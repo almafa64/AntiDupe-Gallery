@@ -1,0 +1,6 @@
+max_width = 100
+newline_style = "Unix"
+imports_granularity = "Module"
+overflow_delimited_expr = true
+remove_nested_parens = true
+group_imports = "StdExternalCrate"

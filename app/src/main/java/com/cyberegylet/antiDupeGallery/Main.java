@@ -6,14 +6,9 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 
-import com.cyberegylet.antiDupeGallery.backend.Test;
+import com.cyberegylet.antiDupeGallery.backend.Backend;
 
-public class Main extends Activity
-{
-    static {
-        System.loadLibrary("backend");
-    }
-
+public class Main extends Activity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -21,6 +16,6 @@ public class Main extends Activity
         setContentView(R.layout.main_activity);
 
         TextView a = findViewById(R.id.textView);
-        a.setText(String.valueOf(Test.test()));
+        a.setText(String.valueOf(Backend.test()));
     }
 }

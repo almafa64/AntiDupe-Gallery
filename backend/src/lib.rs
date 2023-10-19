@@ -1,10 +1,8 @@
-use jni::{
-    objects::JClass,
-    sys::{jint, JNI_VERSION_1_6},
-    JNIEnv, JavaVM, NativeMethod,
-};
+use jni::objects::JClass;
+use jni::sys::{jint, JNIEnv, JNI_VERSION_1_6};
+use jni::{JavaVM, NativeMethod};
 
-const CLASSNAME: &'static str = "com/cyberegylet/antiDupeGallery/backend/Test";
+const CLASSNAME: &'static str = "com/cyberegylet/antiDupeGallery/backend/Backend";
 
 #[no_mangle]
 #[allow(non_snake_case)]
