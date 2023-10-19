@@ -11,7 +11,7 @@ import com.cyberegylet.antiDupeGallery.backend.Test;
 public class Main extends Activity
 {
     static {
-        System.loadLibrary("gallery_backend");
+        System.loadLibrary("backend");
     }
 
     @Override

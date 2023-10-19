@@ -1,11 +1,19 @@
 plugins {
     id 'com.android.application'
+    id 'org.mozilla.rust-android-gradle.rust-android' version '0.9.3'
+}
+
+configurations {
+    backend {
+        canBeConsumed false
+        canBeResolved true
+    }
 }
 
 android {
     namespace 'com.cyberegylet.antiDupeGallery'
     compileSdk 34
-
+    
     defaultConfig {
         applicationId "com.cyberegylet.antiDupeGallery"
         minSdk 26
@@ -22,14 +30,28 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ["src/main/jniLibs"]
+        }
+    }
+
+    ndkVersion '26.1.10909125'
+}
+
+cargo {
+    module = '../backend'
+    libname = 'backend'
+    targets = ['arm64']
 }
 
 dependencies {
-
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.10.0'
     testImplementation 'junit:junit:4.13.2'
