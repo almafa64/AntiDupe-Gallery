@@ -3,6 +3,7 @@ package com.cyberegylet.antiDupeGallery;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -12,14 +13,15 @@ import android.provider.MediaStore;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class FileManager
 {
-	Context context;
-	Activity activity;
-	ContentResolver contentResolver;
+	private final Context context;
+	private final Activity activity;
+	private final ContentResolver contentResolver;
 
 	public static final int STORAGE_REQUEST_CODE = 1;
 
@@ -91,7 +93,7 @@ public class FileManager
 			{
 				paths.add(cursor.getString(getPathCol()));
 			}
-		}, uri, MediaStore.MediaColumns._ID);
+		}, uri, MediaStore.MediaColumns.DATA);
 		return paths;
 	}
 
@@ -102,4 +104,46 @@ public class FileManager
 	public List<String> getAllImagePath() { return getAllPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI); }
 	public List<String> getAllVideoPath() { return getAllPath(MediaStore.Video.Media.EXTERNAL_CONTENT_URI); }
 	public List<String> getAllAudioPath() { return getAllPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI); }
+
+	public String getPathFromID(int id)
+	{
+		Uri content = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+		try(Cursor cursor = contentResolver.query(content, null, null, null, null))
+		{
+			int path_ind = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+			cursor.moveToFirst();
+			return cursor.getString(path_ind);
+		}
+	}
+
+	public String getPathFromPath(String path)
+	{
+		try(Cursor cursor = contentResolver.query(Uri.fromFile(new File(path)), null, null, null, null))
+		{
+			int path_ind = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+			cursor.moveToFirst();
+			return cursor.getString(path_ind);
+		}
+	}
+
+	public int getIDFromID(int id)
+	{
+		Uri content = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+		try(Cursor cursor = contentResolver.query(content, null, null, null, null))
+		{
+			int id_ind = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID);
+			cursor.moveToFirst();
+			return cursor.getInt(id_ind);
+		}
+	}
+
+	public int getIDFromPath(String path)
+	{
+		try(Cursor cursor = contentResolver.query(Uri.fromFile(new File(path)), null, null, null, null))
+		{
+			int id_ind = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID);
+			cursor.moveToFirst();
+			return cursor.getInt(id_ind);
+		}
+	}
 }
