@@ -3,7 +3,6 @@ package com.cyberegylet.antiDupeGallery;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -33,7 +32,8 @@ public class FileManager
 		contentResolver = context.getContentResolver();
 		this.activity = activity;
 
-		if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED)
+		if (ContextCompat.checkSelfPermission(context,
+				android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED)
 		{
 			ActivityCompat.requestPermissions(activity, new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE }, STORAGE_REQUEST_CODE);
 		}
@@ -53,21 +53,32 @@ public class FileManager
 		public abstract void run(Cursor cursor);
 	}
 
-	public void CursorLoop(CursorLoopWrapper wrapper, int cursorStart, Uri uri, String... queries)
+	public void CursorLoop(CursorLoopWrapper wrapper, int cursorStart, String sort, String selection, Uri uri, String... queries)
 	{
-		try (Cursor cursor = contentResolver.query(uri, queries, null, null))
+		try (Cursor cursor = contentResolver.query(uri, queries, selection, null, sort))
 		{
 			assert cursor != null;
 			wrapper.id_col = cursor.getColumnIndex(MediaStore.MediaColumns._ID);
 			wrapper.path_col = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
-			if(!cursor.moveToPosition(cursorStart)) return;
+			if (!cursor.moveToPosition(cursorStart)) return;
 			do
 			{
 				wrapper.run(cursor);
 			} while (cursor.moveToNext());
 		}
 	}
-	public void CursorLoop(CursorLoopWrapper wrapper, Uri uri, String... queries) { CursorLoop(wrapper, 0, uri, queries); }
+
+	public void CursorLoop(CursorLoopWrapper wrapper, String sort, Uri uri, String... queries)
+	{
+		CursorLoop(wrapper, 0, sort, null, uri, queries);
+	}
+
+	public void CursorLoop(CursorLoopWrapper wrapper, String sort, String selection, Uri uri, String... queries)
+	{
+		CursorLoop(wrapper, 0, sort, selection, uri, queries);
+	}
+
+	public void CursorLoop(CursorLoopWrapper wrapper, Uri uri, String... queries) { CursorLoop(wrapper, null, uri, queries); }
 
 	private List<Integer> getAllID(Uri uri)
 	{
@@ -98,49 +109,37 @@ public class FileManager
 	}
 
 	public List<Integer> getAllImageID() { return getAllID(MediaStore.Images.Media.EXTERNAL_CONTENT_URI); }
+
 	public List<Integer> getAllVideoID() { return getAllID(MediaStore.Video.Media.EXTERNAL_CONTENT_URI); }
+
 	public List<Integer> getAllAudioID() { return getAllID(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI); }
+	public List<Integer> getAllFileID() { return getAllID(MediaStore.Files.getContentUri("external")); }
 
 	public List<String> getAllImagePath() { return getAllPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI); }
+
 	public List<String> getAllVideoPath() { return getAllPath(MediaStore.Video.Media.EXTERNAL_CONTENT_URI); }
+
 	public List<String> getAllAudioPath() { return getAllPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI); }
+	public List<String> getAllFilePath() { return getAllPath(MediaStore.Files.getContentUri("external")); }
 
-	public String getPathFromID(int id)
+	public Uri getUriFromID(int id)
 	{
-		Uri content = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
-		try(Cursor cursor = contentResolver.query(content, null, null, null, null))
+		try (Cursor cursor = contentResolver.query(MediaStore.Files.getContentUri("external", id),
+				new String[]{ MediaStore.MediaColumns.DATA }, null, null, null))
 		{
+			assert cursor != null;
 			int path_ind = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
 			cursor.moveToFirst();
-			return cursor.getString(path_ind);
+			return Uri.fromFile(new File(cursor.getString(path_ind)));
 		}
 	}
 
-	public String getPathFromPath(String path)
+	public int getIDFromUri(Uri path)
 	{
-		try(Cursor cursor = contentResolver.query(Uri.fromFile(new File(path)), null, null, null, null))
+		try (Cursor cursor = contentResolver.query(MediaStore.Files.getContentUri("external"), new String[]{ MediaStore.MediaColumns._ID },
+				MediaStore.MediaColumns.DATA + "=?", new String[]{ path.getPath() }, null))
 		{
-			int path_ind = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
-			cursor.moveToFirst();
-			return cursor.getString(path_ind);
-		}
-	}
-
-	public int getIDFromID(int id)
-	{
-		Uri content = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
-		try(Cursor cursor = contentResolver.query(content, null, null, null, null))
-		{
-			int id_ind = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID);
-			cursor.moveToFirst();
-			return cursor.getInt(id_ind);
-		}
-	}
-
-	public int getIDFromPath(String path)
-	{
-		try(Cursor cursor = contentResolver.query(Uri.fromFile(new File(path)), null, null, null, null))
-		{
+			assert cursor != null;
 			int id_ind = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID);
 			cursor.moveToFirst();
 			return cursor.getInt(id_ind);
