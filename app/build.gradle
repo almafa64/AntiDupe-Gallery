@@ -6,10 +6,10 @@ plugins {
 android {
     namespace 'com.cyberegylet.antiDupeGallery'
     compileSdk 34
-    
+
     defaultConfig {
         applicationId "com.cyberegylet.antiDupeGallery"
-        minSdk 26
+        minSdk 27
         targetSdk 33
         versionCode 1
         versionName "1.0"
@@ -45,6 +45,7 @@ cargo {
 }
 
 dependencies {
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.10.0'
     testImplementation 'junit:junit:4.13.2'
