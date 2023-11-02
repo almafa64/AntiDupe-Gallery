@@ -4,17 +4,18 @@ import android.net.Uri;
 
 public class ImageFile
 {
-	public final int id;
-	public final Uri uri;
-	public final String name;
-	public final int fileCount;
+	private final int id;
+	private final Uri path;
+	private final String basename;
 
-	public ImageFile(Uri uri, int id, int fileCount, String name)
+	public ImageFile(Uri path, int id, String name)
 	{
-		this.uri = uri;
+		this.path = path;
 		this.id = id;
-		this.fileCount = fileCount;
-		this.name = name;
+		this.basename = name;
 	}
-	public ImageFile(Uri uri, String name) { this(uri, -1, -1, name); }
+	public ImageFile(Uri uri, String name) { this(uri, -1, name); }
+	public Uri getPath() { return path; }
+	public int getId() { return id; }
+	public String getBasename() { return basename; }
 }

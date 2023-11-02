@@ -13,9 +13,10 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.adapters.FolderAdapter;
-import com.cyberegylet.antiDupeGallery.backend.ActivityParameter;
+import com.cyberegylet.antiDupeGallery.backend.Activites.ActivityParameter;
+import com.cyberegylet.antiDupeGallery.models.ImageFolder;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
-import com.cyberegylet.antiDupeGallery.backend.ActivityManager;
+import com.cyberegylet.antiDupeGallery.backend.Activites.ActivityManager;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 
 import java.io.File;
@@ -74,7 +75,7 @@ public class MainActivity extends Activity
 
 	private void fileThings()
 	{
-		HashMap<String, Folder> folderNames = new HashMap<>();
+		HashMap<String, ImageFolder> folderNames = new HashMap<>();
 
 		FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
 		{
@@ -91,7 +92,7 @@ public class MainActivity extends Activity
 				int secondLastSeparator = path.lastIndexOf('/', lastSeparator - 1);
 
 				String folderAbs = path.substring(0, lastSeparator);
-				Folder folder = folderNames.get(folderAbs);
+				ImageFolder folder = folderNames.get(folderAbs);
 				if (folder != null)
 				{
 					folder.incrementFileCount();
@@ -99,23 +100,20 @@ public class MainActivity extends Activity
 				}
 
 				String basename = path.substring(secondLastSeparator + 1, lastSeparator);
-				folderNames.put(folderAbs, new Folder(fileManager.stringToUri(path), 1, id, basename));
+				folderNames.put(folderAbs, new ImageFolder(fileManager.stringToUri(path), 1, id, basename));
 			}
 		};
 
 		String sort = MediaStore.MediaColumns.DATE_MODIFIED + " DESC";
 		fileManager.allImageAndVideoLoop(sort, wrapper, MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DATA);
 
-		Comparator<Folder> comparator = Comparator.comparing(Folder::getBasename);
-		folderNames.entrySet().stream().sorted(Map.Entry.comparingByValue(comparator)).forEach(entry -> {
-			Folder folder = entry.getValue();
-			images.add(new ImageFile(folder.getPath(), folder.getId(), folder.getFileCount(), folder.getBasename()));
-		});
+		Comparator<ImageFolder> comparator = Comparator.comparing(ImageFolder::getBasename);
+		folderNames.entrySet().stream().sorted(Map.Entry.comparingByValue(comparator)).forEach(entry -> images.add(entry.getValue()));
 
 		folders.setAdapter(new FolderAdapter(images,
 				fileManager,
 				item -> ActivityManager.switchActivity(this, FolderViewActivity.class, new ActivityParameter("currentFolder",
-						Objects.requireNonNull(new File(Objects.requireNonNull(item.uri.getPath())).getParentFile()).getAbsolutePath()
+						Objects.requireNonNull(new File(Objects.requireNonNull(item.getPath().getPath())).getParentFile()).getAbsolutePath()
 				))
 		));
 

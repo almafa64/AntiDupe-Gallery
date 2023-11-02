@@ -58,7 +58,7 @@ public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailAdapter.View
 	{
 		// TODO Optimize?
 		ImageFile imageFile = images.get(position);
-		fileManager.thumbnailIntoImageView(holder.img, imageFile.uri);
+		fileManager.thumbnailIntoImageView(holder.img, imageFile.getPath());
 		holder.img.setOnClickListener(v -> listener.onItemClick(imageFile));
 	}
 

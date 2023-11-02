@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 import com.cyberegylet.antiDupeGallery.R;
+import com.cyberegylet.antiDupeGallery.models.ImageFolder;
 
 import java.util.List;
 
@@ -46,9 +47,9 @@ public class FolderAdapter extends ThumbnailAdapter
 	{
 		// TODO Optimize?
 		super.onBindViewHolder(holder, position);
-		ImageFile data = images.get(position);
+		ImageFolder data = (ImageFolder) images.get(position);
 		FolderAdapter.ViewHolder thisHolder = (FolderAdapter.ViewHolder) holder;
-		thisHolder.name.setText(data.name);
-		thisHolder.count.setText(String.valueOf(data.fileCount));
+		thisHolder.name.setText(data.getBasename());
+		thisHolder.count.setText(String.valueOf(data.getFileCount()));
 	}
 }

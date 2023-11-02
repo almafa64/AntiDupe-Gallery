@@ -1,12 +1,9 @@
-package com.cyberegylet.antiDupeGallery.backend;
+package com.cyberegylet.antiDupeGallery.backend.Activites;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 
-import com.cyberegylet.antiDupeGallery.models.ImageFile;
-
-import java.io.Serializable;
 import java.util.Objects;
 
 public class ActivityManager
