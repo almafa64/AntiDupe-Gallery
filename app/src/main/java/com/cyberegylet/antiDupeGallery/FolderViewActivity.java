@@ -3,23 +3,20 @@ package com.cyberegylet.antiDupeGallery;
 import android.app.Activity;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.cyberegylet.antiDupeGallery.Adapters.ThumbnailAdapter;
-import com.cyberegylet.antiDupeGallery.Models.ImageFile;
+import com.cyberegylet.antiDupeGallery.adapters.ThumbnailAdapter;
+import com.cyberegylet.antiDupeGallery.models.ImageFile;
 import com.cyberegylet.antiDupeGallery.backend.ActivityManager;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
-public class FolderMain extends Activity
+public class FolderViewActivity extends Activity
 {
 	private FileManager fileManager;
 	private RecyclerView recyclerView;
@@ -32,7 +29,7 @@ public class FolderMain extends Activity
 	{
 		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.folder_files);
+		setContentView(R.layout.folder_view);
 
 		currentFolder = (String) ActivityManager.getParam(this, "currentFolder");
 

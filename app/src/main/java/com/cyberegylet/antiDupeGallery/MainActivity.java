@@ -13,8 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.cyberegylet.antiDupeGallery.Adapters.FolderAdapter;
-import com.cyberegylet.antiDupeGallery.Models.ImageFile;
+import com.cyberegylet.antiDupeGallery.adapters.FolderAdapter;
+import com.cyberegylet.antiDupeGallery.models.ImageFile;
 import com.cyberegylet.antiDupeGallery.backend.ActivityManager;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 
@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class Main extends Activity
+public class MainActivity extends Activity
 {
 	private FileManager fileManager;
 	private RecyclerView recyclerView;
@@ -116,7 +116,7 @@ public class Main extends Activity
 				images,
 				fileManager,
 				item -> ActivityManager.switchActivity(this,
-						FolderMain.class,
+						FolderViewActivity.class,
 						new ActivityManager.Parameter(
 								"currentFolder",
 								Objects.requireNonNull(new File(Objects.requireNonNull(item.uri.getPath())).getParentFile())

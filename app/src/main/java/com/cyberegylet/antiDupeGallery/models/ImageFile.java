@@ -1,4 +1,4 @@
-package com.cyberegylet.antiDupeGallery.Models;
+package com.cyberegylet.antiDupeGallery.models;
 
 import android.net.Uri;
 

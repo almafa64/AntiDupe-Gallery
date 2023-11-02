@@ -1,4 +1,4 @@
-package com.cyberegylet.antiDupeGallery.Adapters;
+package com.cyberegylet.antiDupeGallery.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
-import com.cyberegylet.antiDupeGallery.Models.ImageFile;
+import com.cyberegylet.antiDupeGallery.models.ImageFile;
 import com.cyberegylet.antiDupeGallery.R;
 
 import java.util.List;

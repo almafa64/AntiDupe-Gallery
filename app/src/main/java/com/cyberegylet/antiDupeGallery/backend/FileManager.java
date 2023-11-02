@@ -24,13 +24,13 @@ import java.util.List;
 
 public class FileManager
 {
-	public final Context context;
+	public static final int STORAGE_REQUEST_CODE = 1;
+	public static final Uri EXTERNAL_URI = MediaStore.Files.getContentUri("external");
+
+	private final Context context;
 	private final ContentResolver contentResolver;
 
-	public static final int STORAGE_REQUEST_CODE = 1;
-	public static final Uri externalUri = MediaStore.Files.getContentUri("external");
-
-	private boolean has_read_access = false;
+	private boolean hasReadAccess = false;
 
 	public static class Mimes
 	{
@@ -67,14 +67,11 @@ public class FileManager
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
 		{
-			if (ContextCompat.checkSelfPermission(
-					context,
+			if (ContextCompat.checkSelfPermission(context,
 					Manifest.permission.READ_MEDIA_IMAGES
-			) == PackageManager.PERMISSION_DENIED || ContextCompat.checkSelfPermission(
-					context,
+			) == PackageManager.PERMISSION_DENIED || ContextCompat.checkSelfPermission(context,
 					Manifest.permission.READ_MEDIA_AUDIO
-			) == PackageManager.PERMISSION_DENIED || ContextCompat.checkSelfPermission(
-					context,
+			) == PackageManager.PERMISSION_DENIED || ContextCompat.checkSelfPermission(context,
 					Manifest.permission.READ_MEDIA_VIDEO
 			) == PackageManager.PERMISSION_DENIED)
 			{
@@ -84,7 +81,7 @@ public class FileManager
 			}
 			else
 			{
-				has_read_access = true;
+				hasReadAccess = true;
 			}
 		}
 		else
@@ -98,12 +95,12 @@ public class FileManager
 			}
 			else
 			{
-				has_read_access = true;
+				hasReadAccess = true;
 			}
 		}
 	}
 
-	public boolean hasReadAccess() { return has_read_access; }
+	public boolean hasReadAccess() { return hasReadAccess; }
 
 	public abstract static class CursorLoopWrapper
 	{
@@ -129,7 +126,7 @@ public class FileManager
 		public void stop() { cursor.moveToLast(); }
 	}
 
-	public void CursorLoop(CursorLoopWrapper wrapper, int cursorStart, String sort, String selection, Uri uri, String... queries)
+	public void cursorLoop(CursorLoopWrapper wrapper, int cursorStart, String sort, String selection, Uri uri, String... queries)
 	{
 		try (Cursor cursor = contentResolver.query(uri, queries, selection, null, sort))
 		{
@@ -148,34 +145,34 @@ public class FileManager
 		}
 	}
 
-	public void CursorLoop(CursorLoopWrapper wrapper, String sort, Uri uri, String... queries)
+	public void cursorLoop(CursorLoopWrapper wrapper, String sort, Uri uri, String... queries)
 	{
-		CursorLoop(wrapper, 0, sort, null, uri, queries);
+		cursorLoop(wrapper, 0, sort, null, uri, queries);
 	}
 
-	public void CursorLoop(CursorLoopWrapper wrapper, String sort, String selection, Uri uri, String... queries)
+	public void cursorLoop(CursorLoopWrapper wrapper, String sort, String selection, Uri uri, String... queries)
 	{
-		CursorLoop(wrapper, 0, sort, selection, uri, queries);
+		cursorLoop(wrapper, 0, sort, selection, uri, queries);
 	}
 
-	public void CursorLoop(CursorLoopWrapper wrapper, Uri uri, String... queries) { CursorLoop(wrapper, null, uri, queries); }
+	public void cursorLoop(CursorLoopWrapper wrapper, Uri uri, String... queries) { cursorLoop(wrapper, null, uri, queries); }
 
 	public void allImageAndVideoLoop(String sort, CursorLoopWrapper wrapper, String... queries)
 	{
 		String selection = MediaStore.Files.FileColumns.MIME_TYPE + " like 'image/%' or " + MediaStore.Files.FileColumns.MIME_TYPE + " like 'video/%'";
-		CursorLoop(wrapper, sort, selection, externalUri, queries);
+		cursorLoop(wrapper, sort, selection, EXTERNAL_URI, queries);
 	}
 
 	public void allImageAndVideoInFolderLoop(String absoluteFolder, String sort, CursorLoopWrapper wrapper, String... queries)
 	{
 		String selection = "(" + MediaStore.Files.FileColumns.MIME_TYPE + " like 'image/%' or " + MediaStore.Files.FileColumns.MIME_TYPE + " like 'video/%') and " + MediaStore.MediaColumns.DATA + " like '" + absoluteFolder + "/%'";
-		CursorLoop(wrapper, sort, selection, externalUri, queries);
+		cursorLoop(wrapper, sort, selection, EXTERNAL_URI, queries);
 	}
 
-	private List<Integer> getAllID(Uri uri)
+	private List<Integer> getAllIDs(Uri uri)
 	{
 		List<Integer> ids = new ArrayList<>();
-		CursorLoop(new CursorLoopWrapper()
+		cursorLoop(new CursorLoopWrapper()
 		{
 			@Override
 			public void run()
@@ -186,10 +183,10 @@ public class FileManager
 		return ids;
 	}
 
-	private List<String> getAllPath(Uri uri)
+	private List<String> getAllPaths(Uri uri)
 	{
 		List<String> paths = new ArrayList<>();
-		CursorLoop(new CursorLoopWrapper()
+		cursorLoop(new CursorLoopWrapper()
 		{
 			@Override
 			public void run()
@@ -200,21 +197,21 @@ public class FileManager
 		return paths;
 	}
 
-	public List<Integer> getAllImageID() { return getAllID(MediaStore.Images.Media.EXTERNAL_CONTENT_URI); }
+	public List<Integer> getAllImageIDs() { return getAllIDs(MediaStore.Images.Media.EXTERNAL_CONTENT_URI); }
 
-	public List<Integer> getAllVideoID() { return getAllID(MediaStore.Video.Media.EXTERNAL_CONTENT_URI); }
+	public List<Integer> getAllVideoIDs() { return getAllIDs(MediaStore.Video.Media.EXTERNAL_CONTENT_URI); }
 
-	public List<Integer> getAllAudioID() { return getAllID(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI); }
+	public List<Integer> getAllAudioIDs() { return getAllIDs(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI); }
 
-	public List<Integer> getAllFileID() { return getAllID(externalUri); }
+	public List<Integer> getAllFileIDs() { return getAllIDs(EXTERNAL_URI); }
 
-	public List<String> getAllImagePath() { return getAllPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI); }
+	public List<String> getAllImagePaths() { return getAllPaths(MediaStore.Images.Media.EXTERNAL_CONTENT_URI); }
 
-	public List<String> getAllVideoPath() { return getAllPath(MediaStore.Video.Media.EXTERNAL_CONTENT_URI); }
+	public List<String> getAllVideoPaths() { return getAllPaths(MediaStore.Video.Media.EXTERNAL_CONTENT_URI); }
 
-	public List<String> getAllAudioPath() { return getAllPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI); }
+	public List<String> getAllAudioPaths() { return getAllPaths(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI); }
 
-	public List<String> getAllFilePath() { return getAllPath(externalUri); }
+	public List<String> getAllFilePaths() { return getAllPaths(EXTERNAL_URI); }
 
 	public Uri getUriFromID(int id)
 	{
@@ -234,7 +231,7 @@ public class FileManager
 
 	public int getIDFromUri(Uri path)
 	{
-		try (Cursor cursor = contentResolver.query(externalUri,
+		try (Cursor cursor = contentResolver.query(EXTERNAL_URI,
 				new String[]{ MediaStore.MediaColumns._ID },
 				MediaStore.MediaColumns.DATA + "=?",
 				new String[]{ path.getPath() },
@@ -267,49 +264,6 @@ public class FileManager
 	public String getMimeType(Uri uri) { return getMimeType(getIDFromUri(uri)); }
 
 	public Uri stringToUri(String path) { return Uri.parse("file://" + path); }
-
-	/*public Bitmap getThumbnail(String path, int id, boolean isImage)
-	{
-		Bitmap bitmap;
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-		{
-			try
-			{
-				//bitmap = context.getContentResolver().loadThumbnail(data.uri, new Size(255, 255), null);
-				bitmap = contentResolver.loadThumbnail(ContentUris.withAppendedId(externalUri, id),
-						new Size(384, 512), null);
-			}
-			catch (IOException e)
-			{
-				throw new RuntimeException(e);
-			}
-		}
-		else
-		{
-			if (isImage)
-			{
-				bitmap = MediaStore.Images.Thumbnails.getThumbnail(contentResolver, id, MediaStore.Images.Thumbnails.MINI_KIND, null);
-				if (bitmap == null)
-				{
-					bitmap = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(path), 384, 512);
-				}
-			}
-			else
-			{
-				bitmap = MediaStore.Video.Thumbnails.getThumbnail(contentResolver, id, MediaStore.Video.Thumbnails.MINI_KIND, null);
-				if (bitmap == null)
-				{
-					assert path != null;
-					bitmap = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Video.Thumbnails.MINI_KIND);
-					if (bitmap == null)
-					{
-						bitmap = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(path), 384, 512);
-					}
-				}
-			}
-		}
-		return bitmap;
-	}*/
 
 	public void thumbnailIntoImageView(ImageView imageView, Uri uri)
 	{
