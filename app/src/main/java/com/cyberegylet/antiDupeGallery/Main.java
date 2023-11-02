@@ -1,6 +1,7 @@
 package com.cyberegylet.antiDupeGallery;
 
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -50,13 +51,17 @@ public class Main extends Activity
 		});
 
 		fileManager = new FileManager(this);
-		if (fileManager.hasReadAccess()) fileThings();
+		if (fileManager.hasReadAccess())
+		{
+			fileThings();
+		}
 	}
 
 	@Override
 	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
 	{
-		if (requestCode == FileManager.STORAGE_REQUEST_CODE && Arrays.stream(grantResults).allMatch(v -> v == 0))
+		if (requestCode == FileManager.STORAGE_REQUEST_CODE && Arrays.stream(grantResults)
+				.allMatch(v -> v == PackageManager.PERMISSION_GRANTED))
 		{
 			fileThings();
 		}
@@ -107,7 +112,18 @@ public class Main extends Activity
 			images.add(new ImageFile((Uri) v[0], (Integer) v[2], (Integer) v[1], (String) v[3]));
 		});
 
-		recyclerView.setAdapter(new FolderAdapter(images, fileManager, item -> ActivityManager.switchActivity(this, FolderMain.class, new ActivityManager.Parameter("currentFolder", Objects.requireNonNull(new File(Objects.requireNonNull(item.uri.getPath())).getParentFile()).getAbsolutePath()))));
+		recyclerView.setAdapter(new FolderAdapter(
+				images,
+				fileManager,
+				item -> ActivityManager.switchActivity(this,
+						FolderMain.class,
+						new ActivityManager.Parameter(
+								"currentFolder",
+								Objects.requireNonNull(new File(Objects.requireNonNull(item.uri.getPath())).getParentFile())
+										.getAbsolutePath()
+						)
+				)
+		));
 
 		findViewById(R.id.load).setVisibility(View.GONE);
 		findViewById(R.id.mainLayout).setClickable(false);
