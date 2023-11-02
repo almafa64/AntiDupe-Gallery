@@ -2,7 +2,6 @@ package com.cyberegylet.antiDupeGallery;
 
 import android.app.Activity;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -29,7 +28,7 @@ import java.util.Objects;
 public class MainActivity extends Activity
 {
 	private FileManager fileManager;
-	private RecyclerView recyclerView;
+	private RecyclerView folders;
 	ArrayList<ImageFile> images = new ArrayList<>();
 
 	@Override
@@ -39,9 +38,9 @@ public class MainActivity extends Activity
 
 		setContentView(R.layout.main_activity);
 
-		recyclerView = findViewById(R.id.recycle);
-		findViewById(R.id.downBut).setOnClickListener(v -> recyclerView.scrollToPosition(images.size() - 1));
-		findViewById(R.id.upBut).setOnClickListener(v -> recyclerView.scrollToPosition(0));
+		folders = findViewById(R.id.items);
+		findViewById(R.id.downBut).setOnClickListener(v -> folders.scrollToPosition(images.size() - 1));
+		findViewById(R.id.upBut).setOnClickListener(v -> folders.scrollToPosition(0));
 
 		findViewById(R.id.more_button).setOnClickListener(v -> {
 			Toast.makeText(this, "too bad", Toast.LENGTH_SHORT).show();
@@ -84,45 +83,39 @@ public class MainActivity extends Activity
 				String path = getPath();
 				int id = getID();
 				//if (path.contains("/.")) return; // check if file is in empty directory
-				int lastThing = path.lastIndexOf('/');
+				int lastSeparator = path.lastIndexOf('/');
 
-				if (lastThing == -1) return; // check if path doesn't have '/' -> some file "can" be in root
+				if (lastSeparator == -1) return; // check if path doesn't have '/' -> some file "can" be in root
 
-				int secondLastThing = path.lastIndexOf('/', lastThing - 1);
+				int secondLastSeparator = path.lastIndexOf('/', lastSeparator - 1);
 
-				String folderAbs = path.substring(0, lastThing);
-				Object[] tmp = folderNames.get(folderAbs);
-				if (tmp != null)
+				String folderAbs = path.substring(0, lastSeparator);
+				Folder folder = folderNames.get(folderAbs);
+				if (folder != null)
 				{
-					tmp[1] = (Integer) tmp[1] + 1;
+					folder.incrementFileCount();
 					return;
 				}
 
-				folderNames.put(folderAbs,
-						new Object[]{ fileManager.stringToUri(path), 1, id, path.substring(secondLastThing + 1, lastThing) }
-				);
+				String basename = path.substring(secondLastSeparator + 1, lastSeparator);
+				folderNames.put(folderAbs, new Folder(fileManager.stringToUri(path), 1, id, basename));
 			}
 		};
+
 		String sort = MediaStore.MediaColumns.DATE_MODIFIED + " DESC";
 		fileManager.allImageAndVideoLoop(sort, wrapper, MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DATA);
 
-		Comparator<Object[]> comparator = Comparator.comparing((Object[] a) -> ((String) a[3]));
-		folderNames.entrySet().stream().sorted(Map.Entry.comparingByValue(comparator)).forEach(m -> {
-			Object[] v = m.getValue();
-			images.add(new ImageFile((Uri) v[0], (Integer) v[2], (Integer) v[1], (String) v[3]));
+		Comparator<Folder> comparator = Comparator.comparing(Folder::getBasename);
+		folderNames.entrySet().stream().sorted(Map.Entry.comparingByValue(comparator)).forEach(entry -> {
+			Folder folder = entry.getValue();
+			images.add(new ImageFile(folder.getPath(), folder.getId(), folder.getFileCount(), folder.getBasename()));
 		});
 
-		recyclerView.setAdapter(new FolderAdapter(
-				images,
+		folders.setAdapter(new FolderAdapter(images,
 				fileManager,
-				item -> ActivityManager.switchActivity(this,
-						FolderViewActivity.class,
-						new ActivityManager.Parameter(
-								"currentFolder",
-								Objects.requireNonNull(new File(Objects.requireNonNull(item.uri.getPath())).getParentFile())
-										.getAbsolutePath()
-						)
-				)
+				item -> ActivityManager.switchActivity(this, FolderViewActivity.class, new ActivityManager.Parameter("currentFolder",
+						Objects.requireNonNull(new File(Objects.requireNonNull(item.uri.getPath())).getParentFile()).getAbsolutePath()
+				))
 		));
 
 		findViewById(R.id.load).setVisibility(View.GONE);

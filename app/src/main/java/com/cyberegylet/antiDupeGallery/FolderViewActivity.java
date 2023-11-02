@@ -19,7 +19,7 @@ import java.util.ArrayList;
 public class FolderViewActivity extends Activity
 {
 	private FileManager fileManager;
-	private RecyclerView recyclerView;
+	private RecyclerView items;
 	ArrayList<ImageFile> images = new ArrayList<>();
 
 	private String currentFolder;
@@ -33,9 +33,9 @@ public class FolderViewActivity extends Activity
 
 		currentFolder = (String) ActivityManager.getParam(this, "currentFolder");
 
-		recyclerView = findViewById(R.id.recycle);
-		findViewById(R.id.downBut).setOnClickListener(v -> recyclerView.scrollToPosition(images.size() - 1));
-		findViewById(R.id.upBut).setOnClickListener(v -> recyclerView.scrollToPosition(0));
+		items = findViewById(R.id.items);
+		findViewById(R.id.downBut).setOnClickListener(v -> items.scrollToPosition(images.size() - 1));
+		findViewById(R.id.upBut).setOnClickListener(v -> items.scrollToPosition(0));
 		findViewById(R.id.back_button).setOnClickListener(v -> ActivityManager.goBack(this));
 
 		findViewById(R.id.more_button).setOnClickListener(v -> {
@@ -58,19 +58,19 @@ public class FolderViewActivity extends Activity
 			{
 				String path = getPath();
 				//if (path.contains("/.")) return; // check if file is in empty directory
-				int lastThing = path.lastIndexOf('/');
+				int lastSeparator = path.lastIndexOf('/');
 
-				if (lastThing == -1) return; // check if path doesn't have '/' -> some file "can" be in root
+				if (lastSeparator == -1) return; // check if path doesn't have '/' -> some file "can" be in root
 
-				if(!path.substring(0, lastThing).equals(currentFolder)) return;
+				if(!path.substring(0, lastSeparator).equals(currentFolder)) return;
 
-				images.add(new ImageFile(fileManager.stringToUri(path), path.substring(lastThing + 1)));
+				images.add(new ImageFile(fileManager.stringToUri(path), path.substring(lastSeparator + 1)));
 			}
 		};
 		String sort = MediaStore.MediaColumns.DATE_MODIFIED + " DESC";
 		fileManager.allImageAndVideoInFolderLoop(currentFolder, sort, wrapper, MediaStore.MediaColumns.DATA);
 
-		recyclerView.setAdapter(new ThumbnailAdapter(images, fileManager, item -> {
+		items.setAdapter(new ThumbnailAdapter(images, fileManager, item -> {
 			// TODO open files
 		}));
 
