@@ -73,7 +73,7 @@ public class MainActivity extends Activity
 
 	private void fileThings()
 	{
-		HashMap<String, Object[]> folderNames = new HashMap<>();
+		HashMap<String, Folder> folderNames = new HashMap<>();
 
 		FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
 		{
