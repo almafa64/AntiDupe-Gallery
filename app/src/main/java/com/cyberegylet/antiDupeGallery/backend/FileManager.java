@@ -65,27 +65,42 @@ public class FileManager
 		context = activity.getApplicationContext();
 		contentResolver = context.getContentResolver();
 
-		if (ContextCompat.checkSelfPermission(context,
-				android.Manifest.permission.READ_EXTERNAL_STORAGE
-		) == PackageManager.PERMISSION_DENIED)
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
 		{
-			String[] request;
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+			if (ContextCompat.checkSelfPermission(
+					context,
+					Manifest.permission.READ_MEDIA_IMAGES
+			) == PackageManager.PERMISSION_DENIED || ContextCompat.checkSelfPermission(
+					context,
+					Manifest.permission.READ_MEDIA_AUDIO
+			) == PackageManager.PERMISSION_DENIED || ContextCompat.checkSelfPermission(
+					context,
+					Manifest.permission.READ_MEDIA_VIDEO
+			) == PackageManager.PERMISSION_DENIED)
 			{
-				request = new String[] {
-						Manifest.permission.READ_MEDIA_IMAGES,
-						Manifest.permission.READ_MEDIA_VIDEO,
-						Manifest.permission.READ_MEDIA_AUDIO
-				};
+				String[] permissions = new String[]{ Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO,
+						Manifest.permission.READ_MEDIA_AUDIO };
+				ActivityCompat.requestPermissions(activity, permissions, STORAGE_REQUEST_CODE);
 			}
 			else
 			{
-				request = new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE };
+				has_read_access = true;
 			}
-
-			ActivityCompat.requestPermissions(activity, request, STORAGE_REQUEST_CODE);
 		}
-		else has_read_access = true;
+		else
+		{
+			if (ContextCompat.checkSelfPermission(context,
+					android.Manifest.permission.READ_EXTERNAL_STORAGE
+			) == PackageManager.PERMISSION_DENIED)
+			{
+				String[] permissions = new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE };
+				ActivityCompat.requestPermissions(activity, permissions, STORAGE_REQUEST_CODE);
+			}
+			else
+			{
+				has_read_access = true;
+			}
+		}
 	}
 
 	public boolean hasReadAccess() { return has_read_access; }
