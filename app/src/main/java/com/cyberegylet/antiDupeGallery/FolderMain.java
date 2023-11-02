@@ -52,16 +52,6 @@ public class FolderMain extends Activity
 		if (fileManager.hasReadAccess()) fileThings();
 	}
 
-	@Override
-	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
-	{
-		if (requestCode == FileManager.STORAGE_REQUEST_CODE && Arrays.stream(grantResults).allMatch(v -> v == 0))
-		{
-			fileThings();
-		}
-		else finishAndRemoveTask();
-	}
-
 	private void fileThings()
 	{
 		FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
