@@ -27,15 +27,6 @@ import java.util.Objects;
 
 public class Main extends Activity
 {
-	public static void println(String text)
-	{
-		Log.d("App.Main", text);
-	}
-
-	public static void println(Object num) { println(String.valueOf(num)); }
-
-	public static void println() { println(""); }
-
 	private FileManager fileManager;
 	private RecyclerView recyclerView;
 	ArrayList<ImageFile> images = new ArrayList<>();
