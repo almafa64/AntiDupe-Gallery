@@ -72,10 +72,16 @@ public class FileManager
 			String[] request;
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
 			{
-				request = new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.READ_MEDIA_IMAGES,
-						Manifest.permission.READ_MEDIA_VIDEO, Manifest.permission.READ_MEDIA_AUDIO };
+				request = new String[] {
+						Manifest.permission.READ_MEDIA_IMAGES,
+						Manifest.permission.READ_MEDIA_VIDEO,
+						Manifest.permission.READ_MEDIA_AUDIO
+				};
 			}
-			else request = new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE };
+			else
+			{
+				request = new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE };
+			}
 
 			ActivityCompat.requestPermissions(activity, request, STORAGE_REQUEST_CODE);
 		}
