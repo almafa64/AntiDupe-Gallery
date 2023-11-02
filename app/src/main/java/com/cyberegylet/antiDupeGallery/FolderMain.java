@@ -1,7 +1,6 @@
 package com.cyberegylet.antiDupeGallery;
 
 import android.app.Activity;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -12,20 +11,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.cyberegylet.antiDupeGallery.Adapters.FolderAdapter;
+import com.cyberegylet.antiDupeGallery.Adapters.ThumbnailAdapter;
 import com.cyberegylet.antiDupeGallery.Models.ImageFile;
 import com.cyberegylet.antiDupeGallery.backend.ActivityManager;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
-public class Main extends Activity
+public class FolderMain extends Activity
 {
 	public static void println(String text)
 	{
@@ -40,16 +34,21 @@ public class Main extends Activity
 	private RecyclerView recyclerView;
 	ArrayList<ImageFile> images = new ArrayList<>();
 
+	private String currentFolder;
+
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.main_activity);
+		setContentView(R.layout.folder_files);
+
+		currentFolder = (String) ActivityManager.getParam(this, "currentFolder");
 
 		recyclerView = findViewById(R.id.recycle);
 		findViewById(R.id.downBut).setOnClickListener(v -> recyclerView.scrollToPosition(images.size() - 1));
 		findViewById(R.id.upBut).setOnClickListener(v -> recyclerView.scrollToPosition(0));
+		findViewById(R.id.back_button).setOnClickListener(v -> ActivityManager.goBack(this));
 
 		findViewById(R.id.more_button).setOnClickListener(v -> {
 			Toast.makeText(this, "too bad", Toast.LENGTH_SHORT).show();
@@ -74,45 +73,28 @@ public class Main extends Activity
 
 	private void fileThings()
 	{
-		HashMap<String, Object[]> folderNames = new HashMap<>();
-
 		FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
 		{
 			@Override
 			public void run()
 			{
 				String path = getPath();
-				int id = getID();
 				//if (path.contains("/.")) return; // check if file is in empty directory
 				int lastThing = path.lastIndexOf('/');
 
 				if (lastThing == -1) return; // check if path doesn't have '/' -> some file "can" be in root
 
-				int secondLastThing = path.lastIndexOf('/', lastThing - 1);
+				if(!path.substring(0, lastThing).equals(currentFolder)) return;
 
-				String folderAbs = path.substring(0, lastThing);
-				Object[] tmp = folderNames.get(folderAbs);
-				if (tmp != null)
-				{
-					tmp[1] = (Integer) tmp[1] + 1;
-					return;
-				}
-
-				folderNames.put(folderAbs,
-						new Object[]{ fileManager.stringToUri(path), 1, id, path.substring(secondLastThing + 1, lastThing) }
-				);
+				images.add(new ImageFile(fileManager.stringToUri(path), path.substring(lastThing + 1)));
 			}
 		};
 		String sort = MediaStore.MediaColumns.DATE_MODIFIED + " DESC";
-		fileManager.allImageAndVideoLoop(sort, wrapper, MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DATA);
+		fileManager.allImageAndVideoInFolderLoop(currentFolder, sort, wrapper, MediaStore.MediaColumns.DATA);
 
-		Comparator<Object[]> comparator = Comparator.comparing((Object[] a) -> ((String) a[3]));
-		folderNames.entrySet().stream().sorted(Map.Entry.comparingByValue(comparator)).forEach(m -> {
-			Object[] v = m.getValue();
-			images.add(new ImageFile((Uri) v[0], (Integer) v[2], (Integer) v[1], (String) v[3]));
-		});
-
-		recyclerView.setAdapter(new FolderAdapter(images, fileManager, item -> ActivityManager.switchActivity(this, FolderMain.class, new ActivityManager.Parameter("currentFolder", Objects.requireNonNull(new File(Objects.requireNonNull(item.uri.getPath())).getParentFile()).getAbsolutePath()))));
+		recyclerView.setAdapter(new ThumbnailAdapter(images, fileManager, item -> {
+			// TODO open files
+		}));
 
 		findViewById(R.id.load).setVisibility(View.GONE);
 		findViewById(R.id.mainLayout).setClickable(false);

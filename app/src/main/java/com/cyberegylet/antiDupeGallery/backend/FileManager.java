@@ -1,4 +1,4 @@
-package com.cyberegylet.antiDupeGallery;
+package com.cyberegylet.antiDupeGallery.backend;
 
 import android.Manifest;
 import android.app.Activity;
@@ -24,8 +24,7 @@ import java.util.List;
 
 public class FileManager
 {
-	private final Context context;
-	private final Activity activity;
+	public final Context context;
 	private final ContentResolver contentResolver;
 
 	public static final int STORAGE_REQUEST_CODE = 1;
@@ -65,15 +64,16 @@ public class FileManager
 	{
 		context = activity.getApplicationContext();
 		contentResolver = context.getContentResolver();
-		this.activity = activity;
 
 		if (ContextCompat.checkSelfPermission(context,
-				android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED)
+				android.Manifest.permission.READ_EXTERNAL_STORAGE
+		) == PackageManager.PERMISSION_DENIED)
 		{
 			String[] request;
-			if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
 			{
-				request = new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO, Manifest.permission.READ_MEDIA_AUDIO };
+				request = new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.READ_MEDIA_IMAGES,
+						Manifest.permission.READ_MEDIA_VIDEO, Manifest.permission.READ_MEDIA_AUDIO };
 			}
 			else request = new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE };
 
@@ -89,7 +89,7 @@ public class FileManager
 		private int id_col, path_col, mime_col;
 		private Cursor cursor;
 
-		protected void innit(Cursor cursor)
+		private void innit(Cursor cursor)
 		{
 			this.cursor = cursor;
 			id_col = cursor.getColumnIndex(MediaStore.MediaColumns._ID);
@@ -104,6 +104,8 @@ public class FileManager
 		public String getMime() { return cursor.getString(mime_col); }
 
 		public abstract void run();
+
+		public void stop() { cursor.moveToLast(); }
 	}
 
 	public void CursorLoop(CursorLoopWrapper wrapper, int cursorStart, String sort, String selection, Uri uri, String... queries)
@@ -135,6 +137,12 @@ public class FileManager
 	public void allImageAndVideoLoop(String sort, CursorLoopWrapper wrapper, String... queries)
 	{
 		String selection = MediaStore.Files.FileColumns.MIME_TYPE + " like 'image/%' or " + MediaStore.Files.FileColumns.MIME_TYPE + " like 'video/%'";
+		CursorLoop(wrapper, sort, selection, externalUri, queries);
+	}
+
+	public void allImageAndVideoInFolderLoop(String absoluteFolder, String sort, CursorLoopWrapper wrapper, String... queries)
+	{
+		String selection = "(" + MediaStore.Files.FileColumns.MIME_TYPE + " like 'image/%' or " + MediaStore.Files.FileColumns.MIME_TYPE + " like 'video/%') and " + MediaStore.MediaColumns.DATA + " like '" + absoluteFolder + "/%'";
 		CursorLoop(wrapper, sort, selection, externalUri, queries);
 	}
 
@@ -185,7 +193,11 @@ public class FileManager
 	public Uri getUriFromID(int id)
 	{
 		try (Cursor cursor = contentResolver.query(MediaStore.Files.getContentUri("external", id),
-				new String[]{ MediaStore.MediaColumns.DATA }, null, null, null))
+				new String[]{ MediaStore.MediaColumns.DATA },
+				null,
+				null,
+				null
+		))
 		{
 			assert cursor != null;
 			int path_ind = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
@@ -196,8 +208,12 @@ public class FileManager
 
 	public int getIDFromUri(Uri path)
 	{
-		try (Cursor cursor = contentResolver.query(externalUri, new String[]{ MediaStore.MediaColumns._ID },
-				MediaStore.MediaColumns.DATA + "=?", new String[]{ path.getPath() }, null))
+		try (Cursor cursor = contentResolver.query(externalUri,
+				new String[]{ MediaStore.MediaColumns._ID },
+				MediaStore.MediaColumns.DATA + "=?",
+				new String[]{ path.getPath() },
+				null
+		))
 		{
 			assert cursor != null;
 			int id_ind = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID);
@@ -209,7 +225,11 @@ public class FileManager
 	public String getMimeType(int id)
 	{
 		try (Cursor cursor = contentResolver.query(MediaStore.Files.getContentUri("external", id),
-				new String[]{ MediaStore.MediaColumns.MIME_TYPE }, null, null, null))
+				new String[]{ MediaStore.MediaColumns.MIME_TYPE },
+				null,
+				null,
+				null
+		))
 		{
 			assert cursor != null;
 			int mime_ind = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE);
