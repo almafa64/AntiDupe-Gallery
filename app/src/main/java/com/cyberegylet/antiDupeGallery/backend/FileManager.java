@@ -95,7 +95,7 @@ public class FileManager
 		private int id_col, path_col, mime_col;
 		private Cursor cursor;
 
-		private void innit(Cursor cursor)
+		private void init(Cursor cursor)
 		{
 			this.cursor = cursor;
 			id_col = cursor.getColumnIndex(MediaStore.MediaColumns._ID);
@@ -119,8 +119,13 @@ public class FileManager
 		try (Cursor cursor = contentResolver.query(uri, queries, selection, null, sort))
 		{
 			assert cursor != null;
-			wrapper.innit(cursor);
-			if (!cursor.moveToPosition(cursorStart)) return;
+			wrapper.init(cursor);
+
+			if (!cursor.moveToPosition(cursorStart))
+			{
+				return;
+			}
+
 			do
 			{
 				wrapper.run();
