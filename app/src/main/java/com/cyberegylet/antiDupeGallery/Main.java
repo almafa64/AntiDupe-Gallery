@@ -60,7 +60,11 @@ public class Main extends Activity
 		{
 			fileThings();
 		}
-		else finishAndRemoveTask();
+		else
+		{
+			Log.i("Main", "didn't get storage permissions, quitting");
+			finishAndRemoveTask();
+		}
 	}
 
 	private void fileThings()
