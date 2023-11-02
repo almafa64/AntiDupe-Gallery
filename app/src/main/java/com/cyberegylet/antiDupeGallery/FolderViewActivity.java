@@ -62,7 +62,10 @@ public class FolderViewActivity extends Activity
 
 				if (lastSeparator == -1) return; // check if path doesn't have '/' -> some file "can" be in root
 
-				if(!path.substring(0, lastSeparator).equals(currentFolder)) return;
+				if(!path.substring(0, lastSeparator).equals(currentFolder))
+				{
+					return;
+				}
 
 				images.add(new ImageFile(fileManager.stringToUri(path), path.substring(lastSeparator + 1)));
 			}

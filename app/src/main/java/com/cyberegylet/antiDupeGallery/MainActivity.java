@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.adapters.FolderAdapter;
+import com.cyberegylet.antiDupeGallery.backend.ActivityParameter;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 import com.cyberegylet.antiDupeGallery.backend.ActivityManager;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
@@ -113,7 +114,7 @@ public class MainActivity extends Activity
 
 		folders.setAdapter(new FolderAdapter(images,
 				fileManager,
-				item -> ActivityManager.switchActivity(this, FolderViewActivity.class, new ActivityManager.Parameter("currentFolder",
+				item -> ActivityManager.switchActivity(this, FolderViewActivity.class, new ActivityParameter("currentFolder",
 						Objects.requireNonNull(new File(Objects.requireNonNull(item.uri.getPath())).getParentFile()).getAbsolutePath()
 				))
 		));
