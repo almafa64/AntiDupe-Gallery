@@ -75,7 +75,7 @@ public class FolderViewActivity extends Activity
 		fileManager.allImageAndVideoInFolderLoop(currentFolder, sort, wrapper, MediaStore.MediaColumns.DATA);
 
 		items.setAdapter(new ThumbnailAdapter(images, fileManager, item -> {
-			// TODO open files
+			ActivityManager.switchActivity(this, ImageViewActivity.class, new ActivityParameter("imageUri", item.getPath()));
 		}));
 
 		findViewById(R.id.load).setVisibility(View.GONE);
