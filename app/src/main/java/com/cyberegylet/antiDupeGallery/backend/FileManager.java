@@ -15,6 +15,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.bitmap.Downsampler;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 
@@ -267,7 +268,7 @@ public class FileManager
 
 	public void thumbnailIntoImageView(ImageView imageView, Uri uri)
 	{
-		Glide.with(context).load(uri).set(Downsampler.ALLOW_HARDWARE_CONFIG, true).transition(DrawableTransitionOptions.withCrossFade())
-				.into(imageView);
+		Glide.with(context).load(uri).diskCacheStrategy(DiskCacheStrategy.ALL).set(Downsampler.ALLOW_HARDWARE_CONFIG, true)
+				.transition(DrawableTransitionOptions.withCrossFade()).into(imageView);
 	}
 }
