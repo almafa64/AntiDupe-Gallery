@@ -1,4 +1,4 @@
-package com.cyberegylet.antiDupeGallery.backend.Activites;
+package com.cyberegylet.antiDupeGallery.backend.activities;
 
 import android.app.Activity;
 import android.content.Intent;
