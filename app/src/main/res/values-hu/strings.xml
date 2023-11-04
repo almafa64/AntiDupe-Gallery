@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_header_text">Rólunk</string>
+    <string name="back_arrow_text">Vissza</string>
+    <string name="settings_button">Beállítások</string>
+    <string name="more_button">Továbbiak</string>
+    <string name="about_support">Támogatás</string>
+    <string name="about_other">Egyebek</string>
+</resources>

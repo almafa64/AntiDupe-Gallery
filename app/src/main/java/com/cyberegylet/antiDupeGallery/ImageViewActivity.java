@@ -7,12 +7,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.view.MotionEventCompat;
 
 import com.bumptech.glide.Glide;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
@@ -22,7 +20,7 @@ import java.io.Serializable;
 public class ImageViewActivity extends Activity implements Serializable
 {
 	private static final float MIN_SCALE = 0.5f;
-	private static final float MAX_SCALE = 5.0f;
+	private static final float MAX_SCALE = Float.MAX_VALUE;
 	private static final float SCALE_SNAP_MIN = 0.9f;
 	private static final float SCALE_SNAP_MAX = 1.1f;
 	private static final float DRAG_X_SNAP_MIN = -40.0f;
@@ -41,6 +39,8 @@ public class ImageViewActivity extends Activity implements Serializable
 	private float lastPointerX = 0.0f;
 	private float lastPointerY = 0.0f;
 
+	private final ActivityManager activityManager = new ActivityManager(this);
+
 	@SuppressLint("ClickableViewAccessibility")
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState)
@@ -48,11 +48,11 @@ public class ImageViewActivity extends Activity implements Serializable
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.image_view);
 
-		imageUri = (Uri) ActivityManager.getParam(this, "imageUri");
+		imageUri = (Uri) activityManager.getParam("imageUri");
 
 		imageView = findViewById(R.id.imageView);
 		imageContainer = findViewById(R.id.imageContainer);
-		imageContainer.setPadding(0, 0, 0, 0);
+		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
 
 		scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 
@@ -61,7 +61,8 @@ public class ImageViewActivity extends Activity implements Serializable
 		Glide.with(this.getApplicationContext()).load(imageUri).into(imageView);
 	}
 
-	private void onScaleFactorChange() {
+	private void onScaleFactorChange()
+	{
 		imageView.setScaleX(scaleFactor);
 		imageView.setScaleY(scaleFactor);
 		Log.i("image scaling", "current factor: " + scaleFactor);
@@ -74,17 +75,19 @@ public class ImageViewActivity extends Activity implements Serializable
 		Log.i("image moving", "xoff: " + offsetX + ", yoff: " + offsetY);
 	}
 
-	private boolean onImageContainerTouchEvent(MotionEvent event) {
+	private boolean onImageContainerTouchEvent(MotionEvent event)
+	{
 		scaleGestureDetector.onTouchEvent(event);
 
 		final int action = event.getAction();
 
-		switch (action) {
+		switch (action)
+		{
 			case MotionEvent.ACTION_DOWN:
 			{
 				final int pointerIndex = event.getActionIndex();
 				final float x = event.getX(pointerIndex);
-				final float y = event.getX(pointerIndex);
+				final float y = event.getY(pointerIndex);
 				lastPointerX = x;
 				lastPointerY = y;
 				activePointerID = event.getPointerId(pointerIndex);
@@ -133,17 +136,20 @@ public class ImageViewActivity extends Activity implements Serializable
 			case MotionEvent.ACTION_CANCEL:
 			{
 				activePointerID = MotionEvent.INVALID_POINTER_ID;
-				if (scaleFactor >= SCALE_SNAP_MIN && scaleFactor <= SCALE_SNAP_MAX) {
+				if (scaleFactor >= SCALE_SNAP_MIN && scaleFactor <= SCALE_SNAP_MAX)
+				{
 					scaleFactor = 1.0f;
 					onScaleFactorChange();
 				}
 
-				if (offsetX >= DRAG_X_SNAP_MIN && offsetX <= DRAG_X_SNAP_MAX) {
+				if (offsetX >= DRAG_X_SNAP_MIN && offsetX <= DRAG_X_SNAP_MAX)
+				{
 					offsetX = 0.0f;
 					onOffsetChange();
 				}
 
-				if (offsetY >= DRAG_Y_SNAP_MIN && offsetY <= DRAG_Y_SNAP_MAX) {
+				if (offsetY >= DRAG_Y_SNAP_MIN && offsetY <= DRAG_Y_SNAP_MAX)
+				{
 					offsetY = 0.0f;
 					onOffsetChange();
 				}

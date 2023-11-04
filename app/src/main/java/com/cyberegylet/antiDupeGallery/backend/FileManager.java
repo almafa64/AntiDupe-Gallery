@@ -127,9 +127,17 @@ public class FileManager
 		public void stop() { cursor.moveToLast(); }
 	}
 
-	public void cursorLoop(CursorLoopWrapper wrapper, int cursorStart, String sort, String selection, Uri uri, String... queries)
+	public void cursorLoop(
+			CursorLoopWrapper wrapper,
+			int cursorStart,
+			String sort,
+			String selection,
+			String[] args,
+			Uri uri,
+			String... queries
+	)
 	{
-		try (Cursor cursor = contentResolver.query(uri, queries, selection, null, sort))
+		try (Cursor cursor = contentResolver.query(uri, queries, selection, args, sort))
 		{
 			assert cursor != null;
 			wrapper.init(cursor);
@@ -148,12 +156,22 @@ public class FileManager
 
 	public void cursorLoop(CursorLoopWrapper wrapper, String sort, Uri uri, String... queries)
 	{
-		cursorLoop(wrapper, 0, sort, null, uri, queries);
+		cursorLoop(wrapper, 0, sort, null, null, uri, queries);
 	}
 
 	public void cursorLoop(CursorLoopWrapper wrapper, String sort, String selection, Uri uri, String... queries)
 	{
-		cursorLoop(wrapper, 0, sort, selection, uri, queries);
+		cursorLoop(wrapper, 0, sort, selection, null, uri, queries);
+	}
+
+	public void cursorLoop(CursorLoopWrapper wrapper, String selection, String[] args, Uri uri, String... queries)
+	{
+		cursorLoop(wrapper, 0, null, selection, args, uri, queries);
+	}
+
+	public void cursorLoop(CursorLoopWrapper wrapper, String sort, String selection, String[] args, Uri uri, String... queries)
+	{
+		cursorLoop(wrapper, 0, sort, selection, args, uri, queries);
 	}
 
 	public void cursorLoop(CursorLoopWrapper wrapper, Uri uri, String... queries) { cursorLoop(wrapper, null, uri, queries); }
@@ -166,8 +184,8 @@ public class FileManager
 
 	public void allImageAndVideoInFolderLoop(String absoluteFolder, String sort, CursorLoopWrapper wrapper, String... queries)
 	{
-		String selection = "(" + MediaStore.Files.FileColumns.MIME_TYPE + " like 'image/%' or " + MediaStore.Files.FileColumns.MIME_TYPE + " like 'video/%') and " + MediaStore.MediaColumns.DATA + " like '" + absoluteFolder + "/%'";
-		cursorLoop(wrapper, sort, selection, EXTERNAL_URI, queries);
+		String selection = "(" + MediaStore.Files.FileColumns.MIME_TYPE + " like 'image/%' or " + MediaStore.Files.FileColumns.MIME_TYPE + " like 'video/%') and " + MediaStore.MediaColumns.DATA + " like ?";
+		cursorLoop(wrapper, sort, selection, new String[]{ absoluteFolder + "/%" }, EXTERNAL_URI, queries);
 	}
 
 	private List<Integer> getAllIDs(Uri uri)
