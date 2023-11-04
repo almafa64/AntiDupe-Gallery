@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -33,6 +34,8 @@ public class MainActivity extends Activity
 	private RecyclerView folders;
 	ArrayList<ImageFile> images = new ArrayList<>();
 
+	private final ActivityManager activityManager = new ActivityManager(this);
+
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState)
 	{
@@ -45,10 +48,23 @@ public class MainActivity extends Activity
 		findViewById(R.id.upBut).setOnClickListener(v -> folders.scrollToPosition(0));
 
 		findViewById(R.id.more_button).setOnClickListener(v -> {
-			Toast.makeText(this, "too bad", Toast.LENGTH_SHORT).show();
-			/*PopupMenu popup = new PopupMenu(this, v);
-			popup.getMenuInflater().inflate(R.menu., popup.getMenu()).show();*/
-			// TODO make popup
+			PopupMenu popup = new PopupMenu(this, v);
+			popup.setOnMenuItemClickListener(item -> {
+				int id = item.getItemId();
+				if (id == R.id.settings)
+				{
+					// TODO show settings menu
+					Toast.makeText(this, "settings", Toast.LENGTH_SHORT).show();
+				}
+				else if (id == R.id.about)
+				{
+					activityManager.switchActivity(AboutActivity.class);
+				}
+				else return false;
+				return true;
+			});
+			popup.inflate(R.menu.main_popup_menu);
+			popup.show();
 		});
 
 		fileManager = new FileManager(this);
@@ -112,7 +128,7 @@ public class MainActivity extends Activity
 
 		folders.setAdapter(new FolderAdapter(images,
 				fileManager,
-				item -> ActivityManager.switchActivity(this, FolderViewActivity.class, new ActivityParameter("currentFolder",
+				item -> activityManager.switchActivity(FolderViewActivity.class, new ActivityParameter("currentFolder",
 						Objects.requireNonNull(new File(Objects.requireNonNull(item.getPath().getPath())).getParentFile()).getAbsolutePath()
 				))
 		));

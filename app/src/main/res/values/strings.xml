@@ -1,3 +1,11 @@
 <resources>
-    <string name="app_name">AntiDupe Gallery</string>
+    <string name="app_name" translatable="false">AntiDupe Gallery</string>
+    <string name="about_header_text">About</string>
+    <string name="back_arrow_text">Back</string>
+    <string name="settings_button">Settings</string>
+    <string name="more_button">More</string>
+    <string name="about_support">Support</string>
+    <string name="company_email" translatable="false">something@gmail.com</string>
+    <string name="version_text" translatable="false">Version 0.0.1</string>
+    <string name="about_other">Other</string>
 </resources>

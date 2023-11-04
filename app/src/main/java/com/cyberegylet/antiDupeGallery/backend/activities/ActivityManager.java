@@ -8,9 +8,13 @@ import java.util.Objects;
 
 public class ActivityManager
 {
-	public static void switchActivity(Activity activity, Class<? extends Activity> newActivity, ActivityParameter... params)
+	private final Activity currentActivity;
+
+	public ActivityManager(Activity currentActivity) { this.currentActivity = currentActivity; }
+
+	public void switchActivity(Class<? extends Activity> newActivity, ActivityParameter... params)
 	{
-		Intent intent = new Intent(activity, newActivity);
+		Intent intent = new Intent(currentActivity, newActivity);
 		for (ActivityParameter param : params)
 		{
 			switch (param.type)
@@ -29,16 +33,16 @@ public class ActivityManager
 					break;
 			}
 		}
-		activity.startActivity(intent);
+		currentActivity.startActivity(intent);
 	}
 
-	public static void goBack(Activity activity)
+	public void goBack()
 	{
-		activity.finish();
+		currentActivity.finish();
 	}
 
-	public static Object getParam(Activity activity, String name)
+	public Object getParam(String name)
 	{
-		return Objects.requireNonNull(activity.getIntent().getExtras()).get(name);
+		return Objects.requireNonNull(currentActivity.getIntent().getExtras()).get(name);
 	}
 }
