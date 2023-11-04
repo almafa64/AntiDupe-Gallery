@@ -26,5 +26,5 @@ pub extern "system" fn JNI_OnLoad(vm: JavaVM, _: *mut ()) -> jint {
 }
 
 fn test(_env: JNIEnv, _class: JClass) -> jint {
-    56727
+    546
 }
