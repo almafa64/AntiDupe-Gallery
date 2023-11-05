@@ -15,6 +15,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.Priority;
+import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.bitmap.Downsampler;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
@@ -28,7 +30,8 @@ public class FileManager
 	public static final int STORAGE_REQUEST_CODE = 1;
 	public static final Uri EXTERNAL_URI = MediaStore.Files.getContentUri("external");
 
-	private final Context context;
+	public final Context context;
+	public final Activity activity;
 	private final ContentResolver contentResolver;
 
 	private boolean hasReadAccess = false;
@@ -63,6 +66,7 @@ public class FileManager
 
 	public FileManager(Activity activity)
 	{
+		this.activity = activity;
 		context = activity.getApplicationContext();
 		contentResolver = context.getContentResolver();
 
@@ -128,13 +132,7 @@ public class FileManager
 	}
 
 	public void cursorLoop(
-			CursorLoopWrapper wrapper,
-			int cursorStart,
-			String sort,
-			String selection,
-			String[] args,
-			Uri uri,
-			String... queries
+			CursorLoopWrapper wrapper, int cursorStart, String sort, String selection, String[] args, Uri uri, String... queries
 	)
 	{
 		try (Cursor cursor = contentResolver.query(uri, queries, selection, args, sort))
@@ -286,7 +284,8 @@ public class FileManager
 
 	public void thumbnailIntoImageView(ImageView imageView, Uri uri)
 	{
-		Glide.with(context).load(uri).diskCacheStrategy(DiskCacheStrategy.ALL).set(Downsampler.ALLOW_HARDWARE_CONFIG, true)
+		Glide.with(context).load(uri).priority(Priority.LOW).diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+				.format(DecodeFormat.PREFER_ARGB_8888).set(Downsampler.ALLOW_HARDWARE_CONFIG, true)
 				.transition(DrawableTransitionOptions.withCrossFade()).into(imageView);
 	}
 }

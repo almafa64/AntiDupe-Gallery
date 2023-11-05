@@ -10,7 +10,6 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.adapters.ThumbnailAdapter;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
@@ -74,7 +73,7 @@ public class FolderViewActivity extends Activity
 		String sort = MediaStore.MediaColumns.DATE_MODIFIED + " DESC";
 		fileManager.allImageAndVideoInFolderLoop(currentFolder, sort, wrapper, MediaStore.MediaColumns.DATA);
 
-		items.setAdapter(new ThumbnailAdapter(images, fileManager, item -> activityManager.switchActivity(ImageViewActivity.class, new ActivityParameter("imageUri", item.getPath()))));
+		items.setAdapter(new ThumbnailAdapter(images, fileManager));
 
 		findViewById(R.id.load).setVisibility(View.GONE);
 		findViewById(R.id.mainLayout).setClickable(false);

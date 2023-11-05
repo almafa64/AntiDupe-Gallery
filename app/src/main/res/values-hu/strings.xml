@@ -6,4 +6,6 @@
     <string name="more_button">Továbbiak</string>
     <string name="about_support">Támogatás</string>
     <string name="about_other">Egyebek</string>
+    <string name="settings_header">Beállítások</string>
+    <string name="settings_general_heading">Álltalános</string>
 </resources>

@@ -7,26 +7,22 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.PopupMenu;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.adapters.FolderAdapter;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
 import com.cyberegylet.antiDupeGallery.models.ImageFolder;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class MainActivity extends Activity
 {
@@ -53,8 +49,7 @@ public class MainActivity extends Activity
 				int id = item.getItemId();
 				if (id == R.id.settings)
 				{
-					// TODO show settings menu
-					Toast.makeText(this, "settings", Toast.LENGTH_SHORT).show();
+					activityManager.switchActivity(SettingsActivity.class);
 				}
 				else if (id == R.id.about)
 				{
@@ -126,12 +121,7 @@ public class MainActivity extends Activity
 		Comparator<ImageFolder> comparator = Comparator.comparing(ImageFolder::getBasename);
 		folderNames.entrySet().stream().sorted(Map.Entry.comparingByValue(comparator)).forEach(entry -> images.add(entry.getValue()));
 
-		folders.setAdapter(new FolderAdapter(images,
-				fileManager,
-				item -> activityManager.switchActivity(FolderViewActivity.class, new ActivityParameter("currentFolder",
-						Objects.requireNonNull(new File(Objects.requireNonNull(item.getPath().getPath())).getParentFile()).getAbsolutePath()
-				))
-		));
+		folders.setAdapter(new FolderAdapter(images, fileManager));
 
 		findViewById(R.id.load).setVisibility(View.GONE);
 		findViewById(R.id.mainLayout).setClickable(false);
