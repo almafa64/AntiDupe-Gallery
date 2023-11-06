@@ -1,6 +1,5 @@
 package com.cyberegylet.antiDupeGallery.adapters;
 
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -23,8 +22,7 @@ public class FolderAdapter extends ThumbnailAdapter
 {
 	public FolderAdapter(List<ImageFile> images, FileManager fileManager)
 	{
-		super(
-				images,
+		super(images,
 				fileManager,
 				item -> ActivityManager.switchActivity(fileManager.activity,
 						FolderViewActivity.class,
@@ -36,7 +34,7 @@ public class FolderAdapter extends ThumbnailAdapter
 		);
 	}
 
-	public static class ViewHolder extends ThumbnailAdapter.ViewHolder
+	public class ViewHolder extends ThumbnailAdapter.ViewHolder
 	{
 		public TextView name;
 		public TextView count;
@@ -53,18 +51,16 @@ public class FolderAdapter extends ThumbnailAdapter
 	@Override
 	public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
 	{
-		View contactView = LayoutInflater.from(parent.getContext()).inflate(R.layout.folder_card, parent, false);
-		onCreateViewHolderShare(contactView, viewType);
+		View contactView = layoutInflater.inflate(R.layout.folder_card, parent, false);
 		return new ViewHolder(contactView);
 	}
 
 	@Override
 	public void onBindViewHolder(@NonNull ThumbnailAdapter.ViewHolder holder, int position)
 	{
-		// TODO Optimize?
 		ImageFolder imageFolder = (ImageFolder) images.get(position);
 		fileManager.thumbnailIntoImageView(holder.img, imageFolder.getPath());
-		FolderAdapter.ViewHolder thisHolder = (FolderAdapter.ViewHolder) holder;
+		ViewHolder thisHolder = (ViewHolder) holder;
 		thisHolder.name.setText(imageFolder.getBasename());
 		thisHolder.count.setText(String.valueOf(imageFolder.getFileCount()));
 	}

@@ -31,18 +31,28 @@ public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailAdapter.View
 	protected boolean inSelectMode = false;
 	protected List<View> selected = new ArrayList<>();
 
+	protected LayoutInflater layoutInflater;
+
 	protected void selectView(View view)
 	{
 		view.setVisibility(View.VISIBLE);
 		selected.add(view);
-		if (!inSelectMode) inSelectMode = true;
+		if (!inSelectMode)
+		{
+			inSelectMode = true;
+			// TODO add multi-select options to popup (move, copy, info, etc)
+		}
 	}
 
 	protected void unSelectView(View view)
 	{
 		view.setVisibility(View.INVISIBLE);
 		selected.remove(view);
-		if (selected.size() == 0) inSelectMode = false;
+		if (selected.size() == 0)
+		{
+			inSelectMode = false;
+			// TODO remove multi-select options from popup (move, copy, info, etc)
+		}
 	}
 
 	protected ThumbnailAdapter(
@@ -53,6 +63,7 @@ public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailAdapter.View
 		this.fileManager = fileManager;
 		this.clickListener = clickListener;
 		setHasStableIds(true);
+		layoutInflater = LayoutInflater.from(fileManager.activity);
 	}
 
 	public ThumbnailAdapter(List<ImageFile> images, FileManager fileManager)
@@ -66,7 +77,7 @@ public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailAdapter.View
 		);
 	}
 
-	public static class ViewHolder extends RecyclerView.ViewHolder
+	public class ViewHolder extends RecyclerView.ViewHolder
 	{
 		public ImageView img;
 
@@ -74,51 +85,45 @@ public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailAdapter.View
 		{
 			super(itemView);
 			img = itemView.findViewById(R.id.image);
+
+			// view = ConstraintLayout (the parent of ImageView)
+			itemView.setOnClickListener(v -> {
+				if (inSelectMode)
+				{
+					ImageView selectedImg = v.findViewById(R.id.selected_logo);
+					if (selectedImg.getVisibility() == View.INVISIBLE)
+					{
+						selectView(selectedImg);
+					}
+					else
+					{
+						unSelectView(selectedImg);
+					}
+				}
+				else clickListener.onItemClick(images.get(getAdapterPosition()));
+			});
+			itemView.setOnLongClickListener(v -> {
+				ImageView selectedImg = v.findViewById(R.id.selected_logo);
+				if (selectedImg.getVisibility() == View.INVISIBLE) selectView(selectedImg);
+				return true;
+			});
 		}
 	}
 
 	@Override
 	public int getItemViewType(int position) { return position; }
 
-	protected void onCreateViewHolderShare(View view, int position)
-	{
-		ImageFile file = images.get(position);
-		// view = ConstraintLayout (the parent of ImageView)
-		view.setOnClickListener(v -> {
-			if (inSelectMode)
-			{
-				ImageView selectedImg = v.findViewById(R.id.selected_logo);
-				if (selectedImg.getVisibility() == View.INVISIBLE)
-				{
-					selectView(selectedImg);
-				}
-				else
-				{
-					unSelectView(selectedImg);
-				}
-			}
-			else clickListener.onItemClick(file);
-		});
-		view.setOnLongClickListener(v -> {
-			ImageView selectedImg = v.findViewById(R.id.selected_logo);
-			if(selectedImg.getVisibility() == View.INVISIBLE) selectView(selectedImg);
-			return true;
-		});
-	}
-
 	@NonNull
 	@Override
 	public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
 	{
-		View contactView = LayoutInflater.from(parent.getContext()).inflate(R.layout.thumbnail_card, parent, false);
-		onCreateViewHolderShare(contactView, viewType);
+		View contactView = layoutInflater.inflate(R.layout.thumbnail_card, parent, false);
 		return new ViewHolder(contactView);
 	}
 
 	@Override
 	public void onBindViewHolder(@NonNull ThumbnailAdapter.ViewHolder holder, int position)
 	{
-		// TODO Optimize?
 		ImageFile imageFile = images.get(position);
 		fileManager.thumbnailIntoImageView(holder.img, imageFile.getPath());
 	}

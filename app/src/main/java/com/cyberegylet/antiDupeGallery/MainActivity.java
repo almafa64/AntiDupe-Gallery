@@ -18,6 +18,7 @@ import com.cyberegylet.antiDupeGallery.models.ImageFile;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -28,7 +29,6 @@ public class MainActivity extends Activity
 {
 	private FileManager fileManager;
 	private RecyclerView folders;
-	ArrayList<ImageFile> images = new ArrayList<>();
 
 	private final ActivityManager activityManager = new ActivityManager(this);
 
@@ -40,8 +40,8 @@ public class MainActivity extends Activity
 		setContentView(R.layout.main_activity);
 
 		folders = findViewById(R.id.items);
-		findViewById(R.id.downBut).setOnClickListener(v -> folders.scrollToPosition(images.size() - 1));
-		findViewById(R.id.upBut).setOnClickListener(v -> folders.scrollToPosition(0));
+		/*findViewById(R.id.downBut).setOnClickListener(v -> folders.scrollToPosition(images.size() - 1));
+		findViewById(R.id.upBut).setOnClickListener(v -> folders.scrollToPosition(0));*/
 
 		findViewById(R.id.more_button).setOnClickListener(v -> {
 			PopupMenu popup = new PopupMenu(this, v);
@@ -95,12 +95,10 @@ public class MainActivity extends Activity
 			{
 				String path = getPath();
 				int id = getID();
-				//if (path.contains("/.")) return; // check if file is in empty directory
+				//if (path.contains("/.")) return; // check if file is in hidden directory
 				int lastSeparator = path.lastIndexOf('/');
 
 				if (lastSeparator == -1) return; // check if path doesn't have '/' -> some file "can" be in root
-
-				int secondLastSeparator = path.lastIndexOf('/', lastSeparator - 1);
 
 				String folderAbs = path.substring(0, lastSeparator);
 				ImageFolder folder = folderNames.get(folderAbs);
@@ -110,13 +108,18 @@ public class MainActivity extends Activity
 					return;
 				}
 
-				String basename = path.substring(secondLastSeparator + 1, lastSeparator);
+				if (!new File(path).canRead()) return;
+
+				int secondLastSeparator = folderAbs.lastIndexOf('/');
+				String basename = folderAbs.substring(secondLastSeparator + 1);
 				folderNames.put(folderAbs, new ImageFolder(fileManager.stringToUri(path), 1, id, basename));
 			}
 		};
 
 		String sort = MediaStore.MediaColumns.DATE_MODIFIED + " DESC";
 		fileManager.allImageAndVideoLoop(sort, wrapper, MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DATA);
+
+		ArrayList<ImageFile> images = new ArrayList<>();
 
 		Comparator<ImageFolder> comparator = Comparator.comparing(ImageFolder::getBasename);
 		folderNames.entrySet().stream().sorted(Map.Entry.comparingByValue(comparator)).forEach(entry -> images.add(entry.getValue()));

@@ -20,7 +20,6 @@ public class FolderViewActivity extends Activity
 {
 	private FileManager fileManager;
 	private RecyclerView items;
-	ArrayList<ImageFile> images = new ArrayList<>();
 	private String currentFolder;
 	private final ActivityManager activityManager = new ActivityManager(this);
 
@@ -34,8 +33,8 @@ public class FolderViewActivity extends Activity
 		currentFolder = (String) activityManager.getParam("currentFolder");
 
 		items = findViewById(R.id.items);
-		findViewById(R.id.downBut).setOnClickListener(v -> items.scrollToPosition(images.size() - 1));
-		findViewById(R.id.upBut).setOnClickListener(v -> items.scrollToPosition(0));
+		/*findViewById(R.id.downBut).setOnClickListener(v -> items.scrollToPosition(images.size() - 1));
+		findViewById(R.id.upBut).setOnClickListener(v -> items.scrollToPosition(0));*/
 		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
 
 		findViewById(R.id.more_button).setOnClickListener(v -> {
@@ -51,6 +50,7 @@ public class FolderViewActivity extends Activity
 
 	private void fileThings()
 	{
+		ArrayList<ImageFile> images = new ArrayList<>();
 		FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
 		{
 			@Override
@@ -62,7 +62,8 @@ public class FolderViewActivity extends Activity
 
 				if (lastSeparator == -1) return; // check if path doesn't have '/' -> some file "can" be in root
 
-				if (!path.substring(0, lastSeparator).equals(currentFolder))
+				if (!path.substring(0, lastSeparator)
+						.equals(currentFolder)/* || !new File(path).canRead()*/) // commented out because very slow
 				{
 					return;
 				}
