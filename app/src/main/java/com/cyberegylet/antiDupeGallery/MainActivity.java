@@ -7,6 +7,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.PopupMenu;
+import android.widget.SearchView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -115,7 +116,6 @@ public class MainActivity extends Activity
 				folderNames.put(folderAbs, new ImageFolder(fileManager.stringToUri(path), 1, id, basename));
 			}
 		};
-
 		String sort = MediaStore.MediaColumns.DATE_MODIFIED + " DESC";
 		fileManager.allImageAndVideoLoop(sort, wrapper, MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DATA);
 
@@ -128,5 +128,73 @@ public class MainActivity extends Activity
 
 		findViewById(R.id.load).setVisibility(View.GONE);
 		findViewById(R.id.mainLayout).setClickable(false);
+		SearchView search = findViewById(R.id.search_bar);
+		search.setOnQueryTextListener(new SearchView.OnQueryTextListener()
+		{
+			@Override
+			public boolean onQueryTextSubmit(String query)
+			{
+				return false;
+			}
+
+			@Override
+			public boolean onQueryTextChange(String newText)
+			{
+				folderNames.clear();
+				images.clear();
+
+				FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
+				{
+					@Override
+					public void run()
+					{
+						String path = getPath();
+						int id = getID();
+						//if (path.contains("/.")) return; // check if file is in hidden directory
+						int lastSeparator = path.lastIndexOf('/');
+
+						if (lastSeparator == -1) return; // check if path doesn't have '/' -> some file "can" be in root
+
+						String folderAbs = path.substring(0, lastSeparator);
+						ImageFolder folder = folderNames.get(folderAbs);
+						if (folder != null)
+						{
+							folder.incrementFileCount();
+							return;
+						}
+
+						if (!new File(path).canRead()) return;
+
+						int secondLastSeparator = folderAbs.lastIndexOf('/');
+						String basename = folderAbs.substring(secondLastSeparator + 1);
+						folderNames.put(folderAbs, new ImageFolder(fileManager.stringToUri(path), 1, id, basename));
+					}
+				};
+				String sort = MediaStore.MediaColumns.DATE_MODIFIED + " DESC";
+				if (!newText.equals(""))
+				{
+					Log.d("app", "1");
+					String select = FileManager.PATH_FILTER_IMAGES_AND_VIDEOS;
+					String[] args = { "/%" + newText + "%" };
+					fileManager.cursorLoop(
+							wrapper,
+							sort,
+							select,
+							args,
+							FileManager.EXTERNAL_URI,
+							MediaStore.MediaColumns._ID,
+							MediaStore.MediaColumns.DATA
+					);
+				}
+				else fileManager.allImageAndVideoLoop(sort, wrapper, MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DATA);
+
+				Comparator<ImageFolder> comparator = Comparator.comparing(ImageFolder::getBasename);
+				folderNames.entrySet().stream().sorted(Map.Entry.comparingByValue(comparator)).forEach(entry -> images.add(entry.getValue()));
+
+				folders.setAdapter(new FolderAdapter(images, fileManager));
+
+				return true;
+			}
+		});
 	}
 }

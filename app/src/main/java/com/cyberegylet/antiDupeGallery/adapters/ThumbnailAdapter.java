@@ -1,5 +1,6 @@
 package com.cyberegylet.antiDupeGallery.adapters;
 
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +24,11 @@ public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailAdapter.View
 	public interface OnItemClickListener
 	{
 		void onItemClick(ImageFile imageFile);
+	}
+
+	public interface FilterRun
+	{
+		void filter(List<ImageFile> images);
 	}
 
 	protected final List<ImageFile> images;
@@ -112,6 +118,8 @@ public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailAdapter.View
 
 	@Override
 	public int getItemViewType(int position) { return position; }
+	@Override
+	public long getItemId(int position) { return position; }
 
 	@NonNull
 	@Override
@@ -132,5 +140,12 @@ public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailAdapter.View
 	public int getItemCount()
 	{
 		return images.size();
+	}
+
+	@SuppressLint("NotifyDataSetChanged")
+	public void filter(FilterRun filterRun)
+	{
+		filterRun.filter(images);
+		notifyDataSetChanged();
 	}
 }
