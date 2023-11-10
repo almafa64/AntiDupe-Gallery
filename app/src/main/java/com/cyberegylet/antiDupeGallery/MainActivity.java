@@ -96,9 +96,8 @@ public class MainActivity extends Activity
 			public void run()
 			{
 				String path = getPath();
-				//if (path.contains("/.")) return; // check if file is in hidden directory
+				if (path.contains("/.")) return; // check if file is in hidden directory
 				int lastSeparator = path.lastIndexOf('/');
-
 				if (lastSeparator == -1) return; // check if path doesn't have '/' -> some file "can" be in root
 
 				String folderAbs = path.substring(0, lastSeparator);
