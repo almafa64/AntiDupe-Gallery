@@ -10,9 +10,9 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.adapters.ThumbnailAdapter;
-import com.cyberegylet.antiDupeGallery.models.ImageFile;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
+import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.util.ArrayList;
 
@@ -68,7 +68,7 @@ public class FolderViewActivity extends Activity
 					return;
 				}
 
-				images.add(new ImageFile(fileManager.stringToUri(path), path.substring(lastSeparator + 1)));
+				images.add(new ImageFile(FileManager.stringToUri(path), path.substring(lastSeparator + 1)));
 			}
 		};
 		String sort = MediaStore.MediaColumns.DATE_MODIFIED + " DESC";

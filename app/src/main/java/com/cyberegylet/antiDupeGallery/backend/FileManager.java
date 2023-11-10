@@ -280,7 +280,8 @@ public class FileManager
 
 	public String getMimeType(Uri uri) { return getMimeType(getIDFromUri(uri)); }
 
-	public Uri stringToUri(String path) { return Uri.parse("file://" + path); }
+	public static Uri stringToUri(String path) { return Uri.parse("file://" + path); }
+	public static String uriToString(Uri uri) { return uri.getPath(); }
 
 	public void thumbnailIntoImageView(ImageView imageView, Uri uri)
 	{

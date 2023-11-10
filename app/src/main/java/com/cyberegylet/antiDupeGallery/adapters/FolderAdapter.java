@@ -1,5 +1,6 @@
 package com.cyberegylet.antiDupeGallery.adapters;
 
+import android.annotation.SuppressLint;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -7,41 +8,44 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 
 import com.cyberegylet.antiDupeGallery.FolderViewActivity;
+import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
+import com.cyberegylet.antiDupeGallery.models.Folder;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
-import com.cyberegylet.antiDupeGallery.R;
-import com.cyberegylet.antiDupeGallery.models.ImageFolder;
 
-import java.io.File;
 import java.util.List;
-import java.util.Objects;
 
-public class FolderAdapter extends ThumbnailAdapter
+public class FolderAdapter extends BaseImageAdapter
 {
-	public FolderAdapter(List<ImageFile> images, FileManager fileManager)
+	public interface FilterRun
 	{
-		super(images,
-				fileManager,
-				item -> ActivityManager.switchActivity(fileManager.activity,
-						FolderViewActivity.class,
-						new ActivityParameter("currentFolder",
-								Objects.requireNonNull(new File(Objects.requireNonNull(item.getPath().getPath())).getParentFile())
-										.getAbsolutePath()
-						)
-				)
-		);
+		void filter(List<Folder> folders);
 	}
 
-	public class ViewHolder extends ThumbnailAdapter.ViewHolder
+	private final List<Folder> folders;
+
+	public FolderAdapter(List<Folder> folders, FileManager fileManager)
+	{
+		super(fileManager);
+		this.folders = folders;
+	}
+
+	public class ViewHolder extends BaseImageAdapter.ViewHolder
 	{
 		public TextView name;
 		public TextView count;
 
 		public ViewHolder(View itemView)
 		{
-			super(itemView);
+			super(itemView, pos -> ActivityManager.switchActivity(fileManager.activity,
+					FolderViewActivity.class,
+					new ActivityParameter(
+							"currentFolder",
+							folders.get(pos).path.getPath()
+					)
+			));
 			name = itemView.findViewById(R.id.folderName);
 			count = itemView.findViewById(R.id.fileCount);
 		}
@@ -56,12 +60,26 @@ public class FolderAdapter extends ThumbnailAdapter
 	}
 
 	@Override
-	public void onBindViewHolder(@NonNull ThumbnailAdapter.ViewHolder holder, int position)
+	public void onBindViewHolder(@NonNull BaseImageAdapter.ViewHolder holder, int position)
 	{
-		ImageFolder imageFolder = (ImageFolder) images.get(position);
-		fileManager.thumbnailIntoImageView(holder.img, imageFolder.getPath());
+		Folder folder = folders.get(position);
+		ImageFile image = folder.images.get(0);
+		fileManager.thumbnailIntoImageView(holder.img, image.getPath());
 		ViewHolder thisHolder = (ViewHolder) holder;
-		thisHolder.name.setText(imageFolder.getBasename());
-		thisHolder.count.setText(String.valueOf(imageFolder.getFileCount()));
+		thisHolder.name.setText(image.getBasename());
+		thisHolder.count.setText(String.valueOf(folder.images.size()));
+	}
+
+	@Override
+	public int getItemCount()
+	{
+		return folders.size();
+	}
+
+	@SuppressLint("NotifyDataSetChanged")
+	public void filter(FilterRun filterRun)
+	{
+		filterRun.filter(folders);
+		notifyDataSetChanged();
 	}
 }
