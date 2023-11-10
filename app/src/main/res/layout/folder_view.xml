@@ -8,32 +8,6 @@
     android:fillViewport="true"
     android:clickable="true">
 
-    <Button
-        android:id="@+id/downBut"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:insetRight="0dp"
-        android:text="v"
-        android:visibility="gone"
-        app:cornerRadius="100dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <Button
-        android:id="@+id/upBut"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_marginBottom="50dp"
-        android:insetRight="0dp"
-        android:rotation="0"
-        android:rotationX="180"
-        android:rotationY="0"
-        android:text="v"
-        android:visibility="gone"
-        app:cornerRadius="100dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
     <ProgressBar
         android:id="@+id/load"
         style="?android:attr/progressBarStyle"
@@ -48,6 +22,7 @@
         android:id="@+id/search_bar"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:iconifiedByDefault="false"
         app:layout_constraintBottom_toBottomOf="@+id/more_button"
         app:layout_constraintEnd_toStartOf="@+id/more_button"
         app:layout_constraintStart_toEndOf="@+id/back_button"

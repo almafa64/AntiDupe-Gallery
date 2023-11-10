@@ -36,12 +36,10 @@ public class FolderViewActivity extends Activity
 		currentFolder = (String) activityManager.getParam("currentFolder");
 
 		recycler = findViewById(R.id.items);
-		/*findViewById(R.id.downBut).setOnClickListener(v -> items.scrollToPosition(images.size() - 1));
-		findViewById(R.id.upBut).setOnClickListener(v -> items.scrollToPosition(0));*/
 		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
 
 		findViewById(R.id.more_button).setOnClickListener(v -> {
-			Toast.makeText(this, "too bad", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, "not done", Toast.LENGTH_SHORT).show();
 			/*PopupMenu popup = new PopupMenu(this, v);
 			popup.getMenuInflater().inflate(R.menu., popup.getMenu()).show();*/
 			// TODO make popup

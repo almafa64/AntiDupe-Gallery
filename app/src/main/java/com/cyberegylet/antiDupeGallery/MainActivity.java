@@ -44,8 +44,6 @@ public class MainActivity extends Activity
 		setContentView(R.layout.main_activity);
 
 		recycler = findViewById(R.id.items);
-		/*findViewById(R.id.downBut).setOnClickListener(v -> folders.scrollToPosition(images.size() - 1));
-		findViewById(R.id.upBut).setOnClickListener(v -> folders.scrollToPosition(0));*/
 
 		findViewById(R.id.more_button).setOnClickListener(v -> {
 			PopupMenu popup = new PopupMenu(this, v);
@@ -150,7 +148,7 @@ public class MainActivity extends Activity
 							if (!image.getBasename().contains(text)) return;
 							images.add(image);
 						});
-						if(images.size() == 0) return;
+						if (images.size() == 0) return;
 						Folder f = new Folder(folder);
 						dirs.add(f);
 						f.images.addAll(images);
