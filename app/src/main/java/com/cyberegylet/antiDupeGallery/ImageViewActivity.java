@@ -19,7 +19,7 @@ import java.io.Serializable;
 
 public class ImageViewActivity extends Activity implements Serializable
 {
-	private static final float MIN_SCALE = 0.5f;
+	private static final float MIN_SCALE = 0.95f;
 	private static final float MAX_SCALE = Float.MAX_VALUE;
 	private static final float SCALE_SNAP_MIN = 0.9f;
 	private static final float SCALE_SNAP_MAX = 1.1f;
