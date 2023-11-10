@@ -19,7 +19,7 @@ import java.io.Serializable;
 
 public class ImageViewActivity extends Activity implements Serializable
 {
-	private static final float MIN_SCALE = 0.5f;
+	private static final float MIN_SCALE = 0.95f;
 	private static final float MAX_SCALE = Float.MAX_VALUE;
 	private static final float SCALE_SNAP_MIN = 0.9f;
 	private static final float SCALE_SNAP_MAX = 1.1f;
@@ -90,8 +90,15 @@ public class ImageViewActivity extends Activity implements Serializable
 			case MotionEvent.ACTION_DOWN:
 			{
 				final int pointerIndex = event.getActionIndex();
-				final float x = event.getX(pointerIndex);
-				final float y = event.getY(pointerIndex);
+
+				final float x, y;
+				try {
+					x = event.getX(pointerIndex);
+					y = event.getY(pointerIndex);
+				} catch (IllegalArgumentException e) {
+					break;
+				}
+
 				lastPointerX = x;
 				lastPointerY = y;
 				activePointerID = event.getPointerId(pointerIndex);
@@ -103,8 +110,14 @@ public class ImageViewActivity extends Activity implements Serializable
 			{
 				final int pointerIndex = event.findPointerIndex(activePointerID);
 
-				final float x = event.getX(pointerIndex);
-				final float y = event.getY(pointerIndex);
+				final float x, y;
+				try {
+					x = event.getX(pointerIndex);
+					y = event.getY(pointerIndex);
+				} catch (IllegalArgumentException e) {
+					activePointerID = MotionEvent.INVALID_POINTER_ID;
+					break;
+				}
 
 				final float dx = x - lastPointerX;
 				final float dy = y - lastPointerY;
@@ -125,7 +138,14 @@ public class ImageViewActivity extends Activity implements Serializable
 			case MotionEvent.ACTION_POINTER_UP:
 			{
 				final int pointerIndex = event.findPointerIndex(activePointerID);
-				final int pointerId = event.getPointerId(pointerIndex);
+
+				final int pointerId;
+				try {
+					pointerId = event.getPointerId(pointerIndex);
+				} catch (IllegalArgumentException e) {
+					activePointerID = MotionEvent.INVALID_POINTER_ID;
+					break;
+				}
 
 				if (pointerId == activePointerID)
 				{
