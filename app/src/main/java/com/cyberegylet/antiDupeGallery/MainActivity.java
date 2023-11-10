@@ -26,12 +26,13 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class MainActivity extends Activity
 {
 	private FileManager fileManager;
-	private RecyclerView recycle;
+	private RecyclerView recycler;
 
 	private final ActivityManager activityManager = new ActivityManager(this);
 
@@ -42,7 +43,7 @@ public class MainActivity extends Activity
 
 		setContentView(R.layout.main_activity);
 
-		recycle = findViewById(R.id.items);
+		recycler = findViewById(R.id.items);
 		/*findViewById(R.id.downBut).setOnClickListener(v -> folders.scrollToPosition(images.size() - 1));
 		findViewById(R.id.upBut).setOnClickListener(v -> folders.scrollToPosition(0));*/
 
@@ -103,11 +104,9 @@ public class MainActivity extends Activity
 				if (lastSeparator == -1) return; // check if path doesn't have '/' -> some file "can" be in root
 
 				String folderAbs = path.substring(0, lastSeparator);
-				int secondLastSeparator = folderAbs.lastIndexOf('/');
-				String basename = folderAbs.substring(secondLastSeparator + 1);
 
 				Folder folder = folderNames.get(folderAbs);
-				ImageFile image = new ImageFile(FileManager.stringToUri(path), basename);
+				ImageFile image = new ImageFile(FileManager.stringToUri(path));
 				if (folder != null)
 				{
 					folder.images.add(image);
@@ -125,19 +124,40 @@ public class MainActivity extends Activity
 		fileManager.allImageAndVideoLoop(sort, wrapper, MediaStore.MediaColumns.DATA);
 
 		Comparator<Folder> comparator = Comparator.comparing(Folder::getName);
-		List<Folder> folders =  folderNames.entrySet().stream().sorted(Map.Entry.comparingByValue(comparator)).map(Map.Entry::getValue).collect(Collectors.toList());
+		List<Folder> folders = folderNames.entrySet().stream().sorted(Map.Entry.comparingByValue(comparator)).map(Map.Entry::getValue)
+				.collect(Collectors.toList());
+		List<Folder> foldersCopy = new ArrayList<>(folders);
 
-		recycle.setAdapter(new FolderAdapter(folders, fileManager));
+		recycler.setAdapter(new FolderAdapter(folders, fileManager));
 
 		findViewById(R.id.load).setVisibility(View.GONE);
 		findViewById(R.id.mainLayout).setClickable(false);
 		SearchView search = findViewById(R.id.search_bar);
 
-		List<Folder> foldersCopy = new ArrayList<>();
+		search.setOnQueryTextListener(new SearchView.OnQueryTextListener()
+		{
+			@Override
+			public boolean onQueryTextSubmit(String query) { return false; }
 
-		search.setOnQueryTextFocusChangeListener((v, hasFocus) -> {
-			if(hasFocus) foldersCopy.addAll(folders);
-			else foldersCopy.clear();
+			@Override
+			public boolean onQueryTextChange(String text)
+			{
+				((FolderAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
+					dirs.clear();
+					foldersCopy.forEach(folder -> {
+						List<ImageFile> images = new ArrayList<>();
+						folder.images.forEach(image -> {
+							if (!image.getBasename().contains(text)) return;
+							images.add(image);
+						});
+						if(images.size() == 0) return;
+						Folder f = new Folder(folder);
+						dirs.add(f);
+						f.images.addAll(images);
+					});
+				});
+				return true;
+			}
 		});
 	}
 }
