@@ -1,70 +1,73 @@
 package com.cyberegylet.antiDupeGallery.adapters;
 
-import android.view.LayoutInflater;
+import android.annotation.SuppressLint;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.cyberegylet.antiDupeGallery.backend.FileManager;
-import com.cyberegylet.antiDupeGallery.models.ImageFile;
+import com.cyberegylet.antiDupeGallery.ImageViewActivity;
 import com.cyberegylet.antiDupeGallery.R;
+import com.cyberegylet.antiDupeGallery.backend.FileManager;
+import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
+import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.util.List;
 
-public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailAdapter.ViewHolder>
+public class ThumbnailAdapter extends BaseImageAdapter
 {
-	public interface OnItemClickListener
+	public interface FilterRun
 	{
-		void onItemClick(ImageFile imageFile);
+		void filter(List<ImageFile> images);
 	}
 
-	protected final List<ImageFile> images;
+	private final List<ImageFile> images;
 
-	protected final FileManager fileManager;
-
-	protected final OnItemClickListener listener;
-
-	public ThumbnailAdapter(List<ImageFile> images, FileManager fileManager, OnItemClickListener listener)
+	public ThumbnailAdapter(List<ImageFile> images, FileManager fileManager)
 	{
+		super(fileManager);
 		this.images = images;
-		this.fileManager = fileManager;
-		this.listener = listener;
 	}
 
-	public static class ViewHolder extends RecyclerView.ViewHolder
+	public class ViewHolder extends BaseImageAdapter.ViewHolder
 	{
-		public ImageView img;
-
 		public ViewHolder(View itemView)
 		{
-			super(itemView);
-			img = itemView.findViewById(R.id.image);
+			super(itemView,
+					pos -> ActivityManager.switchActivity(fileManager.activity,
+							ImageViewActivity.class,
+							new ActivityParameter("imageUri", images.get(pos).getPath())
+					)
+			);
 		}
 	}
 
 	@NonNull
 	@Override
-	public ThumbnailAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
+	public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
 	{
-		View contactView = LayoutInflater.from(parent.getContext()).inflate(R.layout.thumbnail_card, parent, false);
-		return new ThumbnailAdapter.ViewHolder(contactView);
+		View contactView = layoutInflater.inflate(R.layout.thumbnail_card, parent, false);
+		return new ViewHolder(contactView);
 	}
 
 	@Override
-	public void onBindViewHolder(@NonNull ThumbnailAdapter.ViewHolder holder, int position)
+	public void onBindViewHolder(@NonNull BaseImageAdapter.ViewHolder holder, int position)
 	{
-		// TODO Optimize?
 		ImageFile imageFile = images.get(position);
 		fileManager.thumbnailIntoImageView(holder.img, imageFile.getPath());
-		holder.img.setOnClickListener(v -> listener.onItemClick(imageFile));
 	}
 
 	@Override
 	public int getItemCount()
 	{
 		return images.size();
+	}
+
+	@SuppressLint("NotifyDataSetChanged")
+	public void filter(FilterRun filterRun)
+	{
+		filterRun.filter(images);
+		notifyDataSetChanged();
 	}
 }

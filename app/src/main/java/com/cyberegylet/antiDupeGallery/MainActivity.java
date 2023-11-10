@@ -7,32 +7,31 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.PopupMenu;
-import android.widget.Toast;
+import android.widget.SearchView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.adapters.FolderAdapter;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
-import com.cyberegylet.antiDupeGallery.models.ImageFolder;
-import com.cyberegylet.antiDupeGallery.models.ImageFile;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
+import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.models.Folder;
+import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class MainActivity extends Activity
 {
 	private FileManager fileManager;
-	private RecyclerView folders;
-	ArrayList<ImageFile> images = new ArrayList<>();
+	private RecyclerView recycle;
 
 	private final ActivityManager activityManager = new ActivityManager(this);
 
@@ -43,9 +42,9 @@ public class MainActivity extends Activity
 
 		setContentView(R.layout.main_activity);
 
-		folders = findViewById(R.id.items);
-		findViewById(R.id.downBut).setOnClickListener(v -> folders.scrollToPosition(images.size() - 1));
-		findViewById(R.id.upBut).setOnClickListener(v -> folders.scrollToPosition(0));
+		recycle = findViewById(R.id.items);
+		/*findViewById(R.id.downBut).setOnClickListener(v -> folders.scrollToPosition(images.size() - 1));
+		findViewById(R.id.upBut).setOnClickListener(v -> folders.scrollToPosition(0));*/
 
 		findViewById(R.id.more_button).setOnClickListener(v -> {
 			PopupMenu popup = new PopupMenu(this, v);
@@ -53,8 +52,7 @@ public class MainActivity extends Activity
 				int id = item.getItemId();
 				if (id == R.id.settings)
 				{
-					// TODO show settings menu
-					Toast.makeText(this, "settings", Toast.LENGTH_SHORT).show();
+					activityManager.switchActivity(SettingsActivity.class);
 				}
 				else if (id == R.id.about)
 				{
@@ -84,14 +82,14 @@ public class MainActivity extends Activity
 		}
 		else
 		{
-			Log.i("Main", "didn't get storage permissions, quitting");
+			Log.e("Main", "didn't get storage permissions, quitting");
 			finishAndRemoveTask();
 		}
 	}
 
 	private void fileThings()
 	{
-		HashMap<String, ImageFolder> folderNames = new HashMap<>();
+		HashMap<String, Folder> folderNames = new HashMap<>();
 
 		FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
 		{
@@ -99,41 +97,47 @@ public class MainActivity extends Activity
 			public void run()
 			{
 				String path = getPath();
-				int id = getID();
-				//if (path.contains("/.")) return; // check if file is in empty directory
+				//if (path.contains("/.")) return; // check if file is in hidden directory
 				int lastSeparator = path.lastIndexOf('/');
 
 				if (lastSeparator == -1) return; // check if path doesn't have '/' -> some file "can" be in root
 
-				int secondLastSeparator = path.lastIndexOf('/', lastSeparator - 1);
-
 				String folderAbs = path.substring(0, lastSeparator);
-				ImageFolder folder = folderNames.get(folderAbs);
+				int secondLastSeparator = folderAbs.lastIndexOf('/');
+				String basename = folderAbs.substring(secondLastSeparator + 1);
+
+				Folder folder = folderNames.get(folderAbs);
+				ImageFile image = new ImageFile(FileManager.stringToUri(path), basename);
 				if (folder != null)
 				{
-					folder.incrementFileCount();
+					folder.images.add(image);
 					return;
 				}
 
-				String basename = path.substring(secondLastSeparator + 1, lastSeparator);
-				folderNames.put(folderAbs, new ImageFolder(fileManager.stringToUri(path), 1, id, basename));
+				if (!new File(path).canRead()) return;
+
+				folder = new Folder(FileManager.stringToUri(folderAbs));
+				folder.images.add(image);
+				folderNames.put(folderAbs, folder);
 			}
 		};
-
 		String sort = MediaStore.MediaColumns.DATE_MODIFIED + " DESC";
-		fileManager.allImageAndVideoLoop(sort, wrapper, MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DATA);
+		fileManager.allImageAndVideoLoop(sort, wrapper, MediaStore.MediaColumns.DATA);
 
-		Comparator<ImageFolder> comparator = Comparator.comparing(ImageFolder::getBasename);
-		folderNames.entrySet().stream().sorted(Map.Entry.comparingByValue(comparator)).forEach(entry -> images.add(entry.getValue()));
+		Comparator<Folder> comparator = Comparator.comparing(Folder::getName);
+		List<Folder> folders =  folderNames.entrySet().stream().sorted(Map.Entry.comparingByValue(comparator)).map(Map.Entry::getValue).collect(Collectors.toList());
 
-		folders.setAdapter(new FolderAdapter(images,
-				fileManager,
-				item -> activityManager.switchActivity(FolderViewActivity.class, new ActivityParameter("currentFolder",
-						Objects.requireNonNull(new File(Objects.requireNonNull(item.getPath().getPath())).getParentFile()).getAbsolutePath()
-				))
-		));
+		recycle.setAdapter(new FolderAdapter(folders, fileManager));
 
 		findViewById(R.id.load).setVisibility(View.GONE);
 		findViewById(R.id.mainLayout).setClickable(false);
+		SearchView search = findViewById(R.id.search_bar);
+
+		List<Folder> foldersCopy = new ArrayList<>();
+
+		search.setOnQueryTextFocusChangeListener((v, hasFocus) -> {
+			if(hasFocus) foldersCopy.addAll(folders);
+			else foldersCopy.clear();
+		});
 	}
 }

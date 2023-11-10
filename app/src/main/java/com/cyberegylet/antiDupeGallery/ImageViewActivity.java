@@ -33,6 +33,8 @@ public class ImageViewActivity extends Activity implements Serializable
 	private ConstraintLayout imageContainer;
 	private ScaleGestureDetector scaleGestureDetector;
 	private float scaleFactor = 1.0f;
+	private float scaleFocusX = 0.0f;
+	private float scaleFocusY = 0.0f;
 	private float offsetX = 0.0f;
 	private float offsetY = 0.0f;
 	private int activePointerID = MotionEvent.INVALID_POINTER_ID;
@@ -63,6 +65,8 @@ public class ImageViewActivity extends Activity implements Serializable
 
 	private void onScaleFactorChange()
 	{
+		imageView.setPivotX(scaleFocusX);
+		imageView.setPivotY(scaleFocusY);
 		imageView.setScaleX(scaleFactor);
 		imageView.setScaleY(scaleFactor);
 		Log.i("image scaling", "current factor: " + scaleFactor);
@@ -169,6 +173,13 @@ public class ImageViewActivity extends Activity implements Serializable
 			scaleFactor *= detector.getScaleFactor();
 			scaleFactor = Math.max(MIN_SCALE, Math.min(scaleFactor, MAX_SCALE));
 			onScaleFactorChange();
+			return true;
+		}
+
+		@Override
+		public boolean onScaleBegin(ScaleGestureDetector detector) {
+			scaleFocusX = detector.getFocusX();
+			scaleFocusY = detector.getFocusY();
 			return true;
 		}
 	}

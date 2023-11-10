@@ -8,4 +8,6 @@
     <string name="company_email" translatable="false">something@gmail.com</string>
     <string name="version_text" translatable="false">Version 0.0.1</string>
     <string name="about_other">Other</string>
+    <string name="settings_header">Settings</string>
+    <string name="settings_general_heading">General</string>
 </resources>

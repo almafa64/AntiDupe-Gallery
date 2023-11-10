@@ -15,6 +15,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.Priority;
+import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.bitmap.Downsampler;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
@@ -27,8 +29,11 @@ public class FileManager
 {
 	public static final int STORAGE_REQUEST_CODE = 1;
 	public static final Uri EXTERNAL_URI = MediaStore.Files.getContentUri("external");
+	public static final String IMAGES_AND_VIDEOS = MediaStore.MediaColumns.MIME_TYPE + " like 'image/%' or " + MediaStore.MediaColumns.MIME_TYPE + " like 'video/%'";
+	public static final String PATH_FILTER_IMAGES_AND_VIDEOS = "(" + IMAGES_AND_VIDEOS + ") and " + MediaStore.MediaColumns.DATA + " like ?";
 
-	private final Context context;
+	public final Context context;
+	public final Activity activity;
 	private final ContentResolver contentResolver;
 
 	private boolean hasReadAccess = false;
@@ -63,6 +68,7 @@ public class FileManager
 
 	public FileManager(Activity activity)
 	{
+		this.activity = activity;
 		context = activity.getApplicationContext();
 		contentResolver = context.getContentResolver();
 
@@ -128,13 +134,7 @@ public class FileManager
 	}
 
 	public void cursorLoop(
-			CursorLoopWrapper wrapper,
-			int cursorStart,
-			String sort,
-			String selection,
-			String[] args,
-			Uri uri,
-			String... queries
+			CursorLoopWrapper wrapper, int cursorStart, String sort, String selection, String[] args, Uri uri, String... queries
 	)
 	{
 		try (Cursor cursor = contentResolver.query(uri, queries, selection, args, sort))
@@ -178,14 +178,12 @@ public class FileManager
 
 	public void allImageAndVideoLoop(String sort, CursorLoopWrapper wrapper, String... queries)
 	{
-		String selection = MediaStore.Files.FileColumns.MIME_TYPE + " like 'image/%' or " + MediaStore.Files.FileColumns.MIME_TYPE + " like 'video/%'";
-		cursorLoop(wrapper, sort, selection, EXTERNAL_URI, queries);
+		cursorLoop(wrapper, sort, IMAGES_AND_VIDEOS, EXTERNAL_URI, queries);
 	}
 
 	public void allImageAndVideoInFolderLoop(String absoluteFolder, String sort, CursorLoopWrapper wrapper, String... queries)
 	{
-		String selection = "(" + MediaStore.Files.FileColumns.MIME_TYPE + " like 'image/%' or " + MediaStore.Files.FileColumns.MIME_TYPE + " like 'video/%') and " + MediaStore.MediaColumns.DATA + " like ?";
-		cursorLoop(wrapper, sort, selection, new String[]{ absoluteFolder + "/%" }, EXTERNAL_URI, queries);
+		cursorLoop(wrapper, sort, PATH_FILTER_IMAGES_AND_VIDEOS, new String[]{ absoluteFolder + "/%" }, EXTERNAL_URI, queries);
 	}
 
 	private List<Integer> getAllIDs(Uri uri)
@@ -282,11 +280,13 @@ public class FileManager
 
 	public String getMimeType(Uri uri) { return getMimeType(getIDFromUri(uri)); }
 
-	public Uri stringToUri(String path) { return Uri.parse("file://" + path); }
+	public static Uri stringToUri(String path) { return Uri.parse("file://" + path); }
+	public static String uriToString(Uri uri) { return uri.getPath(); }
 
 	public void thumbnailIntoImageView(ImageView imageView, Uri uri)
 	{
-		Glide.with(context).load(uri).diskCacheStrategy(DiskCacheStrategy.ALL).set(Downsampler.ALLOW_HARDWARE_CONFIG, true)
+		Glide.with(context).load(uri).priority(Priority.LOW).diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+				.format(DecodeFormat.PREFER_ARGB_8888).set(Downsampler.ALLOW_HARDWARE_CONFIG, true)
 				.transition(DrawableTransitionOptions.withCrossFade()).into(imageView);
 	}
 }

@@ -1,34 +1,51 @@
 package com.cyberegylet.antiDupeGallery.adapters;
 
-import android.view.LayoutInflater;
+import android.annotation.SuppressLint;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
-import com.cyberegylet.antiDupeGallery.backend.FileManager;
-import com.cyberegylet.antiDupeGallery.models.ImageFile;
+import com.cyberegylet.antiDupeGallery.FolderViewActivity;
 import com.cyberegylet.antiDupeGallery.R;
-import com.cyberegylet.antiDupeGallery.models.ImageFolder;
+import com.cyberegylet.antiDupeGallery.backend.FileManager;
+import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
+import com.cyberegylet.antiDupeGallery.models.Folder;
+import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.util.List;
 
-public class FolderAdapter extends ThumbnailAdapter
+public class FolderAdapter extends BaseImageAdapter
 {
-	public FolderAdapter(List<ImageFile> images, FileManager fileManager, OnItemClickListener listener)
+	public interface FilterRun
 	{
-		super(images, fileManager, listener);
+		void filter(List<Folder> folders);
 	}
 
-	public static class ViewHolder extends ThumbnailAdapter.ViewHolder
+	private final List<Folder> folders;
+
+	public FolderAdapter(List<Folder> folders, FileManager fileManager)
+	{
+		super(fileManager);
+		this.folders = folders;
+	}
+
+	public class ViewHolder extends BaseImageAdapter.ViewHolder
 	{
 		public TextView name;
 		public TextView count;
 
 		public ViewHolder(View itemView)
 		{
-			super(itemView);
+			super(itemView, pos -> ActivityManager.switchActivity(fileManager.activity,
+					FolderViewActivity.class,
+					new ActivityParameter(
+							"currentFolder",
+							folders.get(pos).path.getPath()
+					)
+			));
 			name = itemView.findViewById(R.id.folderName);
 			count = itemView.findViewById(R.id.fileCount);
 		}
@@ -36,20 +53,33 @@ public class FolderAdapter extends ThumbnailAdapter
 
 	@NonNull
 	@Override
-	public FolderAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
+	public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
 	{
-		View contactView = LayoutInflater.from(parent.getContext()).inflate(R.layout.folder_card, parent, false);
-		return new FolderAdapter.ViewHolder(contactView);
+		View contactView = layoutInflater.inflate(R.layout.folder_card, parent, false);
+		return new ViewHolder(contactView);
 	}
 
 	@Override
-	public void onBindViewHolder(@NonNull ThumbnailAdapter.ViewHolder holder, int position)
+	public void onBindViewHolder(@NonNull BaseImageAdapter.ViewHolder holder, int position)
 	{
-		// TODO Optimize?
-		super.onBindViewHolder(holder, position);
-		ImageFolder data = (ImageFolder) images.get(position);
-		FolderAdapter.ViewHolder thisHolder = (FolderAdapter.ViewHolder) holder;
-		thisHolder.name.setText(data.getBasename());
-		thisHolder.count.setText(String.valueOf(data.getFileCount()));
+		Folder folder = folders.get(position);
+		ImageFile image = folder.images.get(0);
+		fileManager.thumbnailIntoImageView(holder.img, image.getPath());
+		ViewHolder thisHolder = (ViewHolder) holder;
+		thisHolder.name.setText(image.getBasename());
+		thisHolder.count.setText(String.valueOf(folder.images.size()));
+	}
+
+	@Override
+	public int getItemCount()
+	{
+		return folders.size();
+	}
+
+	@SuppressLint("NotifyDataSetChanged")
+	public void filter(FilterRun filterRun)
+	{
+		filterRun.filter(folders);
+		notifyDataSetChanged();
 	}
 }

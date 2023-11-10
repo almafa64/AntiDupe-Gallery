@@ -12,9 +12,9 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/adg_logo"
+        android:icon="@drawable/ic_adg_logo_foreground"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/adg_logo_round"
+        android:roundIcon="@drawable/ic_adg_logo_foreground"
         android:supportsRtl="true"
         android:theme="@style/Theme.AntiDupeGallery"
         tools:targetApi="31">
@@ -30,6 +30,7 @@
         <activity android:name=".FolderViewActivity" />
         <activity android:name=".ImageViewActivity" />
         <activity android:name=".AboutActivity" />
+        <activity android:name=".SettingsActivity" />
     </application>
 
 </manifest>
