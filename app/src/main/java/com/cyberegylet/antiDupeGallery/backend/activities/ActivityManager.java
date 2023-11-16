@@ -3,7 +3,9 @@ package com.cyberegylet.antiDupeGallery.backend.activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Parcelable;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class ActivityManager
@@ -30,11 +32,18 @@ public class ActivityManager
 				case STRING:
 					intent.putExtra(param.name, (String) param.data);
 					break;
+				case STRING_ARR:
+					intent.putExtra(param.name, (String[]) param.data);
+					break;
 				case BOOL:
 					intent.putExtra(param.name, (Boolean) param.data);
 					break;
 				case URI:
 					intent.putExtra(param.name, (Uri) param.data);
+					break;
+				case PARCELABLE:
+					//noinspection unchecked
+					intent.putParcelableArrayListExtra(param.name, (ArrayList<? extends Parcelable>) param.data);
 					break;
 			}
 		}
@@ -50,5 +59,12 @@ public class ActivityManager
 	public static Object getParam(Activity currentActivity, String name)
 	{
 		return Objects.requireNonNull(currentActivity.getIntent().getExtras()).get(name);
+	}
+
+	public <T extends Parcelable> ArrayList<T> getListParam(String name) { return getListParam(currentActivity, name); }
+
+	public static <T extends Parcelable> ArrayList<T> getListParam(Activity currentActivity, String name)
+	{
+		return currentActivity.getIntent().getParcelableArrayListExtra(name);
 	}
 }
