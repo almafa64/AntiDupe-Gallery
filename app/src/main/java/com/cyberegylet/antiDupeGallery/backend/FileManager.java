@@ -40,30 +40,23 @@ public class FileManager
 
 	public static class Mimes
 	{
-		public static final String[] MIME_ALL = new String[]{ "video/quicktime", "video/mpeg", "video/mp4", "video/3gpp", "video/webm",
-				"video/avi", "image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/ico", "image/svg", "audio/3gpp",
-				"audio/midi", "audio/mpeg", "audio/x-wav" };
 		public static final String[] MIME_VIDEOS = new String[]{ "video/quicktime", "video/mpeg", "video/mp4", "video/3gpp", "video/webm",
 				"video/avi" };
 		public static final String[] MIME_IMAGES = new String[]{ "image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp",
 				"image/ico", "image/svg" };
-		public static final String[] MIME_AUDIOS = new String[]{ "audio/3gpp", "audio/midi", "audio/mpeg", "audio/x-wav" };
 
 		public enum Type
 		{
 			MIME_NONE,
 			MIME_IMAGE,
 			MIME_VIDEO,
-			MIME_AUDIO,
 		}
 
 		public static boolean isImage(String mime_string) { return Arrays.asList(MIME_IMAGES).contains(mime_string); }
 
-		public static boolean isAudio(String mime_string) { return Arrays.asList(MIME_AUDIOS).contains(mime_string); }
-
 		public static boolean isVideo(String mime_string) { return Arrays.asList(MIME_VIDEOS).contains(mime_string); }
 
-		public static boolean isMedia(String mime_string) { return Arrays.asList(MIME_ALL).contains(mime_string); }
+		public static boolean isMedia(String mime_string) { return isImage(mime_string) || isVideo(mime_string); }
 	}
 
 	public FileManager(Activity activity)
@@ -77,13 +70,10 @@ public class FileManager
 			if (ContextCompat.checkSelfPermission(context,
 					Manifest.permission.READ_MEDIA_IMAGES
 			) == PackageManager.PERMISSION_DENIED || ContextCompat.checkSelfPermission(context,
-					Manifest.permission.READ_MEDIA_AUDIO
-			) == PackageManager.PERMISSION_DENIED || ContextCompat.checkSelfPermission(context,
 					Manifest.permission.READ_MEDIA_VIDEO
 			) == PackageManager.PERMISSION_DENIED)
 			{
-				String[] permissions = new String[]{ Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO,
-						Manifest.permission.READ_MEDIA_AUDIO };
+				String[] permissions = new String[]{ Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO };
 				ActivityCompat.requestPermissions(activity, permissions, STORAGE_REQUEST_CODE);
 			}
 			else
@@ -281,6 +271,7 @@ public class FileManager
 	public String getMimeType(Uri uri) { return getMimeType(getIDFromUri(uri)); }
 
 	public static Uri stringToUri(String path) { return Uri.parse("file://" + path); }
+
 	public static String uriToString(Uri uri) { return uri.getPath(); }
 
 	public void thumbnailIntoImageView(ImageView imageView, Uri uri)
