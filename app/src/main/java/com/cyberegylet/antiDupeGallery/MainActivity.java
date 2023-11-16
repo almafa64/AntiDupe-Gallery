@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -136,10 +137,11 @@ public class MainActivity extends Activity
 			@Override
 			public boolean onQueryTextChange(String text)
 			{
+				String text2 = text.toLowerCase(Locale.ROOT);
 				((FolderAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
 					dirs.clear();
 					folders.forEach(folder -> {
-						List<ImageFile> images = new ArrayList<>();
+						/*List<ImageFile> images = new ArrayList<>();
 						folder.images.forEach(image -> {
 							if (!image.getBasename().contains(text)) return;
 							images.add(image);
@@ -147,7 +149,8 @@ public class MainActivity extends Activity
 						if (images.size() == 0) return;
 						Folder f = new Folder(folder);
 						dirs.add(f);
-						f.images.addAll(images);
+						f.images.addAll(images);*/
+						if(folder.name.toLowerCase(Locale.ROOT).contains(text2)) dirs.add(new Folder(folder, true));
 					});
 				});
 				return true;

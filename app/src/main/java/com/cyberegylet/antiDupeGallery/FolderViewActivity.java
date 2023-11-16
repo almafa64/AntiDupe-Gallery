@@ -16,6 +16,7 @@ import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 public class FolderViewActivity extends Activity
@@ -68,10 +69,11 @@ public class FolderViewActivity extends Activity
 			@Override
 			public boolean onQueryTextChange(String text)
 			{
+				String text2 = text.toLowerCase(Locale.ROOT);
 				((ThumbnailAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
 					dirs.clear();
 					images.forEach(image -> {
-						if (!image.getBasename().contains(text)) return;
+						if (!image.getBasename().toLowerCase(Locale.ROOT).contains(text2)) return;
 						dirs.add(image);
 					});
 				});
