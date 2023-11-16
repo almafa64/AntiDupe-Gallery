@@ -96,11 +96,10 @@ public class MainActivity extends Activity
 			public void run()
 			{
 				String path = getPath();
-				if (path.contains("/.")) return; // check if file is in hidden directory
-				int lastSeparator = path.lastIndexOf('/');
-				if (lastSeparator == -1) return; // check if path doesn't have '/' -> some file "can" be in root
 
-				String folderAbs = path.substring(0, lastSeparator);
+				if(path.contains("/.") || !new File(path).canRead()) return;
+
+				String folderAbs = path.substring(0, path.lastIndexOf('/'));
 
 				Folder folder = folderNames.get(folderAbs);
 				ImageFile image = new ImageFile(FileManager.stringToUri(path));
@@ -109,8 +108,6 @@ public class MainActivity extends Activity
 					folder.images.add(image);
 					return;
 				}
-
-				if (!new File(path).canRead()) return;
 
 				folder = new Folder(FileManager.stringToUri(folderAbs));
 				folder.images.add(image);
@@ -125,7 +122,7 @@ public class MainActivity extends Activity
 				.collect(Collectors.toList());
 		List<Folder> foldersCopy = new ArrayList<>(folders);
 
-		recycler.setAdapter(new FolderAdapter(folders, fileManager));
+		recycler.setAdapter(new FolderAdapter(foldersCopy, fileManager));
 
 		findViewById(R.id.load).setVisibility(View.GONE);
 		findViewById(R.id.mainLayout).setClickable(false);
@@ -141,7 +138,7 @@ public class MainActivity extends Activity
 			{
 				((FolderAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
 					dirs.clear();
-					foldersCopy.forEach(folder -> {
+					folders.forEach(folder -> {
 						List<ImageFile> images = new ArrayList<>();
 						folder.images.forEach(image -> {
 							if (!image.getBasename().contains(text)) return;

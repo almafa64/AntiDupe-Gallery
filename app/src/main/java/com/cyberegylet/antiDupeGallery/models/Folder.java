@@ -7,12 +7,11 @@ import androidx.annotation.NonNull;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class Folder
 {
-	public final List<ImageFile> images = new ArrayList<>();
+	public final ArrayList<ImageFile> images = new ArrayList<>();
 	public final Uri path;
 	@NotNull
 	public final String name;
