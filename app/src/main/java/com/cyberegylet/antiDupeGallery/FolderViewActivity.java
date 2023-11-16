@@ -2,7 +2,6 @@ package com.cyberegylet.antiDupeGallery;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.view.View;
 import android.widget.SearchView;
 import android.widget.Toast;
@@ -25,6 +24,7 @@ public class FolderViewActivity extends Activity
 	private RecyclerView recycler;
 	private String currentFolder;
 	private final ActivityManager activityManager = new ActivityManager(this);
+	private List<ImageFile> images;
 
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState)
@@ -33,7 +33,8 @@ public class FolderViewActivity extends Activity
 
 		setContentView(R.layout.folder_view);
 
-		currentFolder = (String) activityManager.getParam("currentFolder");
+		//currentFolder = (String) activityManager.getParam("currentFolder");
+		images = activityManager.getListParam("images");
 
 		recycler = findViewById(R.id.items);
 		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
@@ -51,33 +52,9 @@ public class FolderViewActivity extends Activity
 
 	private void fileThings()
 	{
-		ArrayList<ImageFile> images = new ArrayList<>();
-		FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
-		{
-			@Override
-			public void run()
-			{
-				String path = getPath();
-				//if (path.contains("/.")) return; // check if file is in empty directory
-				int lastSeparator = path.lastIndexOf('/');
-
-				if (lastSeparator == -1) return; // check if path doesn't have '/' -> some file "can" be in root
-
-				if (!path.substring(0, lastSeparator)
-						.equals(currentFolder)/* || !new File(path).canRead()*/) // commented out because very slow
-				{
-					return;
-				}
-
-				images.add(new ImageFile(FileManager.stringToUri(path)));
-			}
-		};
-		String sort = MediaStore.MediaColumns.DATE_MODIFIED + " DESC";
-		fileManager.allImageAndVideoInFolderLoop(currentFolder, sort, wrapper, MediaStore.MediaColumns.DATA);
-
 		List<ImageFile> imagesCopy = new ArrayList<>(images);
 
-		recycler.setAdapter(new ThumbnailAdapter(images, fileManager));
+		recycler.setAdapter(new ThumbnailAdapter(imagesCopy, fileManager));
 
 		findViewById(R.id.load).setVisibility(View.GONE);
 		findViewById(R.id.mainLayout).setClickable(false);
@@ -93,9 +70,9 @@ public class FolderViewActivity extends Activity
 			{
 				((ThumbnailAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
 					dirs.clear();
-					imagesCopy.forEach(image -> {
+					images.forEach(image -> {
 						if (!image.getBasename().contains(text)) return;
-						images.add(image);
+						dirs.add(image);
 					});
 				});
 				return true;
