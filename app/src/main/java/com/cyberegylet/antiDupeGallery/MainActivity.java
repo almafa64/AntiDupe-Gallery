@@ -34,7 +34,6 @@ public class MainActivity extends Activity
 {
 	private FileManager fileManager;
 	private RecyclerView recycler;
-
 	private final ActivityManager activityManager = new ActivityManager(this);
 
 	@Override
@@ -98,7 +97,7 @@ public class MainActivity extends Activity
 			{
 				String path = getPath();
 
-				if(path.contains("/.") || !new File(path).canRead()) return;
+				if (path.contains("/.") || !new File(path).canRead()) return;
 
 				String folderAbs = path.substring(0, path.lastIndexOf('/'));
 
@@ -150,7 +149,7 @@ public class MainActivity extends Activity
 						Folder f = new Folder(folder);
 						dirs.add(f);
 						f.images.addAll(images);*/
-						if(folder.name.toLowerCase(Locale.ROOT).contains(text2)) dirs.add(new Folder(folder, true));
+						if (folder.name.toLowerCase(Locale.ROOT).contains(text2)) dirs.add(new Folder(folder, true));
 					});
 				});
 				return true;

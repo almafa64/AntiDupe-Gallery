@@ -1,9 +1,13 @@
 package com.cyberegylet.antiDupeGallery.adapters;
 
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.R;
@@ -11,6 +15,7 @@ import com.cyberegylet.antiDupeGallery.backend.FileManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAdapter.ViewHolder>
 {
@@ -93,4 +98,41 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 
 	@Override
 	public long getItemId(int position) { return position; }
+
+	@SuppressLint("ClickableViewAccessibility")
+	@Override
+	public void onAttachedToRecyclerView(@NonNull RecyclerView recycler)
+	{
+		GridLayoutManager gridLayoutManager = (GridLayoutManager) Objects.requireNonNull(recycler.getLayoutManager());
+		ScaleGestureDetector gestureDetector = new ScaleGestureDetector(fileManager.context, new ScaleGestureDetector.SimpleOnScaleGestureListener()
+		{
+			@Override
+			public boolean onScale(@NonNull ScaleGestureDetector detector)
+			{
+				if (detector.getCurrentSpan() > 200 && detector.getTimeDelta() > 300)
+				{
+					float deltaSpan = detector.getCurrentSpan() - detector.getPreviousSpan();
+					if (deltaSpan < -1)
+					{
+						gridLayoutManager.setSpanCount(gridLayoutManager.getSpanCount() + 1);
+					}
+					else if (deltaSpan > 1)
+					{
+						int span = gridLayoutManager.getSpanCount();
+						if (span > 1) gridLayoutManager.setSpanCount(span - 1);
+						else return false;
+					}
+					else return false;
+					notifyItemRangeChanged(0, getItemCount());
+					return true;
+				}
+				return false;
+			}
+		});
+
+		recycler.setOnTouchListener((v, event) -> {
+			gestureDetector.onTouchEvent(event);
+			return false;
+		});
+	}
 }
