@@ -25,8 +25,7 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 	}
 
 	protected final FileManager fileManager;
-	protected boolean inSelectMode = false;
-	protected List<View> selected = new ArrayList<>();
+	protected List<ViewHolder> selected = new ArrayList<>();
 
 	protected LayoutInflater layoutInflater;
 
@@ -36,31 +35,22 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 		layoutInflater = LayoutInflater.from(fileManager.activity);
 	}
 
-	protected void selectView(ImageView logo)
+	protected void selectView(ViewHolder holder, ImageView logo)
 	{
 		logo.setVisibility(View.VISIBLE);
-		selected.add(logo); // TODO should add layout or image rather than logo
-		if (!inSelectMode)
-		{
-			inSelectMode = true;
-			// TODO add multi-select options to popup (move, copy, info, etc)
-		}
+		selected.add(holder);
 	}
 
-	protected void unSelectView(ImageView logo)
+	protected void unSelectView(ViewHolder holder, ImageView logo)
 	{
 		logo.setVisibility(View.INVISIBLE);
-		selected.remove(logo); // TODO should add layout or image rather than logo
-		if (selected.size() == 0)
-		{
-			inSelectMode = false;
-			// TODO remove multi-select options from popup (move, copy, info, etc)
-		}
+		selected.remove(holder);
 	}
 
 	public class ViewHolder extends RecyclerView.ViewHolder
 	{
-		public ImageView img;
+		protected ImageView img;
+
 		public ViewHolder(View itemView, OnItemClickListener listener)
 		{
 			super(itemView);
@@ -68,16 +58,16 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 
 			// view = ConstraintLayout (the parent of ImageView)
 			itemView.setOnClickListener(v -> {
-				if (inSelectMode)
+				if (selected.size() > 0)
 				{
 					ImageView selectedImg = v.findViewById(R.id.selected_logo);
 					if (selectedImg.getVisibility() == View.INVISIBLE)
 					{
-						selectView(selectedImg);
+						selectView(this, selectedImg);
 					}
 					else
 					{
-						unSelectView(selectedImg);
+						unSelectView(this, selectedImg);
 					}
 				}
 				else
@@ -87,7 +77,7 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 			});
 			itemView.setOnLongClickListener(v -> {
 				ImageView selectedImg = v.findViewById(R.id.selected_logo);
-				if (selectedImg.getVisibility() == View.INVISIBLE) selectView(selectedImg);
+				if (selectedImg.getVisibility() == View.INVISIBLE) selectView(this, selectedImg);
 				return true;
 			});
 		}
@@ -104,34 +94,37 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 	public void onAttachedToRecyclerView(@NonNull RecyclerView recycler)
 	{
 		GridLayoutManager gridLayoutManager = (GridLayoutManager) Objects.requireNonNull(recycler.getLayoutManager());
-		ScaleGestureDetector gestureDetector = new ScaleGestureDetector(fileManager.context, new ScaleGestureDetector.SimpleOnScaleGestureListener()
-		{
-			@Override
-			public boolean onScale(@NonNull ScaleGestureDetector detector)
-			{
-				if (detector.getCurrentSpan() > 200 && detector.getTimeDelta() > 300)
+		ScaleGestureDetector gestureDetector = new ScaleGestureDetector(
+				fileManager.context,
+				new ScaleGestureDetector.SimpleOnScaleGestureListener()
 				{
-					float deltaSpan = detector.getCurrentSpan() - detector.getPreviousSpan();
-					if (deltaSpan < -1)
+					@Override
+					public boolean onScale(@NonNull ScaleGestureDetector detector)
 					{
-						gridLayoutManager.setSpanCount(gridLayoutManager.getSpanCount() + 1);
+						if (detector.getCurrentSpan() > 200 && detector.getTimeDelta() > 300)
+						{
+							float deltaSpan = detector.getCurrentSpan() - detector.getPreviousSpan();
+							if (deltaSpan < -1)
+							{
+								gridLayoutManager.setSpanCount(gridLayoutManager.getSpanCount() + 1);
+							}
+							else if (deltaSpan > 1)
+							{
+								int span = gridLayoutManager.getSpanCount();
+								if (span > 1) gridLayoutManager.setSpanCount(span - 1);
+								else return false;
+							}
+							else return false;
+							notifyItemRangeChanged(0, getItemCount());
+							return true;
+						}
+						return false;
 					}
-					else if (deltaSpan > 1)
-					{
-						int span = gridLayoutManager.getSpanCount();
-						if (span > 1) gridLayoutManager.setSpanCount(span - 1);
-						else return false;
-					}
-					else return false;
-					notifyItemRangeChanged(0, getItemCount());
-					return true;
 				}
-				return false;
-			}
-		});
+		);
 
 		recycler.setOnTouchListener((v, event) -> {
-			gestureDetector.onTouchEvent(event);
+			if (selected.size() == 0) gestureDetector.onTouchEvent(event);
 			return false;
 		});
 	}
