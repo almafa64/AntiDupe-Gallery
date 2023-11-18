@@ -1,13 +1,14 @@
-package com.cyberegylet.antiDupeGallery;
+package com.cyberegylet.antiDupeGallery.activities;
 
 import android.app.Activity;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 
+import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 
-public class SettingsActivity extends Activity
+public class AboutActivity extends Activity
 {
 	private final ActivityManager activityManager = new ActivityManager(this);
 
@@ -16,7 +17,7 @@ public class SettingsActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.settings_activity);
+		setContentView(R.layout.about_activity);
 
 		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
 	}
