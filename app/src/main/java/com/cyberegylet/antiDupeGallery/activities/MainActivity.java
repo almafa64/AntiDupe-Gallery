@@ -4,10 +4,10 @@ import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.SearchView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -82,7 +82,7 @@ public class MainActivity extends Activity
 		}
 		else
 		{
-			Log.e("Main", "didn't get storage permissions, quitting");
+			Toast.makeText(this, getString(R.string.no_storage_permission), Toast.LENGTH_SHORT).show();
 			finishAndRemoveTask();
 		}
 	}
