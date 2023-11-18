@@ -14,6 +14,7 @@ import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,6 +27,7 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 
 	protected final FileManager fileManager;
 	protected List<ViewHolder> selected = new ArrayList<>();
+	public List<ViewHolder> getSelected = Collections.unmodifiableList(selected);
 
 	protected LayoutInflater layoutInflater;
 
@@ -49,7 +51,7 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 
 	public class ViewHolder extends RecyclerView.ViewHolder
 	{
-		protected ImageView img;
+		public ImageView img;
 
 		public ViewHolder(View itemView, OnItemClickListener listener)
 		{
