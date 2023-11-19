@@ -1,21 +1,26 @@
 package com.cyberegylet.antiDupeGallery.activities;
 
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.SearchView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.ThumbnailAdapter;
+import com.cyberegylet.antiDupeGallery.backend.ConfigManager;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -39,8 +44,10 @@ public class FolderViewActivity extends Activity
 		images = activityManager.getListParam("images");
 
 		recycler = findViewById(R.id.items);
-		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
+		int span = Integer.parseInt(ConfigManager.getConfig(ConfigManager.Config.IMAGE_COLUMN_NUMBER));
+		recycler.setLayoutManager(new GridLayoutManager(this, span));
 
+		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
 		findViewById(R.id.more_button).setOnClickListener(v -> {
 			Toast.makeText(this, "not done", Toast.LENGTH_SHORT).show();
 			/*PopupMenu popup = new PopupMenu(this, v);
@@ -50,6 +57,35 @@ public class FolderViewActivity extends Activity
 
 		fileManager = new FileManager(this);
 		if (fileManager.hasReadAccess()) fileThings();
+	}
+
+	@Override
+	protected void onStop()
+	{
+		ConfigManager.saveConfigs();
+		super.onStop();
+	}
+
+	@Override
+	protected void onDestroy()
+	{
+		ConfigManager.saveConfigs();
+		super.onDestroy();
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
+	{
+		if (requestCode == FileManager.STORAGE_REQUEST_CODE && Arrays.stream(grantResults)
+				.allMatch(v -> v == PackageManager.PERMISSION_GRANTED))
+		{
+			fileThings();
+		}
+		else
+		{
+			Toast.makeText(this, getString(R.string.no_storage_permission), Toast.LENGTH_SHORT).show();
+			finishAndRemoveTask();
+		}
 	}
 
 	private void fileThings()

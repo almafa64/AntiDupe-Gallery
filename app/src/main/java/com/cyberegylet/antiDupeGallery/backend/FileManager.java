@@ -6,6 +6,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
@@ -20,6 +21,7 @@ import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.bitmap.Downsampler;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.bumptech.glide.request.RequestOptions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -276,8 +278,12 @@ public class FileManager
 
 	public void thumbnailIntoImageView(ImageView imageView, Uri uri)
 	{
-		Glide.with(context).load(uri).priority(Priority.LOW).diskCacheStrategy(DiskCacheStrategy.RESOURCE)
-				.format(DecodeFormat.PREFER_ARGB_8888).set(Downsampler.ALLOW_HARDWARE_CONFIG, true)
-				.transition(DrawableTransitionOptions.withCrossFade()).into(imageView);
+		RequestOptions options = new RequestOptions().priority(Priority.LOW).diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+				.format(DecodeFormat.PREFER_ARGB_8888).set(Downsampler.ALLOW_HARDWARE_CONFIG, true);
+
+		boolean stopGIF = ConfigManager.getConfig(ConfigManager.Config.ANIMATE_GIF).equals("0");
+		if (stopGIF) options = options.dontAnimate().decode(Bitmap.class);
+
+		Glide.with(context).load(uri).apply(options).transition(DrawableTransitionOptions.withCrossFade()).into(imageView);
 	}
 }

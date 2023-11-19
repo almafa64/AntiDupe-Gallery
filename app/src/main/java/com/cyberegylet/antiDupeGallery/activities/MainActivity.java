@@ -11,12 +11,15 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.FolderAdapter;
+import com.cyberegylet.antiDupeGallery.backend.ConfigManager;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.models.Folder;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
@@ -44,7 +47,11 @@ public class MainActivity extends Activity
 
 		setContentView(R.layout.main_activity);
 
+		ConfigManager.init(this);
+
 		recycler = findViewById(R.id.items);
+		int span = Integer.parseInt(ConfigManager.getConfig(ConfigManager.Config.FOLDER_COLUMN_NUMBER));
+		recycler.setLayoutManager(new GridLayoutManager(this, span));
 
 		findViewById(R.id.more_button).setOnClickListener(v -> {
 			PopupMenu popup = new PopupMenu(this, v);
@@ -72,6 +79,21 @@ public class MainActivity extends Activity
 		}
 	}
 
+	//ToDo make base Activity for merging codes
+	@Override
+	protected void onStop()
+	{
+		ConfigManager.saveConfigs();
+		super.onStop();
+	}
+
+	@Override
+	protected void onDestroy()
+	{
+		ConfigManager.saveConfigs();
+		super.onDestroy();
+	}
+
 	@Override
 	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
 	{
@@ -91,6 +113,8 @@ public class MainActivity extends Activity
 	{
 		HashMap<String, Folder> folderNames = new HashMap<>();
 
+		boolean hideHidden = ConfigManager.getConfig(ConfigManager.Config.SHOW_HIDDEN).equals("0");
+
 		FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
 		{
 			@Override
@@ -98,7 +122,7 @@ public class MainActivity extends Activity
 			{
 				String path = getPath();
 
-				if (path.contains("/.") || !new File(path).canRead()) return;
+				if ((hideHidden && path.contains("/.")) || !new File(path).canRead()) return;
 
 				String folderAbs = path.substring(0, path.lastIndexOf('/'));
 
@@ -115,10 +139,28 @@ public class MainActivity extends Activity
 				folderNames.put(folderAbs, folder);
 			}
 		};
-		String sort = MediaStore.MediaColumns.DATE_MODIFIED + " DESC";
-		fileManager.allImageAndVideoLoop(sort, wrapper, MediaStore.MediaColumns.DATA);
+		String image_sort = ConfigSort.toSQLString(ConfigManager.getConfig(ConfigManager.Config.IMAGE_SORT));
+		fileManager.allImageAndVideoLoop(image_sort, wrapper, MediaStore.MediaColumns.DATA);
 
-		Comparator<Folder> comparator = Comparator.comparing(Folder::getName);
+		String folder_sort_data = ConfigManager.getConfig(ConfigManager.Config.FOLDER_SORT);
+		Comparator<Folder> comparator;
+		switch (ConfigSort.getSortType(folder_sort_data))
+		{
+			case MODIFICATION_DATE:
+				comparator = Comparator.comparing(Folder::getModifiedDate);
+				break;
+			case CREATION_DATE:
+				comparator = Comparator.comparing(Folder::getCreationDate);
+				break;
+			case SIZE:
+				comparator = Comparator.comparing(Folder::getSize);
+				break;
+			default:
+				comparator = Comparator.comparing(Folder::getName);
+				break;
+		}
+		if (!ConfigSort.isAscending(folder_sort_data)) comparator = comparator.reversed();
+
 		List<Folder> folders = folderNames.entrySet().stream().sorted(Map.Entry.comparingByValue(comparator)).map(Map.Entry::getValue)
 				.collect(Collectors.toList());
 		List<Folder> foldersCopy = new ArrayList<>(folders);

@@ -104,7 +104,7 @@ public class ConfigManager
 		{
 			configs.clear();
 			configs.load(reader);
-			if(configs.size() == 0) resetConfigs();
+			if (configs.size() == 0) resetConfigs();
 			//listener.OnLoad();
 		}
 		catch (IOException e)
@@ -132,6 +132,8 @@ public class ConfigManager
 
 		saveConfigs();
 	}
+
+	public static void list() { configs.list(System.out); }
 
 	//ToDo make wrapper functions?
 }
