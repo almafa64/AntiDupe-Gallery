@@ -70,24 +70,7 @@ public class ConfigManager
 		configFile = new File(context.getFilesDir(), "config");
 
 		if (configFile.exists()) reloadConfigs();
-		else
-		{
-			configs.putAll(Stream.of(
-					new AbstractMap.SimpleEntry<>(SHOW_HIDDEN, "0"),
-					new AbstractMap.SimpleEntry<>(PIN_LOCk, ""),
-					new AbstractMap.SimpleEntry<>(FOLDER_SORT, "13"),
-					new AbstractMap.SimpleEntry<>(IMAGE_SORT, "00"),
-					new AbstractMap.SimpleEntry<>(USE_BIN, "1"),
-					new AbstractMap.SimpleEntry<>(TEXT_COLOR, "#FFF"),
-					new AbstractMap.SimpleEntry<>(BACKGROUND_COLOR, "#000"),
-					new AbstractMap.SimpleEntry<>(ETC_COLOR, "#30AFCF"),
-					new AbstractMap.SimpleEntry<>(FOLDER_COLUMN_NUMBER, "2"),
-					new AbstractMap.SimpleEntry<>(IMAGE_COLUMN_NUMBER, "3"),
-					new AbstractMap.SimpleEntry<>(ANIMATE_GIF, "1")
-			).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-
-			saveConfigs();
-		}
+		else resetConfigs();
 	}
 
 	public static String getConfig(@NonNull Config config) { return configs.getProperty(config.toString()); }
@@ -121,12 +104,33 @@ public class ConfigManager
 		{
 			configs.clear();
 			configs.load(reader);
+			if(configs.size() == 0) resetConfigs();
 			//listener.OnLoad();
 		}
 		catch (IOException e)
 		{
 			throw new RuntimeException(e);
 		}
+	}
+
+	public static void resetConfigs()
+	{
+		configs.clear();
+		configs.putAll(Stream.of(
+				new AbstractMap.SimpleEntry<>(SHOW_HIDDEN.toString(), "0"),
+				new AbstractMap.SimpleEntry<>(PIN_LOCk.toString(), ""),
+				new AbstractMap.SimpleEntry<>(FOLDER_SORT.toString(), "13"),
+				new AbstractMap.SimpleEntry<>(IMAGE_SORT.toString(), "00"),
+				new AbstractMap.SimpleEntry<>(USE_BIN.toString(), "1"),
+				new AbstractMap.SimpleEntry<>(TEXT_COLOR.toString(), "#FFF"),
+				new AbstractMap.SimpleEntry<>(BACKGROUND_COLOR.toString(), "#000"),
+				new AbstractMap.SimpleEntry<>(ETC_COLOR.toString(), "#30AFCF"),
+				new AbstractMap.SimpleEntry<>(FOLDER_COLUMN_NUMBER.toString(), "2"),
+				new AbstractMap.SimpleEntry<>(IMAGE_COLUMN_NUMBER.toString(), "3"),
+				new AbstractMap.SimpleEntry<>(ANIMATE_GIF.toString(), "0")
+		).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+
+		saveConfigs();
 	}
 
 	//ToDo make wrapper functions?
