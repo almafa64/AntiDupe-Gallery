@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="image_border_width">0.5dp</dimen>
+    <dimen name="simple_activity_margin">70dp</dimen>
+    <dimen name="simple_activity_row_height">70dp</dimen>
 </resources>
