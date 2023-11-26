@@ -1,30 +1,15 @@
+use backend_proc_macro::java_export;
 use jni::objects::JClass;
 use jni::sys::{jint, JNIEnv, JNI_VERSION_1_6};
-use jni::{JavaVM, NativeMethod};
-
-const CLASSNAME: &'static str = "com/cyberegylet/antiDupeGallery/backend/Backend";
+use jni::JavaVM;
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern "system" fn JNI_OnLoad(vm: JavaVM, _: *mut ()) -> jint {
-    let mut env = vm.get_env().expect("failed to get vm env");
-
-    let class = env
-        .find_class(CLASSNAME)
-        .expect(&format!("cannot find class {CLASSNAME}"));
-
-    let native_methods = vec![NativeMethod {
-        name: "test".into(),
-        sig: "()I".into(),
-        fn_ptr: test as _,
-    }];
-
-    env.register_native_methods(class, &native_methods)
-        .expect("failed to register native methods");
-
+pub extern "system" fn JNI_OnLoad(_vm: JavaVM, _: *mut ()) -> jint {
     JNI_VERSION_1_6
 }
 
-fn test(_env: JNIEnv, _class: JClass) -> jint {
+#[java_export(class = "com.cyberegylet.antiDupeGallery.backend.Backend")]
+pub extern "C" fn test(_env: JNIEnv, _class: JClass) -> jint {
     546
 }
