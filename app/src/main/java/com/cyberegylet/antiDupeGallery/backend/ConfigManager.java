@@ -74,6 +74,8 @@ public class ConfigManager
 	}
 
 	public static String getConfig(@NonNull Config config) { return configs.getProperty(config.toString()); }
+	public static boolean getBooleanConfig(@NonNull Config config) { return getConfig(config).equals("1"); }
+	public static int getIntConfig(@NonNull Config config) { return Integer.parseInt(getConfig(config)); }
 
 	public static void setConfig(@NonNull Config config, @Nullable String data)
 	{
@@ -82,6 +84,9 @@ public class ConfigManager
 		if (data == null) configs.remove(config);
 		else configs.setProperty(config.toString(), data);
 	}
+	public static void setBooleanConfig(@NonNull Config config, boolean data) { setConfig(config, data ? "1" : "0"); }
+	public static void setIntConfig(@NonNull Config config, int data) { setConfig(config, String.valueOf(data)); }
+
 
 	public static void removeConfig(@NonNull Config config) { setConfig(config, null); }
 
@@ -134,6 +139,4 @@ public class ConfigManager
 	}
 
 	public static void list() { configs.list(System.out); }
-
-	//ToDo make wrapper functions?
 }

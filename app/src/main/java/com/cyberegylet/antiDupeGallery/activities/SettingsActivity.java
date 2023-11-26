@@ -23,11 +23,8 @@ public class SettingsActivity extends Activity
 		SimpleActivityGenerator generator = new SimpleActivityGenerator(this, false, R.string.settings_header);
 
 		SwitchCompat toggleButton = new SwitchCompat(this);
-		toggleButton.setChecked(ConfigManager.getConfig(ConfigManager.Config.ANIMATE_GIF).equals("1"));
-		toggleButton.setOnCheckedChangeListener((v, checked) -> ConfigManager.setConfig(
-				ConfigManager.Config.ANIMATE_GIF,
-				checked ? "1" : "0"
-		));
+		toggleButton.setChecked(ConfigManager.getBooleanConfig(ConfigManager.Config.ANIMATE_GIF));
+		toggleButton.setOnCheckedChangeListener((v, checked) -> ConfigManager.setBooleanConfig(ConfigManager.Config.ANIMATE_GIF, checked));
 		generator.newHeader(R.string.settings_thumbnail_heading);
 		generator.addRow(null, R.string.settings_animate_gif, toggleButton);
 

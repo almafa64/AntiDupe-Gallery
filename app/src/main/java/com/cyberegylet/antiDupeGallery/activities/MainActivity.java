@@ -50,7 +50,7 @@ public class MainActivity extends Activity
 		ConfigManager.init(this);
 
 		recycler = findViewById(R.id.items);
-		int span = Integer.parseInt(ConfigManager.getConfig(ConfigManager.Config.FOLDER_COLUMN_NUMBER));
+		int span = ConfigManager.getIntConfig(ConfigManager.Config.FOLDER_COLUMN_NUMBER);
 		recycler.setLayoutManager(new GridLayoutManager(this, span));
 
 		findViewById(R.id.more_button).setOnClickListener(v -> {
@@ -113,7 +113,7 @@ public class MainActivity extends Activity
 	{
 		HashMap<String, Folder> folderNames = new HashMap<>();
 
-		boolean hideHidden = ConfigManager.getConfig(ConfigManager.Config.SHOW_HIDDEN).equals("0");
+		boolean hideHidden = !ConfigManager.getBooleanConfig(ConfigManager.Config.SHOW_HIDDEN);
 
 		FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
 		{

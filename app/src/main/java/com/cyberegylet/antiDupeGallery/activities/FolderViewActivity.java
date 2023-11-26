@@ -44,7 +44,7 @@ public class FolderViewActivity extends Activity
 		images = activityManager.getListParam("images");
 
 		recycler = findViewById(R.id.items);
-		int span = Integer.parseInt(ConfigManager.getConfig(ConfigManager.Config.IMAGE_COLUMN_NUMBER));
+		int span = ConfigManager.getIntConfig(ConfigManager.Config.IMAGE_COLUMN_NUMBER);
 		recycler.setLayoutManager(new GridLayoutManager(this, span));
 
 		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
