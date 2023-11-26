@@ -4,8 +4,11 @@ import android.app.Activity;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SwitchCompat;
 
 import com.cyberegylet.antiDupeGallery.R;
+import com.cyberegylet.antiDupeGallery.backend.ConfigManager;
+import com.cyberegylet.antiDupeGallery.backend.SimpleActivityGenerator;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 
 public class SettingsActivity extends Activity
@@ -17,8 +20,20 @@ public class SettingsActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.settings_activity);
+		SimpleActivityGenerator generator = new SimpleActivityGenerator(this, false, R.string.settings_header);
 
-		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
+		SwitchCompat toggleButton = new SwitchCompat(this);
+		toggleButton.setChecked(ConfigManager.getConfig(ConfigManager.Config.ANIMATE_GIF).equals("1"));
+		toggleButton.setOnCheckedChangeListener((v, checked) -> ConfigManager.setConfig(
+				ConfigManager.Config.ANIMATE_GIF,
+				checked ? "1" : "0"
+		));
+		generator.newHeader(R.string.settings_thumbnail_heading);
+		generator.addRow(null, R.string.settings_animate_gif, toggleButton);
+
+		findViewById(R.id.back_button).setOnClickListener(v -> {
+			activityManager.goBack();
+			ConfigManager.saveConfigs();
+		});
 	}
 }
