@@ -8,7 +8,6 @@ import androidx.annotation.NonNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 
@@ -26,15 +25,14 @@ public class ImageFile implements Parcelable
 		this.basename = path.getLastPathSegment();
 		try
 		{
-			Path p = Paths.get(path.getPath());
-			BasicFileAttributes attr = Files.readAttributes(p, BasicFileAttributes.class);
+			BasicFileAttributes attr = Files.readAttributes(Paths.get(path.getPath()), BasicFileAttributes.class);
 			size = attr.size();
 			modifiedDate = attr.lastModifiedTime().toMillis();
 			creationDate = attr.creationTime().toMillis();
 		}
 		catch (IOException e)
 		{
-			throw new RuntimeException();
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 
