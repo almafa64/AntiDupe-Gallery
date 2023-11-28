@@ -7,6 +7,7 @@ import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.Checkable;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -108,13 +109,21 @@ public class SimpleActivityGenerator
 		scrollLayout.addView(header);
 	}
 
-	public int addRow(int textID) { return addRow(textID, null, null); }
+	private void addRipple()
+	{
+		TypedArray typedArray = activity.obtainStyledAttributes(new int[]{ android.R.attr.selectableItemBackground });
+		curLinearLayout.setBackgroundResource(typedArray.getResourceId(0, 0));
+		typedArray.recycle();
+	}
 
-	public int addRow(int textID, Integer iconID) { return addRow(textID, null, iconID); }
+	public int addRow() { return addRow(null, null, null); }
+	public int addRow(Integer textID) { return addRow(textID, null, null); }
 
-	public int addRow(int textID, View customView) { return addRow(textID, customView, null); }
+	public int addRow(Integer textID, Integer iconID) { return addRow(textID, null, iconID); }
 
-	public int addRow(int textID, View customView, Integer iconID)
+	public int addRow(Integer textID, View customView) { return addRow(textID, customView, null); }
+
+	public int addRow(Integer textID, View customView, Integer iconID)
 	{
 		curLinearLayout = new LinearLayout(activity);
 		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -123,6 +132,10 @@ public class SimpleActivityGenerator
 		curLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
 		curLinearLayout.setLayoutParams(params);
 		scrollLayout.addView(curLinearLayout);
+
+		int id = View.generateViewId();
+		curLinearLayout.setId(id);
+		if(textID == null) return id;
 
 		TextView text = new TextView(activity);
 		LinearLayout.LayoutParams textParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -154,22 +167,26 @@ public class SimpleActivityGenerator
 		curLinearLayout.addView(text);
 		if (customView != null)
 		{
+			boolean isCheckable = customView instanceof Checkable;
+			if(customView instanceof Button && !isCheckable)
+			{
+				curLinearLayout.setOnClickListener(v -> customView.performClick());
+				addRipple();
+				return id;
+			}
 			LinearLayout.LayoutParams customParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
 					ViewGroup.LayoutParams.MATCH_PARENT
 			);
 			customParam.setMarginEnd(res.getDimensionPixelSize(R.dimen.simple_activity_small_margin));
 			customView.setLayoutParams(customParam);
 			curLinearLayout.addView(customView);
-			if (customView instanceof Checkable)
+			if (isCheckable)
 			{
-				curLinearLayout.setOnClickListener(v -> ((Checkable) customView).toggle());
-				TypedArray typedArray = activity.obtainStyledAttributes(new int[]{ android.R.attr.selectableItemBackground });
-				curLinearLayout.setBackgroundResource(typedArray.getResourceId(0, 0));
-				typedArray.recycle();
+				curLinearLayout.setOnClickListener(v -> customView.performClick());
+				addRipple();
 			}
 		}
-		int id = View.generateViewId();
-		curLinearLayout.setId(id);
+
 		return id;
 	}
 }
