@@ -8,6 +8,12 @@
     <!-- settings -->
     <string name="settings_header">Beállítások</string>
     <string name="settings_thumbnail_heading">Indexképek</string>
+    <string name="settings_general_heading">Általános</string>
+    <string name="settings_pin">Alkalmazás PIN</string>
+    <string name="settings_show_hidden">Rejtett fájlok mutatása</string>
+
+    <!-- pin -->
+    <string name="enter_the_pin">Írd be a PIN kódott</string>
 
     <!-- general -->
     <string name="settings_button">Beállítások</string>

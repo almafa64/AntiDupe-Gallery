@@ -2,9 +2,12 @@ package com.cyberegylet.antiDupeGallery.activities;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.PopupWindow;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SwitchCompat;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.backend.ConfigManager;
@@ -22,11 +25,17 @@ public class SettingsActivity extends Activity
 
 		SimpleActivityGenerator generator = new SimpleActivityGenerator(this, false, R.string.settings_header);
 
-		SwitchCompat toggleButton = new SwitchCompat(this);
-		toggleButton.setChecked(ConfigManager.getBooleanConfig(ConfigManager.Config.ANIMATE_GIF));
-		toggleButton.setOnCheckedChangeListener((v, checked) -> ConfigManager.setBooleanConfig(ConfigManager.Config.ANIMATE_GIF, checked));
+		generator.newHeader(R.string.settings_general_heading);
+		generator.addRow(R.string.settings_pin, v -> {
+			// ToDo open popup
+			View popup = getLayoutInflater().inflate(R.layout.dialog_enter_pin, null);
+			PopupWindow window = new PopupWindow(popup, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+			window.showAtLocation(v, Gravity.CENTER, 0, 0);
+		});
+		generator.addConfigCheckRow(R.string.settings_show_hidden, ConfigManager.Config.SHOW_HIDDEN);
+
 		generator.newHeader(R.string.settings_thumbnail_heading);
-		generator.addRow(R.string.settings_animate_gif, toggleButton);
+		generator.addConfigCheckRow(R.string.settings_animate_gif, ConfigManager.Config.ANIMATE_GIF);
 
 		findViewById(R.id.back_button).setOnClickListener(v -> {
 			activityManager.goBack();

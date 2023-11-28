@@ -45,9 +45,14 @@ public class MainActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.main_activity);
-
 		ConfigManager.init(this);
+		if (ConfigManager.getConfig(ConfigManager.Config.PIN_LOCk).length() != 0 && ActivityManager.getParam(this, "login") == null)
+		{
+			ActivityManager.switchActivity(this, PinActivity.class);
+			return;
+		}
+
+		setContentView(R.layout.main_activity);
 
 		recycler = findViewById(R.id.items);
 		int span = ConfigManager.getIntConfig(ConfigManager.Config.FOLDER_COLUMN_NUMBER);
