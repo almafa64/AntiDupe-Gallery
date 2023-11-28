@@ -7,7 +7,6 @@ import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.Checkable;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -15,6 +14,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+
+import androidx.appcompat.widget.AppCompatCheckBox;
 
 import com.cyberegylet.antiDupeGallery.R;
 
@@ -116,14 +117,24 @@ public class SimpleActivityGenerator
 		typedArray.recycle();
 	}
 
-	public int addRow() { return addRow(null, null, null); }
-	public int addRow(Integer textID) { return addRow(textID, null, null); }
+	public LinearLayout addRow() { return addRow(null, null, null, null); }
 
-	public int addRow(Integer textID, Integer iconID) { return addRow(textID, null, iconID); }
+	public LinearLayout addRow(Integer textID) { return addRow(textID, null, null, null); }
 
-	public int addRow(Integer textID, View customView) { return addRow(textID, customView, null); }
+	public LinearLayout addRow(Integer textID, Integer iconID) { return addRow(textID, null, null, iconID); }
 
-	public int addRow(Integer textID, View customView, Integer iconID)
+	public LinearLayout addRow(Integer textID, View customView) { return addRow(textID, customView, null, null); }
+
+	public LinearLayout addRow(Integer textID, View customView, Integer iconID) { return addRow(textID, customView, null, iconID); }
+
+	public LinearLayout addRow(Integer textID, View.OnClickListener clickListener) { return addRow(textID, null, clickListener, null); }
+
+	public LinearLayout addRow(Integer textID, View.OnClickListener clickListener, Integer iconID)
+	{
+		return addRow(textID, null, clickListener, iconID);
+	}
+
+	private LinearLayout addRow(Integer textID, View customView, View.OnClickListener clickListener, Integer iconID)
 	{
 		curLinearLayout = new LinearLayout(activity);
 		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -135,7 +146,7 @@ public class SimpleActivityGenerator
 
 		int id = View.generateViewId();
 		curLinearLayout.setId(id);
-		if(textID == null) return id;
+		if (textID == null) return curLinearLayout;
 
 		TextView text = new TextView(activity);
 		LinearLayout.LayoutParams textParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -167,26 +178,32 @@ public class SimpleActivityGenerator
 		curLinearLayout.addView(text);
 		if (customView != null)
 		{
-			boolean isCheckable = customView instanceof Checkable;
-			if(customView instanceof Button && !isCheckable)
-			{
-				curLinearLayout.setOnClickListener(v -> customView.performClick());
-				addRipple();
-				return id;
-			}
 			LinearLayout.LayoutParams customParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
 					ViewGroup.LayoutParams.MATCH_PARENT
 			);
 			customParam.setMarginEnd(res.getDimensionPixelSize(R.dimen.simple_activity_small_margin));
 			customView.setLayoutParams(customParam);
 			curLinearLayout.addView(customView);
-			if (isCheckable)
+			if (customView instanceof Checkable)
 			{
 				curLinearLayout.setOnClickListener(v -> customView.performClick());
 				addRipple();
 			}
 		}
+		else if (clickListener != null)
+		{
+			curLinearLayout.setOnClickListener(clickListener);
+			addRipple();
+		}
 
-		return id;
+		return curLinearLayout;
+	}
+
+	public LinearLayout addConfigCheckRow(Integer textID, ConfigManager.Config config)
+	{
+		AppCompatCheckBox button = new AppCompatCheckBox(activity);
+		button.setChecked(ConfigManager.getBooleanConfig(config));
+		button.setOnCheckedChangeListener((v, checked) -> ConfigManager.setBooleanConfig(config, checked));
+		return addRow(textID, button);
 	}
 }
