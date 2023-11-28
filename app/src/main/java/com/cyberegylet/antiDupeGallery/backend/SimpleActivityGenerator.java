@@ -2,10 +2,12 @@ package com.cyberegylet.antiDupeGallery.backend;
 
 import android.app.Activity;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Checkable;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -158,6 +160,13 @@ public class SimpleActivityGenerator
 			customParam.setMarginEnd(res.getDimensionPixelSize(R.dimen.simple_activity_small_margin));
 			customView.setLayoutParams(customParam);
 			curLinearLayout.addView(customView);
+			if (customView instanceof Checkable)
+			{
+				curLinearLayout.setOnClickListener(v -> ((Checkable) customView).toggle());
+				TypedArray typedArray = activity.obtainStyledAttributes(new int[]{ android.R.attr.selectableItemBackground });
+				curLinearLayout.setBackgroundResource(typedArray.getResourceId(0, 0));
+				typedArray.recycle();
+			}
 		}
 		int id = View.generateViewId();
 		curLinearLayout.setId(id);
