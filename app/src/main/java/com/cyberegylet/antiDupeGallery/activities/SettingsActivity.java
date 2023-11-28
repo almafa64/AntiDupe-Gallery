@@ -26,7 +26,7 @@ public class SettingsActivity extends Activity
 		toggleButton.setChecked(ConfigManager.getBooleanConfig(ConfigManager.Config.ANIMATE_GIF));
 		toggleButton.setOnCheckedChangeListener((v, checked) -> ConfigManager.setBooleanConfig(ConfigManager.Config.ANIMATE_GIF, checked));
 		generator.newHeader(R.string.settings_thumbnail_heading);
-		generator.addRow(null, R.string.settings_animate_gif, toggleButton);
+		generator.addRow(R.string.settings_animate_gif, toggleButton);
 
 		findViewById(R.id.back_button).setOnClickListener(v -> {
 			activityManager.goBack();

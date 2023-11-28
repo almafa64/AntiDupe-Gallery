@@ -103,25 +103,28 @@ public class SimpleActivityGenerator
 		header.setTextAppearance(R.style.AboutHeader);
 		header.setGravity(Gravity.CENTER_VERTICAL);
 
-		curLinearLayout = new LinearLayout(activity);
-		LinearLayout.LayoutParams layoutParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-				(ViewGroup.LayoutParams.MATCH_PARENT)
-		);
-		curLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
-
 		scrollLayout.addView(header);
-		scrollLayout.addView(curLinearLayout);
 	}
 
-	public void addRow(int textID) { addRow(null, textID, null); }
+	public int addRow(int textID) { return addRow(textID, null, null); }
 
-	public void addRow(Integer iconID, int textID) { addRow(iconID, textID, null); }
+	public int addRow(int textID, Integer iconID) { return addRow(textID, null, iconID); }
 
-	public void addRow(Integer iconID, int textID, View customView)
+	public int addRow(int textID, View customView) { return addRow(textID, customView, null); }
+
+	public int addRow(int textID, View customView, Integer iconID)
 	{
+		curLinearLayout = new LinearLayout(activity);
+		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+				res.getDimensionPixelSize(R.dimen.simple_activity_row_height)
+		);
+		curLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
+		curLinearLayout.setLayoutParams(params);
+		scrollLayout.addView(curLinearLayout);
+
 		TextView text = new TextView(activity);
 		LinearLayout.LayoutParams textParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-				res.getDimensionPixelSize(R.dimen.simple_activity_row_height)
+				ViewGroup.LayoutParams.MATCH_PARENT
 		);
 		textParam.weight = 1;
 		if (hasIcons)
@@ -129,7 +132,7 @@ public class SimpleActivityGenerator
 			if (iconID != null)
 			{
 				ImageView image = new ImageView(activity);
-				LinearLayout.LayoutParams imageParam = new LinearLayout.LayoutParams(res.getDimensionPixelSize(R.dimen.simple_activity_row_height),
+				LinearLayout.LayoutParams imageParam = new LinearLayout.LayoutParams(res.getDimensionPixelSize(R.dimen.simple_activity_margin),
 						(int) (50 * toPx)
 				);
 				imageParam.topMargin = (int) (10 * toPx);
@@ -150,11 +153,14 @@ public class SimpleActivityGenerator
 		if (customView != null)
 		{
 			LinearLayout.LayoutParams customParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-					res.getDimensionPixelSize(R.dimen.simple_activity_row_height)
+					ViewGroup.LayoutParams.MATCH_PARENT
 			);
-			customParam.setMarginStart(res.getDimensionPixelSize(R.dimen.simple_activity_small_margin));
 			customParam.setMarginEnd(res.getDimensionPixelSize(R.dimen.simple_activity_small_margin));
+			customView.setLayoutParams(customParam);
 			curLinearLayout.addView(customView);
 		}
+		int id = View.generateViewId();
+		curLinearLayout.setId(id);
+		return id;
 	}
 }
