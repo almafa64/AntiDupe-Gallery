@@ -23,7 +23,8 @@ import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.models.Folder;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -124,7 +125,10 @@ public class MainActivity extends Activity
 			{
 				String path = getPath();
 
-				if (!new File(path).canRead()) return;
+				if (!Files.exists(Paths.get(path)))
+				{
+					return;
+				}
 
 				String folderAbs = path.substring(0, path.lastIndexOf('/'));
 
