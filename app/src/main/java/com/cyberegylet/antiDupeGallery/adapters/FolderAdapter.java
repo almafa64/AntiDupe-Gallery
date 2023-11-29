@@ -66,7 +66,7 @@ public class FolderAdapter extends BaseImageAdapter
 		ImageFile image = folder.images.get(0);
 		fileManager.thumbnailIntoImageView(holder.img, image.getPath());
 		ViewHolder thisHolder = (ViewHolder) holder;
-		thisHolder.name.setText(folder.name);
+		thisHolder.name.setText(folder.getName());
 		thisHolder.count.setText(String.valueOf(folder.images.size()));
 	}
 

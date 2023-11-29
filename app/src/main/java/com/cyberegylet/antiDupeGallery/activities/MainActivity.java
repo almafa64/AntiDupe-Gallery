@@ -24,7 +24,6 @@ import com.cyberegylet.antiDupeGallery.models.Folder;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -45,12 +44,17 @@ public class MainActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 
+		ConfigManager.init(this);
+		if (ConfigManager.getConfig(ConfigManager.Config.PIN_LOCk).length() != 0 && ActivityManager.getParam(this, "login") == null)
+		{
+			ActivityManager.switchActivity(this, PinActivity.class);
+			return;
+		}
+
 		setContentView(R.layout.main_activity);
 
-		ConfigManager.init(this);
-
 		recycler = findViewById(R.id.items);
-		int span = Integer.parseInt(ConfigManager.getConfig(ConfigManager.Config.FOLDER_COLUMN_NUMBER));
+		int span = ConfigManager.getIntConfig(ConfigManager.Config.FOLDER_COLUMN_NUMBER);
 		recycler.setLayoutManager(new GridLayoutManager(this, span));
 
 		findViewById(R.id.more_button).setOnClickListener(v -> {
@@ -113,8 +117,6 @@ public class MainActivity extends Activity
 	{
 		HashMap<String, Folder> folderNames = new HashMap<>();
 
-		boolean hideHidden = ConfigManager.getConfig(ConfigManager.Config.SHOW_HIDDEN).equals("0");
-
 		FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
 		{
 			@Override
@@ -122,7 +124,7 @@ public class MainActivity extends Activity
 			{
 				String path = getPath();
 
-				if ((hideHidden && path.contains("/.")) || !new File(path).canRead()) return;
+				if (!new File(path).canRead()) return;
 
 				String folderAbs = path.substring(0, path.lastIndexOf('/'));
 
@@ -163,7 +165,20 @@ public class MainActivity extends Activity
 
 		List<Folder> folders = folderNames.entrySet().stream().sorted(Map.Entry.comparingByValue(comparator)).map(Map.Entry::getValue)
 				.collect(Collectors.toList());
-		List<Folder> foldersCopy = new ArrayList<>(folders);
+		List<Folder> foldersCopy = folders.stream()
+				.filter(folder -> !folder.isHidden() || ConfigManager.getBooleanConfig(ConfigManager.Config.SHOW_HIDDEN))
+				.collect(Collectors.toList());
+
+		ConfigManager.addListener((c, v) -> {
+			if (c == ConfigManager.Config.SHOW_HIDDEN)
+			{
+				boolean showHidden = Objects.equals(v, "1");
+				((FolderAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
+					dirs.clear();
+					dirs.addAll(folders.stream().filter(folder -> !folder.isHidden() || showHidden).collect(Collectors.toList()));
+				});
+			}
+		});
 
 		recycler.setAdapter(new FolderAdapter(foldersCopy, fileManager));
 
@@ -192,7 +207,7 @@ public class MainActivity extends Activity
 						Folder f = new Folder(folder);
 						dirs.add(f);
 						f.images.addAll(images);*/
-						if (folder.name.toLowerCase(Locale.ROOT).contains(text2)) dirs.add(new Folder(folder, true));
+						if (folder.getName().toLowerCase(Locale.ROOT).contains(text2)) dirs.add(new Folder(folder, true));
 					});
 				});
 				return true;

@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
@@ -281,8 +282,9 @@ public class FileManager
 		RequestOptions options = new RequestOptions().priority(Priority.LOW).diskCacheStrategy(DiskCacheStrategy.RESOURCE)
 				.format(DecodeFormat.PREFER_ARGB_8888).set(Downsampler.ALLOW_HARDWARE_CONFIG, true);
 
-		boolean stopGIF = ConfigManager.getConfig(ConfigManager.Config.ANIMATE_GIF).equals("0");
-		if (stopGIF) options = options.dontAnimate().decode(Bitmap.class);
+		boolean playGIF = ConfigManager.getBooleanConfig(ConfigManager.Config.ANIMATE_GIF);
+		if (!playGIF) options = options.dontAnimate().decode(Bitmap.class);
+		else options = options.decode(Drawable.class);
 
 		Glide.with(context).load(uri).apply(options).transition(DrawableTransitionOptions.withCrossFade()).into(imageView);
 	}

@@ -17,20 +17,23 @@ import java.util.Objects;
 public class Folder
 {
 	public final ArrayList<ImageFile> images = new ArrayList<>();
-	public final Uri path;
+	private Uri path;
 	@NotNull
-	public final String name;
-	public final long size;
-	public final long modifiedDate;
-	public final long creationDate;
+	private String name;
+	private long size;
+	private long modifiedDate;
+	private long creationDate;
+	private boolean isHidden;
 
 	public Folder(Uri path)
 	{
+		String stringPath = Objects.requireNonNull(path.getPath());
 		this.path = path;
 		this.name = Objects.requireNonNull(path.getLastPathSegment());
+		this.isHidden = path.getPath().contains("/.");
 		try
 		{
-			Path p = Paths.get(path.getPath());
+			Path p = Paths.get(stringPath);
 			BasicFileAttributes attr = Files.readAttributes(p, BasicFileAttributes.class);
 			size = attr.size();
 			modifiedDate = attr.lastModifiedTime().toMillis();
@@ -65,4 +68,5 @@ public class Folder
 
 	public long getCreationDate() { return creationDate; }
 
+	public boolean isHidden() { return isHidden; }
 }

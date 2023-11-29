@@ -19,11 +19,11 @@ import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class FolderViewActivity extends Activity
 {
@@ -44,7 +44,7 @@ public class FolderViewActivity extends Activity
 		images = activityManager.getListParam("images");
 
 		recycler = findViewById(R.id.items);
-		int span = Integer.parseInt(ConfigManager.getConfig(ConfigManager.Config.IMAGE_COLUMN_NUMBER));
+		int span = ConfigManager.getIntConfig(ConfigManager.Config.IMAGE_COLUMN_NUMBER);
 		recycler.setLayoutManager(new GridLayoutManager(this, span));
 
 		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
@@ -90,13 +90,26 @@ public class FolderViewActivity extends Activity
 
 	private void fileThings()
 	{
-		List<ImageFile> imagesCopy = new ArrayList<>(images);
+		List<ImageFile> imagesCopy = images.stream()
+				.filter(image -> !image.isHidden() || ConfigManager.getBooleanConfig(ConfigManager.Config.SHOW_HIDDEN))
+				.collect(Collectors.toList());
 
 		recycler.setAdapter(new ThumbnailAdapter(imagesCopy, fileManager));
 
 		findViewById(R.id.load).setVisibility(View.GONE);
 		findViewById(R.id.mainLayout).setClickable(false);
 		SearchView search = findViewById(R.id.search_bar);
+
+		ConfigManager.addListener((c, v) -> {
+			if (c == ConfigManager.Config.SHOW_HIDDEN)
+			{
+				boolean showHidden = Objects.equals(v, "1");
+				((ThumbnailAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(imgs -> {
+					imgs.clear();
+					imgs.addAll(images.stream().filter(image -> !image.isHidden() || showHidden).collect(Collectors.toList()));
+				});
+			}
+		});
 
 		search.setOnQueryTextListener(new SearchView.OnQueryTextListener()
 		{
@@ -110,7 +123,7 @@ public class FolderViewActivity extends Activity
 				((ThumbnailAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
 					dirs.clear();
 					images.forEach(image -> {
-						if (!image.getBasename().toLowerCase(Locale.ROOT).contains(text2)) return;
+						if (!image.getName().toLowerCase(Locale.ROOT).contains(text2)) return;
 						dirs.add(image);
 					});
 				});

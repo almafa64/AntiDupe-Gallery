@@ -3,10 +3,10 @@ package com.cyberegylet.antiDupeGallery.backend.activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Parcelable;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class ActivityManager
 {
@@ -58,7 +58,8 @@ public class ActivityManager
 
 	public static Object getParam(Activity currentActivity, String name)
 	{
-		return Objects.requireNonNull(currentActivity.getIntent().getExtras()).get(name);
+		Bundle b = currentActivity.getIntent().getExtras();
+		return b == null ? null : b.get(name);
 	}
 
 	public <T extends Parcelable> ArrayList<T> getListParam(String name) { return getListParam(currentActivity, name); }

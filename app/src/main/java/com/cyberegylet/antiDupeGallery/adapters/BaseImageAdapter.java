@@ -128,7 +128,7 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 					public void onScaleEnd(@NonNull ScaleGestureDetector detector)
 					{
 						ConfigManager.Config key = adapter instanceof FolderAdapter ? ConfigManager.Config.FOLDER_COLUMN_NUMBER : ConfigManager.Config.IMAGE_COLUMN_NUMBER;
-						ConfigManager.setConfig(key, String.valueOf(gridLayoutManager.getSpanCount()));
+						ConfigManager.setIntConfig(key, gridLayoutManager.getSpanCount());
 						ConfigManager.saveConfigs();
 					}
 				}

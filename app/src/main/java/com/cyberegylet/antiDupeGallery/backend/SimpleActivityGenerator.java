@@ -2,16 +2,21 @@ package com.cyberegylet.antiDupeGallery.backend;
 
 import android.app.Activity;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsSpinner;
+import android.widget.Checkable;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+
+import androidx.appcompat.widget.AppCompatCheckBox;
 
 import com.cyberegylet.antiDupeGallery.R;
 
@@ -22,10 +27,12 @@ public class SimpleActivityGenerator
 	private LinearLayout curLinearLayout = null;
 	private final Resources res;
 	private final float toPx;
+	private final boolean hasIcons;
 
-	public SimpleActivityGenerator(Activity activity, int titleTextID)
+	public SimpleActivityGenerator(Activity activity, boolean hasIcons, int titleTextID)
 	{
 		this.activity = activity;
+		this.hasIcons = hasIcons;
 		res = activity.getResources();
 		toPx = res.getDisplayMetrics().density;
 		RelativeLayout root = new RelativeLayout(activity);
@@ -90,43 +97,79 @@ public class SimpleActivityGenerator
 		}
 
 		TextView header = new TextView(activity);
-		LinearLayout.LayoutParams headerParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, res.getDimensionPixelSize(R.dimen.simple_activity_row_height));
-		headerParam.setMarginStart(res.getDimensionPixelSize(R.dimen.simple_activity_margin));
+		LinearLayout.LayoutParams headerParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+				res.getDimensionPixelSize(R.dimen.simple_activity_row_height)
+		);
+		if (hasIcons) headerParam.setMarginStart(res.getDimensionPixelSize(R.dimen.simple_activity_margin));
+		else headerParam.setMarginStart(res.getDimensionPixelSize(R.dimen.simple_activity_small_margin));
 		header.setLayoutParams(headerParam);
 		header.setText(res.getText(titleTextID));
 		header.setTextDirection(View.TEXT_DIRECTION_LOCALE);
 		header.setTextAppearance(R.style.AboutHeader);
 		header.setGravity(Gravity.CENTER_VERTICAL);
 
-		curLinearLayout = new LinearLayout(activity);
-		LinearLayout.LayoutParams layoutParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-				(ViewGroup.LayoutParams.MATCH_PARENT)
-		);
-		curLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
-
 		scrollLayout.addView(header);
-		scrollLayout.addView(curLinearLayout);
 	}
 
-	public void addRow(int textID) { addRow(null, textID, null); }
-
-	public void addRow(Integer iconID, int textID) { addRow(iconID, textID, null); }
-
-	public void addRow(Integer iconID, int textID, View customView)
+	private void addRipple()
 	{
+		TypedArray typedArray = activity.obtainStyledAttributes(new int[]{ android.R.attr.selectableItemBackground });
+		curLinearLayout.setBackgroundResource(typedArray.getResourceId(0, 0));
+		typedArray.recycle();
+	}
+
+	public LinearLayout addRow() { return addRow(null, null, null, null); }
+
+	public LinearLayout addRow(Integer textID) { return addRow(textID, null, null, null); }
+
+	public LinearLayout addRow(Integer textID, Integer iconID) { return addRow(textID, null, null, iconID); }
+
+	public LinearLayout addRow(Integer textID, View customView) { return addRow(textID, customView, null, null); }
+
+	public LinearLayout addRow(Integer textID, View customView, Integer iconID) { return addRow(textID, customView, null, iconID); }
+
+	public LinearLayout addRow(Integer textID, View.OnClickListener clickListener) { return addRow(textID, null, clickListener, null); }
+
+	public LinearLayout addRow(Integer textID, View.OnClickListener clickListener, Integer iconID)
+	{
+		return addRow(textID, null, clickListener, iconID);
+	}
+
+	private LinearLayout addRow(Integer textID, View customView, View.OnClickListener clickListener, Integer iconID)
+	{
+		curLinearLayout = new LinearLayout(activity);
+		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+				res.getDimensionPixelSize(R.dimen.simple_activity_row_height)
+		);
+		curLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
+		curLinearLayout.setLayoutParams(params);
+		scrollLayout.addView(curLinearLayout);
+
+		int id = View.generateViewId();
+		curLinearLayout.setId(id);
+		if (textID == null) return curLinearLayout;
+
 		TextView text = new TextView(activity);
-		LinearLayout.LayoutParams textParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, res.getDimensionPixelSize(R.dimen.simple_activity_row_height));
+		LinearLayout.LayoutParams textParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+				ViewGroup.LayoutParams.MATCH_PARENT
+		);
 		textParam.weight = 1;
-		if (iconID != null)
+		if (hasIcons)
 		{
-			ImageView image = new ImageView(activity);
-			LinearLayout.LayoutParams imageParam = new LinearLayout.LayoutParams((int) (70 * toPx), (int) (50 * toPx));
-			imageParam.topMargin = (int) (10 * toPx);
-			image.setLayoutParams(imageParam);
-			image.setImageResource(iconID);
-			curLinearLayout.addView(image);
+			if (iconID != null)
+			{
+				ImageView image = new ImageView(activity);
+				LinearLayout.LayoutParams imageParam = new LinearLayout.LayoutParams(res.getDimensionPixelSize(R.dimen.simple_activity_margin),
+						(int) (50 * toPx)
+				);
+				imageParam.topMargin = (int) (10 * toPx);
+				image.setLayoutParams(imageParam);
+				image.setImageResource(iconID);
+				curLinearLayout.addView(image);
+			}
+			else textParam.setMarginStart(res.getDimensionPixelSize(R.dimen.simple_activity_margin));
 		}
-		else textParam.setMarginStart(res.getDimensionPixelSize(R.dimen.simple_activity_margin));
+		else textParam.setMarginStart(res.getDimensionPixelSize(R.dimen.simple_activity_small_margin));
 		text.setLayoutParams(textParam);
 		text.setText(res.getText(textID));
 		text.setTextDirection(View.TEXT_DIRECTION_LOCALE);
@@ -136,9 +179,32 @@ public class SimpleActivityGenerator
 		curLinearLayout.addView(text);
 		if (customView != null)
 		{
-			LinearLayout.LayoutParams customParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, res.getDimensionPixelSize(R.dimen.simple_activity_row_height));
-			customParam.setMarginStart((int) (10 * toPx));
+			LinearLayout.LayoutParams customParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+					ViewGroup.LayoutParams.MATCH_PARENT
+			);
+			customParam.setMarginEnd(res.getDimensionPixelSize(R.dimen.simple_activity_small_margin));
+			customView.setLayoutParams(customParam);
 			curLinearLayout.addView(customView);
+			if (customView instanceof Checkable || customView instanceof AbsSpinner)
+			{
+				curLinearLayout.setOnClickListener(v -> customView.performClick());
+				addRipple();
+			}
 		}
+		else if (clickListener != null)
+		{
+			curLinearLayout.setOnClickListener(clickListener);
+			addRipple();
+		}
+
+		return curLinearLayout;
+	}
+
+	public LinearLayout addConfigCheckRow(Integer textID, ConfigManager.Config config)
+	{
+		AppCompatCheckBox button = new AppCompatCheckBox(activity);
+		button.setChecked(ConfigManager.getBooleanConfig(config));
+		button.setOnCheckedChangeListener((v, checked) -> ConfigManager.setBooleanConfig(config, checked));
+		return addRow(textID, button);
 	}
 }
