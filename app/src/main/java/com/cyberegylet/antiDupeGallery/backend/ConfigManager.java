@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -135,6 +136,7 @@ public class ConfigManager
 				new AbstractMap.SimpleEntry<>(ANIMATE_GIF.toString(), "0")
 		).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
+		changedConfigFlags = Arrays.stream(values()).mapToInt(c -> 1 << c.ordinal()).sum();
 		saveConfigs();
 	}
 
