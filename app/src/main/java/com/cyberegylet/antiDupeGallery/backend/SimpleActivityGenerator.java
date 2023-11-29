@@ -7,6 +7,7 @@ import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsSpinner;
 import android.widget.Checkable;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -184,7 +185,7 @@ public class SimpleActivityGenerator
 			customParam.setMarginEnd(res.getDimensionPixelSize(R.dimen.simple_activity_small_margin));
 			customView.setLayoutParams(customParam);
 			curLinearLayout.addView(customView);
-			if (customView instanceof Checkable)
+			if (customView instanceof Checkable || customView instanceof AbsSpinner)
 			{
 				curLinearLayout.setOnClickListener(v -> customView.performClick());
 				addRipple();
