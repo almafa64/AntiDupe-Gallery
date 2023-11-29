@@ -11,6 +11,9 @@
     <string name="settings_general_heading">Általános</string>
     <string name="settings_pin">Alkalmazás PIN</string>
     <string name="settings_show_hidden">Rejtett fájlok mutatása</string>
+    <string name="settings_animate_gif">GIF Animálása</string>
+    <string name="settings_reset">Beállítások visszaállítása</string>
+    <string name="settings_danger_header">Veszély zóna</string>
 
     <!-- pin -->
     <string name="enter_the_pin">Írd be a PIN kódott</string>
@@ -20,5 +23,4 @@
     <string name="more_button">Továbbiak</string>
     <string name="no_storage_permission">Nincs tárhely engedély</string>
     <string name="back_arrow_text">Vissza</string>
-    <string name="settings_animate_gif">GIF Animálása</string>
 </resources>

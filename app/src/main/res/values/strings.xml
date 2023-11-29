@@ -11,6 +11,8 @@
     <string name="settings_show_hidden">Show hidden files</string>
     <string name="settings_general_heading">General</string>
     <string name="settings_pin">App PIN</string>
+    <string name="settings_reset">Reset all settings</string>
+    <string name="settings_danger_header">Danger zone</string>
 
     <!-- pin -->
     <string name="enter_the_pin">Enter the PIN</string>

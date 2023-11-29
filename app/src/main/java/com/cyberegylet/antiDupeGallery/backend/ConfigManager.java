@@ -3,7 +3,6 @@ package com.cyberegylet.antiDupeGallery.backend;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -11,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -20,14 +20,15 @@ import static com.cyberegylet.antiDupeGallery.backend.ConfigManager.Config.*;
 
 public class ConfigManager
 {
-	/*public interface OnConfigLoadListener
+	public interface OnConfigChangeListener
 	{
-		void OnLoad();
-	}*/
+		void OnChange(Config config, String value);
+	}
 
 	private static File configFile;
 	private static final Properties configs = new Properties();
-	//private static OnConfigLoadListener listener;
+	private static final ArrayList<OnConfigChangeListener> listeners = new ArrayList<>(5);
+	private static int changedConfigFlags = 0;
 
 	public enum Config
 	{
@@ -74,33 +75,32 @@ public class ConfigManager
 	}
 
 	public static String getConfig(@NonNull Config config) { return configs.getProperty(config.toString()); }
+
 	public static boolean getBooleanConfig(@NonNull Config config) { return getConfig(config).equals("1"); }
+
 	public static int getIntConfig(@NonNull Config config) { return Integer.parseInt(getConfig(config)); }
 
-	public static void setConfig(@NonNull Config config, @Nullable String data)
+	public static void setConfig(@NonNull Config config, @NonNull String data)
 	{
-		//ToDo make data check
-
-		if (data == null) configs.remove(config);
-		else configs.setProperty(config.toString(), data);
+		configs.setProperty(config.toString(), data);
+		changedConfigFlags |= 1 << config.ordinal();
 	}
+
 	public static void setBooleanConfig(@NonNull Config config, boolean data) { setConfig(config, data ? "1" : "0"); }
+
 	public static void setIntConfig(@NonNull Config config, int data) { setConfig(config, String.valueOf(data)); }
-
-
-	public static void removeConfig(@NonNull Config config) { setConfig(config, null); }
 
 	public static void saveConfigs()
 	{
 		try (BufferedWriter writer = Files.newBufferedWriter(configFile.toPath()))
 		{
 			configs.store(writer, null);
-			//listener.OnLoad();
 		}
 		catch (IOException e)
 		{
 			throw new RuntimeException(e);
 		}
+		runListeners();
 	}
 
 	public static void reloadConfigs()
@@ -110,12 +110,12 @@ public class ConfigManager
 			configs.clear();
 			configs.load(reader);
 			if (configs.size() == 0) resetConfigs();
-			//listener.OnLoad();
 		}
 		catch (IOException e)
 		{
 			throw new RuntimeException(e);
 		}
+		runListeners();
 	}
 
 	public static void resetConfigs()
@@ -138,5 +138,20 @@ public class ConfigManager
 		saveConfigs();
 	}
 
+	private static void runListeners()
+	{
+		for (Config c : Config.values())
+		{
+			if ((1 << c.ordinal() & changedConfigFlags) != 0)
+			{
+				listeners.forEach(l -> l.OnChange(c, configs.getProperty(c.toString())));
+			}
+		}
+	}
+
 	public static void list() { configs.list(System.out); }
+
+	public static void addListener(@NonNull OnConfigChangeListener listener) { listeners.add(listener); }
+
+	public static void removeListener(@NonNull OnConfigChangeListener listener) { listeners.remove(listener); }
 }
