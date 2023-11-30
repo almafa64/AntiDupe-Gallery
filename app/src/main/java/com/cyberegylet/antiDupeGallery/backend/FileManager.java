@@ -32,7 +32,9 @@ public class FileManager
 {
 	public static final int STORAGE_REQUEST_CODE = 1;
 	public static final Uri EXTERNAL_URI = MediaStore.Files.getContentUri("external");
-	public static final String IMAGES_AND_VIDEOS = MediaStore.MediaColumns.MIME_TYPE + " like 'image/%' or " + MediaStore.MediaColumns.MIME_TYPE + " like 'video/%'";
+	public static final String IMAGES = MediaStore.MediaColumns.MIME_TYPE + " like 'image/%'";
+	public static final String VIDEOS = MediaStore.MediaColumns.MIME_TYPE + " like 'video/%'";
+	public static final String IMAGES_AND_VIDEOS = IMAGES + " or " + VIDEOS;
 	public static final String PATH_FILTER_IMAGES_AND_VIDEOS = "(" + IMAGES_AND_VIDEOS + ") and " + MediaStore.MediaColumns.DATA + " like ?";
 
 	public final Context context;
@@ -172,6 +174,14 @@ public class FileManager
 	public void allImageAndVideoLoop(String sort, CursorLoopWrapper wrapper, String... queries)
 	{
 		cursorLoop(wrapper, sort, IMAGES_AND_VIDEOS, EXTERNAL_URI, queries);
+	}
+
+	public void allImageLoop(String sort, CursorLoopWrapper wrapper, String... queries) {
+		cursorLoop(wrapper, sort, IMAGES, EXTERNAL_URI, queries);
+	}
+
+	public void allVideoLoop(String sort, CursorLoopWrapper wrapper, String... queries) {
+		cursorLoop(wrapper, sort, VIDEOS, EXTERNAL_URI, queries);
 	}
 
 	public void allImageAndVideoInFolderLoop(String absoluteFolder, String sort, CursorLoopWrapper wrapper, String... queries)
