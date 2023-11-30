@@ -124,12 +124,12 @@ public class MainActivity extends Activity
 			{
 				String path = getPath();
 
-				if(!new File(path).canRead()) return;
+				if (!new File(path).canRead()) return;
 
 				String folderAbs = path.substring(0, path.lastIndexOf('/'));
 
 				Folder folder = folderNames.get(folderAbs);
-				if(folder == null)
+				if (folder == null)
 				{
 					folder = new Folder(FileManager.stringToUri(folderAbs));
 					folderNames.put(folderAbs, folder);

@@ -6,8 +6,8 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 
-import com.cyberegylet.antiDupeGallery.activities.ImageViewActivity;
 import com.cyberegylet.antiDupeGallery.R;
+import com.cyberegylet.antiDupeGallery.activities.ImageViewActivity;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;

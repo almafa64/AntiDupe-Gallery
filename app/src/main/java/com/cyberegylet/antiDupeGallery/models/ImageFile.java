@@ -49,6 +49,7 @@ public class ImageFile implements Parcelable
 	public long getModifiedDate() { return modifiedDate; }
 
 	public long getCreationDate() { return creationDate; }
+
 	public boolean isHidden() { return isHidden; }
 
 	private ImageFile(Parcel in)
