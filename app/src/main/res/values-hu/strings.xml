@@ -14,6 +14,7 @@
     <string name="settings_animate_gif">GIF Animálása</string>
     <string name="settings_reset">Beállítások visszaállítása</string>
     <string name="settings_danger_header">Veszély zóna</string>
+    <string name="settings_use_bin">Fájlok kukába rakása törlés helyett</string>
 
     <!-- pin -->
     <string name="enter_the_pin">Írd be a PIN kódott</string>

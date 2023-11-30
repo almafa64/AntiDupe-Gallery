@@ -13,6 +13,7 @@
     <string name="settings_pin">App PIN</string>
     <string name="settings_reset">Reset all settings</string>
     <string name="settings_danger_header">Danger zone</string>
+    <string name="settings_use_bin">Move items into the Recycle Bin instead of deleting</string>
 
     <!-- pin -->
     <string name="enter_the_pin">Enter the PIN</string>

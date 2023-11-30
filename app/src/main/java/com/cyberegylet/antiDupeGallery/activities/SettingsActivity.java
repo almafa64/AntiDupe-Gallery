@@ -29,6 +29,7 @@ public class SettingsActivity extends Activity
 			window.showAtLocation(v, Gravity.CENTER, 0, 0);*/
 		});
 		generator.addConfigCheckRow(R.string.settings_show_hidden, ConfigManager.Config.SHOW_HIDDEN);
+		generator.addConfigCheckRow(R.string.settings_use_bin, ConfigManager.Config.USE_BIN);
 
 		generator.newHeader(R.string.settings_thumbnail_heading);
 		generator.addConfigCheckRow(R.string.settings_animate_gif, ConfigManager.Config.ANIMATE_GIF);
