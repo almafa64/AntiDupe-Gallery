@@ -5,5 +5,5 @@ public class Backend {
         System.loadLibrary("backend");
     }
 
-    public static native int test();
+    public static native void init(String workDirPath);
 }
