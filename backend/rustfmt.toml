@@ -1,4 +1,12 @@
-max_width = 100
+max_width = 80
+binop_separator = "Back"
+combine_control_expr = false
+empty_item_single_line = false
+force_multiline_blocks = true
+format_code_in_doc_comments = true
+format_macro_matchers = true
+format_macro_bodies = true
+hex_literal_case = "Upper"
 newline_style = "Unix"
 imports_granularity = "Module"
 overflow_delimited_expr = true
