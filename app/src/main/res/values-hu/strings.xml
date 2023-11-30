@@ -17,7 +17,8 @@
     <string name="settings_use_bin">Fájlok kukába rakása törlés helyett</string>
 
     <!-- pin -->
-    <string name="enter_the_pin">Írd be a PIN kódott</string>
+    <string name="pin_enter_pin">Írd be a PIN kódott</string>
+    <string name="pin_enter_pin_again">Írd be a PIN kódott mégegyszer</string>
 
     <!-- general -->
     <string name="settings_button">Beállítások</string>

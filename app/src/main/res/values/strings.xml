@@ -16,7 +16,8 @@
     <string name="settings_use_bin">Move items into the Recycle Bin instead of deleting</string>
 
     <!-- pin -->
-    <string name="enter_the_pin">Enter the PIN</string>
+    <string name="pin_enter_pin">Enter the PIN</string>
+    <string name="pin_enter_pin_again">Enter the PIN again</string>
 
     <!-- general -->
     <string name="settings_button">Settings</string>
