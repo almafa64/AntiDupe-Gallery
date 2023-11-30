@@ -66,13 +66,13 @@ public class FileManager
 	{
 		this.activity = activity;
 		context = activity.getApplicationContext();
-		contentResolver = context.getContentResolver();
+		contentResolver = activity.getContentResolver();
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
 		{
-			if (ContextCompat.checkSelfPermission(context,
+			if (ContextCompat.checkSelfPermission(activity,
 					Manifest.permission.READ_MEDIA_IMAGES
-			) == PackageManager.PERMISSION_DENIED || ContextCompat.checkSelfPermission(context,
+			) == PackageManager.PERMISSION_DENIED || ContextCompat.checkSelfPermission(activity,
 					Manifest.permission.READ_MEDIA_VIDEO
 			) == PackageManager.PERMISSION_DENIED)
 			{
@@ -86,7 +86,7 @@ public class FileManager
 		}
 		else
 		{
-			if (ContextCompat.checkSelfPermission(context,
+			if (ContextCompat.checkSelfPermission(activity,
 					android.Manifest.permission.READ_EXTERNAL_STORAGE
 			) == PackageManager.PERMISSION_DENIED)
 			{

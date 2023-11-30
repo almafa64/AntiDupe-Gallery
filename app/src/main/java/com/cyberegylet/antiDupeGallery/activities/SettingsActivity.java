@@ -6,12 +6,12 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatCheckBox;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.backend.ConfigManager;
@@ -31,10 +31,10 @@ public class SettingsActivity extends Activity
 
 		generator.newHeader(R.string.settings_general_heading);
 
-		CheckBox checkBox = new CheckBox(this);
+		AppCompatCheckBox checkBox = new AppCompatCheckBox(this);
 		checkBox.setChecked(ConfigManager.getConfig(ConfigManager.Config.PIN_LOCk).length() != 0);
 		checkBox.setOnCheckedChangeListener((v, check) -> {
-			if(!check)
+			if (!check)
 			{
 				ConfigManager.setConfig(ConfigManager.Config.PIN_LOCk, "");
 				return;
@@ -51,7 +51,7 @@ public class SettingsActivity extends Activity
 				return true;
 			});
 			EditText editText = (EditText) popup.getChildAt(1);
-			final String[] tmpPin = new String[] {""};
+			final String[] tmpPin = new String[]{ "" };
 			editText.addTextChangedListener(new TextWatcher()
 			{
 				@Override
@@ -65,13 +65,13 @@ public class SettingsActivity extends Activity
 				{
 					if (s.length() == 4)
 					{
-						if(text.getText() == getResources().getText(R.string.pin_enter_pin))
+						if (text.getText() == getResources().getText(R.string.pin_enter_pin))
 						{
 							text.setText(R.string.pin_enter_pin_again);
 							tmpPin[0] = s.toString();
 							editText.getText().clear();
 						}
-						else if(s.toString().equals(tmpPin[0]))
+						else if (s.toString().equals(tmpPin[0]))
 						{
 							ConfigManager.setConfig(ConfigManager.Config.PIN_LOCk, s.toString());
 							window.dismiss();
