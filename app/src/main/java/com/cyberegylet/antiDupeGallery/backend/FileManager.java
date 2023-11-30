@@ -24,8 +24,6 @@ import com.bumptech.glide.load.resource.bitmap.Downsampler;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -275,17 +273,7 @@ public class FileManager
 
 	public String getMimeType(Uri uri) { return getMimeType(getIDFromUri(uri)); }
 
-	public static Uri stringToUri(String pathStr) {
-		Path path = Paths.get(pathStr);
-		if (!path.isAbsolute()) {
-			throw new RuntimeException("FileManager.stringToUri requires an absolute path");
-		}
-		final StringBuilder encodedPathBuilder = new StringBuilder();
-		for (Path segment : path) {
-			encodedPathBuilder.append("/").append(Uri.encode(segment.toString()));
-		}
-		return Uri.parse("file://" + encodedPathBuilder);
-	}
+	public static Uri stringToUri(String pathStr) { return Uri.parse("file://" + Uri.encode(pathStr, "/")); }
 
 	public static String uriToString(Uri uri) { return uri.getPath(); }
 

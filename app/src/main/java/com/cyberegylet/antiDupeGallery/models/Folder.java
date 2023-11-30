@@ -8,7 +8,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -30,11 +29,10 @@ public class Folder
 		String stringPath = Objects.requireNonNull(path.getPath());
 		this.path = path;
 		this.name = Objects.requireNonNull(path.getLastPathSegment());
-		this.isHidden = path.getPath().contains("/.");
+		this.isHidden = stringPath.contains("/.");
 		try
 		{
-			Path p = Paths.get(stringPath);
-			BasicFileAttributes attr = Files.readAttributes(p, BasicFileAttributes.class);
+			BasicFileAttributes attr = Files.readAttributes(Paths.get(stringPath), BasicFileAttributes.class);
 			size = attr.size();
 			modifiedDate = attr.lastModifiedTime().toMillis();
 			creationDate = attr.creationTime().toMillis();

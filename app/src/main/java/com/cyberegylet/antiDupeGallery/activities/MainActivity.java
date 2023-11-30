@@ -23,8 +23,7 @@ import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.models.Folder;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -125,24 +124,18 @@ public class MainActivity extends Activity
 			{
 				String path = getPath();
 
-				if (!Files.exists(Paths.get(path)))
-				{
-					return;
-				}
+				if(!new File(path).canRead()) return;
 
 				String folderAbs = path.substring(0, path.lastIndexOf('/'));
 
 				Folder folder = folderNames.get(folderAbs);
-				ImageFile image = new ImageFile(FileManager.stringToUri(path));
-				if (folder != null)
+				if(folder == null)
 				{
-					folder.images.add(image);
-					return;
+					folder = new Folder(FileManager.stringToUri(folderAbs));
+					folderNames.put(folderAbs, folder);
 				}
-
-				folder = new Folder(FileManager.stringToUri(folderAbs));
+				ImageFile image = new ImageFile(FileManager.stringToUri(path));
 				folder.images.add(image);
-				folderNames.put(folderAbs, folder);
 			}
 		};
 		String image_sort = ConfigSort.toSQLString(ConfigManager.getConfig(ConfigManager.Config.IMAGE_SORT));
