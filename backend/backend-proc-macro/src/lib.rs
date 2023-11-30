@@ -1,7 +1,6 @@
 use core::panic;
 
 use proc_macro::TokenStream;
-use proc_macro2::Ident;
 use quote::quote;
 use syn::{parse_quote, ExprLit, ItemFn, Meta};
 
@@ -36,12 +35,8 @@ pub fn java_export(attr: TokenStream, input: TokenStream) -> TokenStream {
         class_name = class.replace('.', "_")
     );
 
-    fn_decl.sig.ident = Ident::new(&jni_name, fn_decl.sig.ident.span());
     fn_decl.attrs.push(parse_quote! {
-        #[allow(non_snake_case)]
-    });
-    fn_decl.attrs.push(parse_quote! {
-        #[no_mangle]
+        #[export_name = #jni_name]
     });
 
     quote! { #fn_decl }.into()
