@@ -25,6 +25,10 @@
     <string name="no_storage_permission">No storage permission</string>
     <string name="back_arrow_text">Back</string>
 
+    <!-- main -->
+    <string name="main_popup_move">Move</string>
+    <string name="main_popup_copy">Copy</string>
+
     <!-- info -->
     <string name="email" translatable="false">something@gmail.com</string>
     <string name="version_text" translatable="false">Version 0.0.2</string>

@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -23,7 +24,14 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.bitmap.Downsampler;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
+import com.cyberegylet.antiDupeGallery.R;
 
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -39,7 +47,7 @@ public class FileManager
 	public final Activity activity;
 	private final ContentResolver contentResolver;
 
-	private boolean hasReadAccess = false;
+	private boolean hasFileAccess = false;
 
 	public static class Mimes
 	{
@@ -68,39 +76,50 @@ public class FileManager
 		context = activity.getApplicationContext();
 		contentResolver = activity.getContentResolver();
 
+		boolean hasRead;
+		boolean hasWrite = true;
+
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
 		{
-			if (ContextCompat.checkSelfPermission(activity,
+			hasRead = (ContextCompat.checkSelfPermission(activity,
 					Manifest.permission.READ_MEDIA_IMAGES
-			) == PackageManager.PERMISSION_DENIED || ContextCompat.checkSelfPermission(activity,
+			) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(activity,
 					Manifest.permission.READ_MEDIA_VIDEO
-			) == PackageManager.PERMISSION_DENIED)
-			{
-				String[] permissions = new String[]{ Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO };
-				ActivityCompat.requestPermissions(activity, permissions, STORAGE_REQUEST_CODE);
-			}
-			else
-			{
-				hasReadAccess = true;
-			}
+			) == PackageManager.PERMISSION_GRANTED);
 		}
 		else
 		{
-			if (ContextCompat.checkSelfPermission(activity,
+			hasRead = ContextCompat.checkSelfPermission(activity,
 					android.Manifest.permission.READ_EXTERNAL_STORAGE
-			) == PackageManager.PERMISSION_DENIED)
+			) == PackageManager.PERMISSION_GRANTED;
+		}
+
+		if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P)
+		{
+			hasWrite = ContextCompat.checkSelfPermission(activity,
+					Manifest.permission.WRITE_EXTERNAL_STORAGE
+			) == PackageManager.PERMISSION_GRANTED;
+		}
+
+		if (hasRead && hasWrite) hasFileAccess = true;
+		else
+		{
+			List<String> permissions = new ArrayList<>();
+			if (!hasWrite) permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+			if (!hasRead)
 			{
-				String[] permissions = new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE };
-				ActivityCompat.requestPermissions(activity, permissions, STORAGE_REQUEST_CODE);
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+				{
+					permissions.add(Manifest.permission.READ_MEDIA_IMAGES);
+					permissions.add(Manifest.permission.READ_MEDIA_VIDEO);
+				}
+				else permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
 			}
-			else
-			{
-				hasReadAccess = true;
-			}
+			ActivityCompat.requestPermissions(activity, permissions.toArray(new String[0]), STORAGE_REQUEST_CODE);
 		}
 	}
 
-	public boolean hasReadAccess() { return hasReadAccess; }
+	public boolean hasFileAccess() { return hasFileAccess; }
 
 	public abstract static class CursorLoopWrapper
 	{
@@ -179,50 +198,6 @@ public class FileManager
 		cursorLoop(wrapper, sort, PATH_FILTER_IMAGES_AND_VIDEOS, new String[]{ absoluteFolder + "/%" }, EXTERNAL_URI, queries);
 	}
 
-	private List<Integer> getAllIDs(Uri uri)
-	{
-		List<Integer> ids = new ArrayList<>();
-		cursorLoop(new CursorLoopWrapper()
-		{
-			@Override
-			public void run()
-			{
-				ids.add(getID());
-			}
-		}, uri, MediaStore.MediaColumns._ID);
-		return ids;
-	}
-
-	private List<String> getAllPaths(Uri uri)
-	{
-		List<String> paths = new ArrayList<>();
-		cursorLoop(new CursorLoopWrapper()
-		{
-			@Override
-			public void run()
-			{
-				paths.add(getPath());
-			}
-		}, uri, MediaStore.MediaColumns.DATA);
-		return paths;
-	}
-
-	public List<Integer> getAllImageIDs() { return getAllIDs(MediaStore.Images.Media.EXTERNAL_CONTENT_URI); }
-
-	public List<Integer> getAllVideoIDs() { return getAllIDs(MediaStore.Video.Media.EXTERNAL_CONTENT_URI); }
-
-	public List<Integer> getAllAudioIDs() { return getAllIDs(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI); }
-
-	public List<Integer> getAllFileIDs() { return getAllIDs(EXTERNAL_URI); }
-
-	public List<String> getAllImagePaths() { return getAllPaths(MediaStore.Images.Media.EXTERNAL_CONTENT_URI); }
-
-	public List<String> getAllVideoPaths() { return getAllPaths(MediaStore.Video.Media.EXTERNAL_CONTENT_URI); }
-
-	public List<String> getAllAudioPaths() { return getAllPaths(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI); }
-
-	public List<String> getAllFilePaths() { return getAllPaths(EXTERNAL_URI); }
-
 	public Uri getUriFromID(int id)
 	{
 		try (Cursor cursor = contentResolver.query(MediaStore.Files.getContentUri("external", id),
@@ -287,5 +262,77 @@ public class FileManager
 		else options = options.decode(Drawable.class);
 
 		Glide.with(context).load(uri).apply(options).transition(DrawableTransitionOptions.withCrossFade()).into(imageView);
+	}
+
+	public boolean moveFile(Path fromFile, Path toFolder)
+	{
+		try
+		{
+			Files.createDirectories(toFolder);
+			Files.move(fromFile, toFolder.resolve(fromFile.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+			return true;
+		}
+		catch (AccessDeniedException e)
+		{
+			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show();
+			return false;
+		}
+		catch (IOException e)
+		{
+			return false;
+		}
+	}
+
+	public boolean copyFile(Path fromFile, Path toFolder)
+	{
+		try
+		{
+			Files.createDirectories(toFolder);
+			Files.copy(fromFile, toFolder.resolve(fromFile.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+			return true;
+		}
+		catch (AccessDeniedException e)
+		{
+			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show();
+			return false;
+		}
+		catch (IOException e)
+		{
+			return false;
+		}
+	}
+
+	public boolean moveFolder(Path fromFolder, Path toFolder)
+	{
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(fromFolder))
+		{
+			for (Path path : stream)
+			{
+				if (Files.isDirectory(path)) continue;
+				moveFile(path, toFolder);
+			}
+		}
+		catch (IOException e)
+		{
+			return false;
+		}
+		return true;
+	}
+
+	public boolean copyFolder(Path fromFolder, Path toFolder)
+	{
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(fromFolder))
+		{
+			for (Path path : stream)
+			{
+				if (Files.isDirectory(path)) continue;
+				copyFile(path, toFolder);
+			}
+		}
+		catch (IOException e)
+		{
+			return false;
+		}
+		return true;
 	}
 }

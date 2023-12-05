@@ -77,7 +77,7 @@ public class MainActivity extends Activity
 		});
 
 		fileManager = new FileManager(this);
-		if (fileManager.hasReadAccess())
+		if (fileManager.hasFileAccess())
 		{
 			fileThings();
 		}
