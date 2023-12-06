@@ -93,10 +93,13 @@ public class ImageViewActivity extends Activity implements Serializable
 				final int pointerIndex = event.getActionIndex();
 
 				final float x, y;
-				try {
+				try
+				{
 					x = event.getX(pointerIndex);
 					y = event.getY(pointerIndex);
-				} catch (IllegalArgumentException e) {
+				}
+				catch (IllegalArgumentException e)
+				{
 					break;
 				}
 
@@ -112,10 +115,13 @@ public class ImageViewActivity extends Activity implements Serializable
 				final int pointerIndex = event.findPointerIndex(activePointerID);
 
 				final float x, y;
-				try {
+				try
+				{
 					x = event.getX(pointerIndex);
 					y = event.getY(pointerIndex);
-				} catch (IllegalArgumentException e) {
+				}
+				catch (IllegalArgumentException e)
+				{
 					activePointerID = MotionEvent.INVALID_POINTER_ID;
 					break;
 				}
@@ -141,9 +147,12 @@ public class ImageViewActivity extends Activity implements Serializable
 				final int pointerIndex = event.findPointerIndex(activePointerID);
 
 				final int pointerId;
-				try {
+				try
+				{
 					pointerId = event.getPointerId(pointerIndex);
-				} catch (IllegalArgumentException e) {
+				}
+				catch (IllegalArgumentException e)
+				{
 					activePointerID = MotionEvent.INVALID_POINTER_ID;
 					break;
 				}
@@ -198,7 +207,8 @@ public class ImageViewActivity extends Activity implements Serializable
 		}
 
 		@Override
-		public boolean onScaleBegin(ScaleGestureDetector detector) {
+		public boolean onScaleBegin(ScaleGestureDetector detector)
+		{
 			scaleFocusX = detector.getFocusX();
 			scaleFocusY = detector.getFocusY();
 			return true;

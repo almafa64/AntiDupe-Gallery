@@ -56,7 +56,7 @@ public class FolderViewActivity extends Activity
 		});
 
 		fileManager = new FileManager(this);
-		if (fileManager.hasReadAccess()) fileThings();
+		if (fileManager.hasFileAccess()) fileThings();
 	}
 
 	@Override

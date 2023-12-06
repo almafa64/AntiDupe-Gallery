@@ -15,18 +15,34 @@ import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
 import com.cyberegylet.antiDupeGallery.models.Folder;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
-import java.util.List;
+import java.util.Comparator;
+import java.util.TreeSet;
 
-public class FolderAdapter extends BaseImageAdapter
+public class FolderAdapterAsync extends BaseImageAdapter
 {
-	public interface FilterRun
+	public static class MySortedSet<T> extends TreeSet<T>
 	{
-		void filter(List<Folder> folders);
+		public MySortedSet(Comparator<T> comparator) { super(comparator); }
+
+		public T get(int i)
+		{
+			int tmp = 0;
+			for (T e : this)
+			{
+				if (tmp++ == i) return e;
+			}
+			return null;
+		}
 	}
 
-	private final List<Folder> folders;
+	public interface FilterRun
+	{
+		void filter(MySortedSet<Folder> folders);
+	}
 
-	public FolderAdapter(List<Folder> folders, FileManager fileManager)
+	private final MySortedSet<Folder> folders;
+
+	public FolderAdapterAsync(MySortedSet<Folder> folders, FileManager fileManager)
 	{
 		super(fileManager);
 		this.folders = folders;
@@ -34,17 +50,24 @@ public class FolderAdapter extends BaseImageAdapter
 
 	public class ViewHolder extends BaseImageAdapter.ViewHolder
 	{
-		public TextView name;
-		public TextView count;
-
+		public final TextView name;
+		public final TextView count;
+		public Folder folder;
 		public ViewHolder(View itemView)
 		{
-			super(itemView, pos -> ActivityManager.switchActivity(fileManager.activity, FolderViewActivity.class,
-					//new ActivityParameter("currentFolder", folders.get(pos).path.getPath()),
-					new ActivityParameter("images", folders.get(pos).images)
-			));
+			super(itemView,
+					pos -> ActivityManager.switchActivity(fileManager.activity,
+							FolderViewActivity.class,
+							new ActivityParameter("images", folders.get(pos).images)
+					)
+			);
 			name = itemView.findViewById(R.id.folderName);
 			count = itemView.findViewById(R.id.fileCount);
+		}
+
+		public void reIndexFolder()
+		{
+			folder = folders.get(getAdapterPosition());
 		}
 	}
 
@@ -65,6 +88,7 @@ public class FolderAdapter extends BaseImageAdapter
 		ViewHolder thisHolder = (ViewHolder) holder;
 		thisHolder.name.setText(folder.getName());
 		thisHolder.count.setText(String.valueOf(folder.images.size()));
+		thisHolder.reIndexFolder();
 	}
 
 	@Override

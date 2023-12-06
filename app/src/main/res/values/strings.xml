@@ -13,15 +13,21 @@
     <string name="settings_pin">App PIN</string>
     <string name="settings_reset">Reset all settings</string>
     <string name="settings_danger_header">Danger zone</string>
+    <string name="settings_use_bin">Move items into the Recycle Bin instead of deleting</string>
 
     <!-- pin -->
-    <string name="enter_the_pin">Enter the PIN</string>
+    <string name="pin_enter_pin">Enter the PIN</string>
+    <string name="pin_enter_pin_again">Enter the PIN again</string>
 
     <!-- general -->
     <string name="settings_button">Settings</string>
     <string name="more_button">More</string>
     <string name="no_storage_permission">No storage permission</string>
     <string name="back_arrow_text">Back</string>
+
+    <!-- main -->
+    <string name="main_popup_move">Move</string>
+    <string name="main_popup_copy">Copy</string>
 
     <!-- info -->
     <string name="email" translatable="false">something@gmail.com</string>
