@@ -2,10 +2,12 @@ package com.cyberegylet.antiDupeGallery.activities;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.PopupMenu;
@@ -42,6 +44,8 @@ import java.util.stream.Collectors;
 
 public class MainActivity extends Activity
 {
+	private static final int MOVE_FOLDER_SELECT_ID = 1;
+	private static final int COPY_FOLDER_SELECT_ID = 2;
 	private FileManager fileManager;
 	private RecyclerView recycler;
 	private final ActivityManager activityManager = new ActivityManager(this);
@@ -91,21 +95,13 @@ public class MainActivity extends Activity
 				}
 				else if (id == moveId)
 				{
-					for(BaseImageAdapter.ViewHolder tmp: selected)
-					{
-						FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
-						Path p = Paths.get(holder.folder.getPath().getPath());
-						fileManager.moveFolder(p, Paths.get("/storage/emulated/0/appTmp")); // ToDo get toPath
-					}
+					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+					startActivityForResult(intent, MOVE_FOLDER_SELECT_ID);
 				}
 				else if (id == copyId)
 				{
-					for(BaseImageAdapter.ViewHolder tmp: selected)
-					{
-						FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
-						Path p = Paths.get(holder.folder.getPath().getPath());
-						fileManager.copyFolder(p, Paths.get("/storage/emulated/0/appTmp")); // ToDo get toPath
-					}
+					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+					startActivityForResult(intent, COPY_FOLDER_SELECT_ID);
 				}
 				else return false;
 				return true;
@@ -149,6 +145,35 @@ public class MainActivity extends Activity
 			dirs.clear();
 			dirs.addAll(folders2.stream().filter(folder -> !folder.isHidden() || showHidden).collect(Collectors.toList()));
 		});
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	{
+		if(resultCode != RESULT_OK || data == null) return;
+		final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
+		final List<BaseImageAdapter.ViewHolder> selected = adapter.getSelected;
+		Path path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]); // ToDo this is very hacky
+		Log.d("app", path.toString());
+		switch (requestCode)
+		{
+			case MOVE_FOLDER_SELECT_ID:
+				for (BaseImageAdapter.ViewHolder tmp : selected)
+				{
+					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
+					Path p = Paths.get(holder.folder.getPath().getPath());
+					fileManager.moveFolder(p, path);
+				}
+				break;
+			case COPY_FOLDER_SELECT_ID:
+				for (BaseImageAdapter.ViewHolder tmp : selected)
+				{
+					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
+					Path p = Paths.get(holder.folder.getPath().getPath());
+					fileManager.copyFolder(p, path);
+				}
+				break;
+		}
 	}
 
 	@Override
