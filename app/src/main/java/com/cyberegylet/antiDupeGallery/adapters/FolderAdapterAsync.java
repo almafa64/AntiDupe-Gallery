@@ -53,6 +53,7 @@ public class FolderAdapterAsync extends BaseImageAdapter
 		public final TextView name;
 		public final TextView count;
 		public Folder folder;
+
 		public ViewHolder(View itemView)
 		{
 			super(itemView,
@@ -83,8 +84,11 @@ public class FolderAdapterAsync extends BaseImageAdapter
 	public void onBindViewHolder(@NonNull BaseImageAdapter.ViewHolder holder, int position)
 	{
 		Folder folder = folders.get(position);
-		ImageFile image = folder.images.get(0);
-		fileManager.thumbnailIntoImageView(holder.img, image.getPath());
+		if (folder.images.size() > 0)
+		{
+			ImageFile image = folder.images.get(0);
+			fileManager.thumbnailIntoImageView(holder.img, image.getPath());
+		}
 		ViewHolder thisHolder = (ViewHolder) holder;
 		thisHolder.name.setText(folder.getName());
 		thisHolder.count.setText(String.valueOf(folder.images.size()));
