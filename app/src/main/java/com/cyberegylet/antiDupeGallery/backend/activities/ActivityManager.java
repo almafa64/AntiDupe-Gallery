@@ -2,9 +2,15 @@ package com.cyberegylet.antiDupeGallery.backend.activities;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
 
@@ -68,4 +74,14 @@ public class ActivityManager
 	{
 		return currentActivity.getIntent().getParcelableArrayListExtra(name);
 	}
+
+	public static void applyDim(@NonNull ViewGroup parent, float dimAmount)
+	{
+		Drawable dim = new ColorDrawable(Color.BLACK);
+		dim.setBounds(0, 0, parent.getWidth(), parent.getHeight());
+		dim.setAlpha((int) (255 * dimAmount));
+		parent.getOverlay().add(dim);
+	}
+
+	public static void clearDim(@NonNull ViewGroup parent) { parent.getOverlay().clear(); }
 }
