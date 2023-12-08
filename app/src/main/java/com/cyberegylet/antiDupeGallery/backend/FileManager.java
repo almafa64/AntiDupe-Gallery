@@ -310,6 +310,24 @@ public class FileManager
 		}
 	}
 
+	public boolean deleteFile(Path file)
+	{
+		try
+		{
+			Files.deleteIfExists(file);
+			return true;
+		}
+		catch (AccessDeniedException e)
+		{
+			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show();
+			return false;
+		}
+		catch (IOException e)
+		{
+			return false;
+		}
+	}
+
 	public boolean moveFolder(Path fromFolder, Path toFolder)
 	{
 		try (DirectoryStream<Path> stream = Files.newDirectoryStream(fromFolder))
@@ -335,6 +353,23 @@ public class FileManager
 			{
 				if (Files.isDirectory(path)) continue;
 				copyFile(path, toFolder);
+			}
+		}
+		catch (IOException e)
+		{
+			return false;
+		}
+		return true;
+	}
+
+	public boolean deleteFolder(Path folder)
+	{
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(folder))
+		{
+			for (Path path : stream)
+			{
+				if (Files.isDirectory(path)) continue;
+				deleteFile(path);
 			}
 		}
 		catch (IOException e)
