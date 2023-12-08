@@ -52,7 +52,7 @@ public class FolderAdapterAsync extends BaseImageAdapter
 	{
 		public final TextView name;
 		public final TextView count;
-		public Folder folder;
+		private Folder folder;
 
 		public ViewHolder(View itemView)
 		{
@@ -69,6 +69,11 @@ public class FolderAdapterAsync extends BaseImageAdapter
 		public void reIndexFolder()
 		{
 			folder = folders.get(getAdapterPosition());
+		}
+
+		public Folder getFolder()
+		{
+			return folder;
 		}
 	}
 

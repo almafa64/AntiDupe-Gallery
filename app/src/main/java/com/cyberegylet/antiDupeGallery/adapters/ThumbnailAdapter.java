@@ -32,6 +32,7 @@ public class ThumbnailAdapter extends BaseImageAdapter
 
 	public class ViewHolder extends BaseImageAdapter.ViewHolder
 	{
+		private ImageFile image;
 		public ViewHolder(View itemView)
 		{
 			super(itemView,
@@ -41,6 +42,13 @@ public class ThumbnailAdapter extends BaseImageAdapter
 					)
 			);
 		}
+
+		public void reIndexImage()
+		{
+			image = images.get(getAdapterPosition());
+		}
+
+		public ImageFile getImage() { return image; }
 	}
 
 	@NonNull
@@ -56,6 +64,7 @@ public class ThumbnailAdapter extends BaseImageAdapter
 	{
 		ImageFile imageFile = images.get(position);
 		fileManager.thumbnailIntoImageView(holder.img, imageFile.getPath());
+		((ViewHolder) holder).reIndexImage();
 	}
 
 	@Override
