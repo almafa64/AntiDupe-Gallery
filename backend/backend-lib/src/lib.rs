@@ -1,17 +1,81 @@
+#![allow(unused)]
+
+mod android;
+mod digest;
 mod log;
 
-use backend_proc_macro::java_export;
-use jni::objects::{JClass, JString};
-use jni::sys::{jint, JNI_VERSION_1_6};
-use jni::{JNIEnv, JavaVM};
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
-#[no_mangle]
-#[allow(non_snake_case)]
-pub extern "system" fn JNI_OnLoad(_vm: JavaVM, _: *mut ()) -> jint {
-    JNI_VERSION_1_6
+use jni::JNIEnv;
+use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::{Database, Executor, Pool, Sqlite};
+use tokio::sync::{mpsc, oneshot};
+
+use std::sync::Arc;
+
+async fn main(
+    mut env: JNIEnv<'_>,
+    mut file_recver: mpsc::UnboundedReceiver<(i64, PathBuf)>,
+    mut shutdown_recver: oneshot::Receiver<()>,
+    mut file_queue_length: Arc<AtomicUsize>,
+    db_path: &str,
+) {
+    let db = SqlitePoolOptions::new()
+        .connect(&format!("sqlite://{db_path}?mode=rw"))
+        .await
+        .unwrap();
+    sqlx::query("CREATE TABLE IF NOT EXISTS digests (id INTEGER, path TEXT, digest BLOB)")
+        .execute(&db)
+        .await
+        .unwrap();
+
+    loop {
+        tokio::select! {
+            file = file_recver.recv() => {
+                if let Some((id, path)) = file {
+                    handle_file(&mut env, &db, (id, path)).await;
+                    file_queue_length.fetch_sub(1, Ordering::SeqCst);
+                }
+            }
+            _ = &mut shutdown_recver => {
+                break;
+            }
+        }
+    }
 }
 
-#[java_export(class = "com.cyberegylet.antiDupeGallery.backend.Backend")]
-pub extern "C" fn init(mut env: JNIEnv, _class: JClass, work_dir: JString) {
-    let work_dir: String = env.get_string(&work_dir).unwrap().into();
+async fn handle_file(
+    env: &mut JNIEnv<'_>,
+    db: &Pool<Sqlite>,
+    file: (i64, PathBuf),
+) {
+    let (id, path) = file;
+    let (exists,): (bool,) =
+        sqlx::query_as("SELECT EXISTS(SELECT 1 FROM digests WHERE id = ?)")
+            .bind(id)
+            .fetch_one(db)
+            .await
+            .unwrap();
+    if !exists {
+        match digest::digest(&path) {
+            Ok(digest) => {
+                let path = path.as_os_str().to_str().unwrap();
+                sqlx::query("INSERT INTO digests VALUES (?, ?, ?)")
+                    .bind(id)
+                    .bind(path)
+                    .bind(&digest.digest[..])
+                    .execute(db)
+                    .await
+                    .unwrap();
+            }
+            Err(err) => {
+                log::err(
+                    env,
+                    "Backend",
+                    format!("digest::digest failed: {err}"),
+                );
+            }
+        }
+    }
 }

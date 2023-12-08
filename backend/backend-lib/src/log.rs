@@ -1,7 +1,6 @@
 use std::fmt::Display;
-use std::sync::Mutex;
 
-use jni::objects::{JClass, JValueGen};
+use jni::objects::JValueGen;
 use jni::JNIEnv;
 
 const ANDROID_LOG_CLASS: &'static str = "android/util/Log";

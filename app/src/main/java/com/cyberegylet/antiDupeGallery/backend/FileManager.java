@@ -136,7 +136,7 @@ public class FileManager
 			mime_col = cursor.getColumnIndex(MediaStore.MediaColumns.MIME_TYPE);
 		}
 
-		public int getID() { return cursor.getInt(id_col); }
+		public long getID() { return cursor.getLong(id_col); }
 
 		public String getPath() { return cursor.getString(path_col); }
 
@@ -207,6 +207,50 @@ public class FileManager
 	{
 		cursorLoop(wrapper, sort, PATH_FILTER_IMAGES_AND_VIDEOS, new String[]{ absoluteFolder + "/%" }, EXTERNAL_URI, queries);
 	}
+
+	private List<Long> getAllIDs(Uri uri)
+	{
+		List<Long> ids = new ArrayList<>();
+		cursorLoop(new CursorLoopWrapper()
+		{
+			@Override
+			public void run()
+			{
+				ids.add(getID());
+			}
+		}, uri, MediaStore.MediaColumns._ID);
+		return ids;
+	}
+
+	private List<String> getAllPaths(Uri uri)
+	{
+		List<String> paths = new ArrayList<>();
+		cursorLoop(new CursorLoopWrapper()
+		{
+			@Override
+			public void run()
+			{
+				paths.add(getPath());
+			}
+		}, uri, MediaStore.MediaColumns.DATA);
+		return paths;
+	}
+
+	public List<Long> getAllImageIDs() { return getAllIDs(MediaStore.Images.Media.EXTERNAL_CONTENT_URI); }
+
+	public List<Long> getAllVideoIDs() { return getAllIDs(MediaStore.Video.Media.EXTERNAL_CONTENT_URI); }
+
+	public List<Long> getAllAudioIDs() { return getAllIDs(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI); }
+
+	public List<Long> getAllFileIDs() { return getAllIDs(EXTERNAL_URI); }
+
+	public List<String> getAllImagePaths() { return getAllPaths(MediaStore.Images.Media.EXTERNAL_CONTENT_URI); }
+
+	public List<String> getAllVideoPaths() { return getAllPaths(MediaStore.Video.Media.EXTERNAL_CONTENT_URI); }
+
+	public List<String> getAllAudioPaths() { return getAllPaths(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI); }
+
+	public List<String> getAllFilePaths() { return getAllPaths(EXTERNAL_URI); }
 
 	public Uri getUriFromID(int id)
 	{

@@ -4,10 +4,12 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.Menu;
+import android.util.Log;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.SearchView;
@@ -22,6 +24,7 @@ import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.FolderAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.FolderAdapterAsync;
+import com.cyberegylet.antiDupeGallery.backend.Backend;
 import com.cyberegylet.antiDupeGallery.backend.ConfigManager;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
@@ -30,17 +33,22 @@ import com.cyberegylet.antiDupeGallery.models.Folder;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import kotlin.io.encoding.Base64Kt;
 
 public class MainActivity extends Activity
 {
@@ -54,10 +62,15 @@ public class MainActivity extends Activity
 	private FolderAdapterAsync.MySortedSet<Folder> foldersCopy;
 	private FolderAdapterAsync.MySortedSet<Folder> folders2;
 
+	private SQLiteDatabase database;
+
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+
+		this.database = SQLiteDatabase.openOrCreateDatabase(getDatabasePath("data.db"), null);
+		Backend.init(this);
 
 		ConfigManager.init(this);
 		if (ConfigManager.getConfig(ConfigManager.Config.PIN_LOCk).length() != 0 && ActivityManager.getParam(this, "login") == null)
@@ -167,6 +180,7 @@ public class MainActivity extends Activity
 			dirs.addAll(folders.stream().filter(folder -> !folder.isHidden() || showHidden).collect(Collectors.toList()));
 		});*/
 		if (recycler == null || recycler.getAdapter() == null) return;
+		if (recycler == null || recycler.getAdapter() == null) return;
 		((FolderAdapterAsync) recycler.getAdapter()).filter(dirs -> {
 			dirs.clear();
 			dirs.addAll(folders2.stream().filter(folder -> !folder.isHidden() || showHidden).collect(Collectors.toList()));
@@ -260,6 +274,14 @@ public class MainActivity extends Activity
 
 		new AsyncTask<Void, Void, Void>()
 		{
+			private long timeStart = 0;
+
+			@Override
+			protected void onPreExecute()
+			{
+				timeStart = System.nanoTime();
+			}
+
 			@Override
 			protected Void doInBackground(Void... voids)
 			{
@@ -286,6 +308,11 @@ public class MainActivity extends Activity
 								foldersCopy.add(folder);
 						}
 						ImageFile image = new ImageFile(FileManager.stringToUri(path));
+
+						long id = getID();
+
+						Backend.queueFile(id, path);
+
 						folder.images.add(image);
 
 						if (timeout[0]++ == 20)
@@ -296,7 +323,13 @@ public class MainActivity extends Activity
 					}
 				};
 				String image_sort = ConfigSort.toSQLString(ConfigManager.getConfig(ConfigManager.Config.IMAGE_SORT));
-				fileManager.allImageAndVideoLoop(image_sort, wrapper, MediaStore.MediaColumns.DATA);
+				fileManager.allImageAndVideoLoop(
+						image_sort,
+						wrapper,
+						MediaStore.MediaColumns._ID,
+						MediaStore.MediaColumns.DATA,
+						MediaStore.MediaColumns.MIME_TYPE
+				);
 				return null;
 			}
 
@@ -304,6 +337,8 @@ public class MainActivity extends Activity
 			protected void onPostExecute(Void unused)
 			{
 				super.onPostExecute(unused);
+				long time = System.nanoTime() - this.timeStart;
+				Log.i("MainActivity", "media iteration took " + time + " ns");
 				runOnUiThread(adapter::notifyDataSetChanged);
 			}
 		}.execute();
@@ -427,5 +462,10 @@ public class MainActivity extends Activity
 				return true;
 			}
 		});
+	}
+
+	private String getDbPath(String name)
+	{
+		return getDatabasePath(name).getAbsolutePath();
 	}
 }
