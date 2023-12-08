@@ -4,9 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.DisplayMetrics;
 import android.view.Gravity;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.PopupWindow;
@@ -44,24 +42,24 @@ public class SettingsActivity extends Activity
 			final boolean[] isGood = { false };
 			final String[] tmpPin = new String[]{ "" };
 			ViewGroup popup = (ViewGroup) getLayoutInflater().inflate(R.layout.dialog_enter_pin, (ViewGroup) v.getRootView(), false);
-			TextView text = (TextView) popup.getChildAt(0);
+			TextView text = popup.findViewById(R.id.header_title);
 			text.setText(R.string.pin_enter_pin);
-			popup.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-			DisplayMetrics metrics = this.getResources().getDisplayMetrics();
-			float ratio = ((float)metrics.heightPixels / (float)metrics.widthPixels);
-			PopupWindow window = new PopupWindow(popup, (int)ratio * popup.getMeasuredHeight() / 2, popup.getMeasuredHeight(), true);
+			PopupWindow window = new PopupWindow(popup, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
 			window.showAtLocation(v, Gravity.CENTER, 0, 0);
 			window.setOnDismissListener(() -> {
-				if(!isGood[0]) checkBox.setChecked(false);
+				if (!isGood[0]) checkBox.setChecked(false);
 			});
-			EditText editText = (EditText) popup.getChildAt(1);
+			EditText editText = popup.findViewById(R.id.pin_input);
 			editText.addTextChangedListener(new TextWatcher()
 			{
 				@Override
 				public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
 				@Override
-				public void afterTextChanged(Editable s) { }
+				public void afterTextChanged(Editable s)
+				{
+					if (s.length() == 4) editText.getText().clear();
+				}
 
 				@Override
 				public void onTextChanged(CharSequence s, int start, int before, int count)
@@ -72,7 +70,6 @@ public class SettingsActivity extends Activity
 						{
 							text.setText(R.string.pin_enter_pin_again);
 							tmpPin[0] = s.toString();
-							editText.getText().clear();
 						}
 						else if (s.toString().equals(tmpPin[0]))
 						{
@@ -83,7 +80,6 @@ public class SettingsActivity extends Activity
 						else
 						{
 							text.setText(R.string.pin_enter_pin);
-							editText.getText().clear();
 						}
 					}
 				}
