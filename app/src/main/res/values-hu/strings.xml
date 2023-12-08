@@ -20,10 +20,13 @@
     <string name="pin_enter_pin">Írd be a PIN kódott</string>
     <string name="pin_enter_pin_again">Írd be a PIN kódott mégegyszer</string>
 
-    <!-- main -->
-    <string name="main_popup_move">Mozgatás</string>
-    <string name="main_popup_copy">Másolás</string>
-
+    <!-- popup -->
+    <string name="popup_move">Mozgatás</string>
+    <string name="popup_copy">Másolás</string>
+    <string name="popup_delete">Törlés</string>
+    <string name="popup_move_success">Mappák sikeresen mozgatva</string>
+    <string name="popup_copy_success">Mappák sikeresen másolva</string>
+    <string name="popup_delete_success">Mappák sikeresen törölve</string>
     <!-- general -->
     <string name="settings_button">Beállítások</string>
     <string name="more_button">Továbbiak</string>

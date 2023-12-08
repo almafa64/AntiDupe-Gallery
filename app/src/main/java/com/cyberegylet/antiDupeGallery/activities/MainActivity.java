@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.PopupMenu;
@@ -33,6 +32,7 @@ import com.cyberegylet.antiDupeGallery.models.ImageFile;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -46,6 +46,7 @@ public class MainActivity extends Activity
 {
 	private static final int MOVE_FOLDER_SELECT_ID = 1;
 	private static final int COPY_FOLDER_SELECT_ID = 2;
+
 	private FileManager fileManager;
 	private RecyclerView recycler;
 	private final ActivityManager activityManager = new ActivityManager(this);
@@ -76,13 +77,20 @@ public class MainActivity extends Activity
 			final List<BaseImageAdapter.ViewHolder> selected = adapter.getSelected;
 			PopupMenu popup = new PopupMenu(this, v);
 			popup.inflate(R.menu.main_popup_menu);
-			final int moveId = View.generateViewId();
-			final int copyId = View.generateViewId();
-			if(selected.size() != 0)
+			final int moveId;
+			final int copyId;
+			final int deleteId;
+			if (selected.size() != 0)
 			{
-				popup.getMenu().add(Menu.NONE, moveId, Menu.NONE, R.string.main_popup_move);
-				popup.getMenu().add(Menu.NONE, copyId, Menu.NONE, R.string.main_popup_copy);
+				moveId = View.generateViewId();
+				copyId = View.generateViewId();
+				deleteId = View.generateViewId();
+				Menu menu = popup.getMenu();
+				menu.add(Menu.NONE, moveId, Menu.NONE, R.string.popup_move);
+				menu.add(Menu.NONE, copyId, Menu.NONE, R.string.popup_copy);
+				menu.add(Menu.NONE, deleteId, Menu.NONE, R.string.popup_delete);
 			}
+			else deleteId = copyId = moveId = -1;
 			popup.setOnMenuItemClickListener(item -> {
 				int id = item.getItemId();
 				if (id == R.id.settings)
@@ -102,6 +110,24 @@ public class MainActivity extends Activity
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
 					startActivityForResult(intent, COPY_FOLDER_SELECT_ID);
+				}
+				else if (id == deleteId)
+				{
+					List<String> failedFolders = new ArrayList<>();
+					for (BaseImageAdapter.ViewHolder tmp : selected)
+					{
+						FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
+						Path p = Paths.get(holder.folder.getPath().getPath());
+						if (!fileManager.deleteFolder(p)) failedFolders.add(holder.folder.getName());
+					}
+					if (failedFolders.size() == 0)
+					{
+						Toast.makeText(this, R.string.popup_delete_success, Toast.LENGTH_SHORT).show();
+					}
+					else
+					{
+						// ToDo error dialog
+					}
 				}
 				else return false;
 				return true;
@@ -140,7 +166,7 @@ public class MainActivity extends Activity
 			dirs.clear();
 			dirs.addAll(folders.stream().filter(folder -> !folder.isHidden() || showHidden).collect(Collectors.toList()));
 		});*/
-		if(recycler == null || recycler.getAdapter() == null) return;
+		if (recycler == null || recycler.getAdapter() == null) return;
 		((FolderAdapterAsync) recycler.getAdapter()).filter(dirs -> {
 			dirs.clear();
 			dirs.addAll(folders2.stream().filter(folder -> !folder.isHidden() || showHidden).collect(Collectors.toList()));
@@ -150,11 +176,11 @@ public class MainActivity extends Activity
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
-		if(resultCode != RESULT_OK || data == null) return;
+		if (resultCode != RESULT_OK || data == null) return;
 		final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
 		final List<BaseImageAdapter.ViewHolder> selected = adapter.getSelected;
 		Path path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]); // ToDo this is very hacky
-		Log.d("app", path.toString());
+		List<String> failedFolders = new ArrayList<>();
 		switch (requestCode)
 		{
 			case MOVE_FOLDER_SELECT_ID:
@@ -162,7 +188,7 @@ public class MainActivity extends Activity
 				{
 					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
 					Path p = Paths.get(holder.folder.getPath().getPath());
-					fileManager.moveFolder(p, path);
+					if (!fileManager.moveFolder(p, path)) failedFolders.add(holder.folder.getName());
 				}
 				break;
 			case COPY_FOLDER_SELECT_ID:
@@ -170,9 +196,21 @@ public class MainActivity extends Activity
 				{
 					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
 					Path p = Paths.get(holder.folder.getPath().getPath());
-					fileManager.copyFolder(p, path);
+					if (!fileManager.copyFolder(p, path)) failedFolders.add(holder.folder.getName());
 				}
 				break;
+		}
+		if (failedFolders.size() == 0)
+		{
+			Toast.makeText(
+					this,
+					(requestCode == MOVE_FOLDER_SELECT_ID) ? R.string.popup_move_success : R.string.popup_copy_success,
+					Toast.LENGTH_SHORT
+			).show();
+		}
+		else
+		{
+			// ToDo error dialog
 		}
 	}
 
@@ -250,7 +288,7 @@ public class MainActivity extends Activity
 						ImageFile image = new ImageFile(FileManager.stringToUri(path));
 						folder.images.add(image);
 
-						if(timeout[0]++ == 20)
+						if (timeout[0]++ == 20)
 						{
 							timeout[0] = 0;
 							runOnUiThread(adapter::notifyDataSetChanged);
@@ -283,7 +321,7 @@ public class MainActivity extends Activity
 			public boolean onQueryTextChange(String text)
 			{
 				String text2 = text.toLowerCase(Locale.ROOT);
-				((FolderAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
+				((FolderAdapterAsync) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
 					dirs.clear();
 					for (Folder folder : folders2)
 					{/*List<ImageFile> images = new ArrayList<>();
