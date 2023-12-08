@@ -293,7 +293,7 @@ public class FileManager
 	public void thumbnailIntoImageView(ImageView imageView, Uri uri)
 	{
 		RequestOptions options = new RequestOptions().priority(Priority.LOW).diskCacheStrategy(DiskCacheStrategy.RESOURCE)
-				.format(DecodeFormat.PREFER_ARGB_8888).set(Downsampler.ALLOW_HARDWARE_CONFIG, true);
+				.format(DecodeFormat.PREFER_ARGB_8888).set(Downsampler.ALLOW_HARDWARE_CONFIG, true).centerCrop();
 
 		boolean playGIF = ConfigManager.getBooleanConfig(ConfigManager.Config.ANIMATE_GIF);
 		if (!playGIF) options = options.dontAnimate().decode(Bitmap.class);
