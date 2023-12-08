@@ -45,9 +45,12 @@ public class SettingsActivity extends Activity
 			TextView text = popup.findViewById(R.id.header_title);
 			text.setText(R.string.pin_enter_pin);
 			PopupWindow window = new PopupWindow(popup, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+			ViewGroup root = (ViewGroup) getWindow().getDecorView().getRootView();
+			ActivityManager.applyDim(root, 0.5f);
 			window.showAtLocation(v, Gravity.CENTER, 0, 0);
 			window.setOnDismissListener(() -> {
 				if (!isGood[0]) checkBox.setChecked(false);
+				ActivityManager.clearDim(root);
 			});
 			EditText editText = popup.findViewById(R.id.pin_input);
 			editText.addTextChangedListener(new TextWatcher()
@@ -85,57 +88,6 @@ public class SettingsActivity extends Activity
 				}
 			});
 		});
-		/*checkBox.setOnCheckedChangeListener((v, check) -> {
-			if (!check)
-			{
-				ConfigManager.setConfig(ConfigManager.Config.PIN_LOCk, "");
-				return;
-			}
-			ViewGroup popup = (ViewGroup) getLayoutInflater().inflate(R.layout.dialog_enter_pin, (ViewGroup) v.getRootView(), false);
-			TextView text = (TextView) popup.getChildAt(0);
-			text.setText(R.string.pin_enter_pin);
-			popup.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-			DisplayMetrics metrics = this.getResources().getDisplayMetrics();
-			float ratio = ((float)metrics.heightPixels / (float)metrics.widthPixels);
-			PopupWindow window = new PopupWindow(popup, (int)ratio * popup.getMeasuredHeight(), popup.getMeasuredHeight(), true);
-			window.showAtLocation(v, Gravity.CENTER, 0, 0);
-			window.setOnDismissListener(() -> checkBox.setChecked(false));
-			EditText editText = (EditText) popup.getChildAt(1);
-			final String[] tmpPin = new String[]{ "" };
-			editText.addTextChangedListener(new TextWatcher()
-			{
-				@Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-				@Override
-				public void afterTextChanged(Editable s) { }
-
-				@Override
-				public void onTextChanged(CharSequence s, int start, int before, int count)
-				{
-					if (s.length() == 4)
-					{
-						if (text.getText() == getResources().getText(R.string.pin_enter_pin))
-						{
-							text.setText(R.string.pin_enter_pin_again);
-							tmpPin[0] = s.toString();
-							editText.getText().clear();
-						}
-						else if (s.toString().equals(tmpPin[0]))
-						{
-							ConfigManager.setConfig(ConfigManager.Config.PIN_LOCk, s.toString());
-							window.dismiss();
-							checkBox.setChecked(true);
-						}
-						else
-						{
-							text.setText(R.string.pin_enter_pin);
-							editText.getText().clear();
-						}
-					}
-				}
-			});
-		});*/
 		generator.addRow(R.string.settings_pin, checkBox);
 		generator.addConfigCheckRow(R.string.settings_show_hidden, ConfigManager.Config.SHOW_HIDDEN);
 		generator.addConfigCheckRow(R.string.settings_use_bin, ConfigManager.Config.USE_BIN);
