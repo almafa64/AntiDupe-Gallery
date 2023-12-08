@@ -25,9 +25,13 @@
     <string name="no_storage_permission">No storage permission</string>
     <string name="back_arrow_text">Back</string>
 
-    <!-- main -->
-    <string name="main_popup_move">Move</string>
-    <string name="main_popup_copy">Copy</string>
+    <!-- popup -->
+    <string name="popup_move">Move</string>
+    <string name="popup_copy">Copy</string>
+    <string name="popup_delete">Delete</string>
+    <string name="popup_move_success">Successfully moved folders</string>
+    <string name="popup_copy_success">Successfully copied folders</string>
+    <string name="popup_delete_success">Successfully deleted folders</string>
 
     <!-- info -->
     <string name="email" translatable="false">something@gmail.com</string>

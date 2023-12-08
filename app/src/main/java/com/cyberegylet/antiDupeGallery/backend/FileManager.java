@@ -262,6 +262,14 @@ public class FileManager
 
 	public static String uriToString(Uri uri) { return uri.getPath(); }
 
+	public static boolean isExternalStorageDocument(Uri uri) { return "com.android.externalstorage.documents".equals(uri.getAuthority()); }
+
+	public static boolean isDownloadsDocument(Uri uri) { return "com.android.providers.downloads.documents".equals(uri.getAuthority()); }
+
+	public static boolean isMediaDocument(Uri uri) { return "com.android.providers.media.documents".equals(uri.getAuthority()); }
+
+	public static boolean isGooglePhotosUri(Uri uri) { return "com.google.android.apps.photos.content".equals(uri.getAuthority()); }
+
 	public void thumbnailIntoImageView(ImageView imageView, Uri uri)
 	{
 		RequestOptions options = new RequestOptions().priority(Priority.LOW).diskCacheStrategy(DiskCacheStrategy.RESOURCE)
@@ -312,6 +320,24 @@ public class FileManager
 		}
 	}
 
+	public boolean deleteFile(Path file)
+	{
+		try
+		{
+			Files.deleteIfExists(file);
+			return true;
+		}
+		catch (AccessDeniedException e)
+		{
+			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show();
+			return false;
+		}
+		catch (IOException e)
+		{
+			return false;
+		}
+	}
+
 	public boolean moveFolder(Path fromFolder, Path toFolder)
 	{
 		try (DirectoryStream<Path> stream = Files.newDirectoryStream(fromFolder))
@@ -337,6 +363,23 @@ public class FileManager
 			{
 				if (Files.isDirectory(path)) continue;
 				copyFile(path, toFolder);
+			}
+		}
+		catch (IOException e)
+		{
+			return false;
+		}
+		return true;
+	}
+
+	public boolean deleteFolder(Path folder)
+	{
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(folder))
+		{
+			for (Path path : stream)
+			{
+				if (Files.isDirectory(path)) continue;
+				deleteFile(path);
 			}
 		}
 		catch (IOException e)

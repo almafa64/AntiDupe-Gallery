@@ -1,34 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@color/secondary_text_color">
+    android:gravity="center"
+    android:orientation="vertical"
+    android:background="@color/primary_text_color">
 
-    <TextView
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textAlignment="center"
-        android:textAppearance="@style/MainHeader"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:labelFor="@id/pin_input"
-        android:text="@null" />
+        <TextView
+            android:id="@+id/header_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:textAppearance="@style/MainHeader"
+            android:labelFor="@id/pin_input"
+            android:text="@null"
+            android:background="@color/secondary_text_color"/>
 
-    <EditText
-        android:id="@+id/pin_input"
-        android:layout_width="0dp"
-        android:layout_height="150dp"
-        android:importantForAutofill="no"
-        android:inputType="numberPassword"
-        android:maxLength="4"
-        android:textAlignment="center"
-        android:textAppearance="@style/MainHeader"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <EditText
+            android:id="@+id/pin_input"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:importantForAutofill="no"
+            android:inputType="numberPassword"
+            android:maxLength="4"
+            android:textAlignment="center"
+            android:textAppearance="@style/MainHeader"
+            android:background="@color/secondary_text_color"/>
+</LinearLayout>
