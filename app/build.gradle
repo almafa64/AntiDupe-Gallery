@@ -43,7 +43,14 @@ cargo {
     module = '../backend'
     libname = 'backend'
     targets = ['arm64']
+    def isRelease = gradle.startParameter.taskRequests.any {
+        it.args.any { it.endsWith("Release") }
+    }
+    if (isRelease) {
+        profile = "release"
+    }
 }
+preBuild.dependsOn 'cargoBuild'
 
 dependencies {
     implementation 'com.github.bumptech.glide:glide:4.16.0'
