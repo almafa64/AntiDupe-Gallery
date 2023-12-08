@@ -29,9 +29,12 @@
     <string name="popup_move">Move</string>
     <string name="popup_copy">Copy</string>
     <string name="popup_delete">Delete</string>
-    <string name="popup_move_success">Successfully moved folders</string>
-    <string name="popup_copy_success">Successfully copied folders</string>
-    <string name="popup_delete_success">Successfully deleted folders</string>
+    <string name="popup_move_folder_success">Successfully moved folders</string>
+    <string name="popup_copy_folder_success">Successfully copied folders</string>
+    <string name="popup_delete_folder_success">Successfully deleted folders</string>
+    <string name="popup_move_file_success">Successfully moved files</string>
+    <string name="popup_copy_file_success">Successfully copied files</string>
+    <string name="popup_delete_file_success">Successfully deleted files</string>
 
     <!-- info -->
     <string name="email" translatable="false">something@gmail.com</string>

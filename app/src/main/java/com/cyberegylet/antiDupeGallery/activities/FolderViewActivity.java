@@ -1,9 +1,12 @@
 package com.cyberegylet.antiDupeGallery.activities;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.View;
+import android.widget.PopupMenu;
 import android.widget.SearchView;
 import android.widget.Toast;
 
@@ -13,12 +16,16 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.R;
+import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.ThumbnailAdapter;
 import com.cyberegylet.antiDupeGallery.backend.ConfigManager;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -27,11 +34,14 @@ import java.util.stream.Collectors;
 
 public class FolderViewActivity extends Activity
 {
+	private static final int MOVE_IMAGE_SELECT_ID = 1;
+	private static final int COPY_IMAGE_SELECT_ID = 2;
 	private FileManager fileManager;
 	private RecyclerView recycler;
 	private String currentFolder;
 	private final ActivityManager activityManager = new ActivityManager(this);
 	private List<ImageFile> images;
+	private SearchView search;
 
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState)
@@ -46,13 +56,70 @@ public class FolderViewActivity extends Activity
 		recycler = findViewById(R.id.items);
 		int span = ConfigManager.getIntConfig(ConfigManager.Config.IMAGE_COLUMN_NUMBER);
 		recycler.setLayoutManager(new GridLayoutManager(this, span));
+		search = findViewById(R.id.search_bar);
 
 		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
 		findViewById(R.id.more_button).setOnClickListener(v -> {
-			Toast.makeText(this, "not done", Toast.LENGTH_SHORT).show();
-			/*PopupMenu popup = new PopupMenu(this, v);
-			popup.getMenuInflater().inflate(R.menu., popup.getMenu()).show();*/
-			// TODO make popup
+			final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
+			final List<BaseImageAdapter.ViewHolder> selected = adapter.getSelected;
+			PopupMenu popup = new PopupMenu(this, v);
+			popup.inflate(R.menu.main_popup_menu);
+			final int moveId;
+			final int copyId;
+			final int deleteId;
+			if (selected.size() != 0)
+			{
+				moveId = View.generateViewId();
+				copyId = View.generateViewId();
+				deleteId = View.generateViewId();
+				Menu menu = popup.getMenu();
+				menu.add(Menu.NONE, moveId, Menu.NONE, R.string.popup_move);
+				menu.add(Menu.NONE, copyId, Menu.NONE, R.string.popup_copy);
+				menu.add(Menu.NONE, deleteId, Menu.NONE, R.string.popup_delete);
+			}
+			else deleteId = copyId = moveId = -1;
+			popup.setOnMenuItemClickListener(item -> {
+				int id = item.getItemId();
+				if (id == R.id.settings)
+				{
+					activityManager.switchActivity(SettingsActivity.class);
+				}
+				else if (id == R.id.about)
+				{
+					activityManager.switchActivity(AboutActivity.class);
+				}
+				else if (id == moveId)
+				{
+					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+					startActivityForResult(intent, MOVE_IMAGE_SELECT_ID);
+				}
+				else if (id == copyId)
+				{
+					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+					startActivityForResult(intent, COPY_IMAGE_SELECT_ID);
+				}
+				else if (id == deleteId)
+				{
+					List<String> failedImages = new ArrayList<>();
+					for (BaseImageAdapter.ViewHolder tmp : selected)
+					{
+						ThumbnailAdapter.ViewHolder holder = (ThumbnailAdapter.ViewHolder) tmp;
+						Path p = Paths.get(holder.getImage().getPath().getPath());
+						if (!fileManager.deleteFile(p)) failedImages.add(holder.getImage().getName());
+					}
+					if (failedImages.size() == 0)
+					{
+						Toast.makeText(this, R.string.popup_delete_file_success, Toast.LENGTH_SHORT).show();
+					}
+					else
+					{
+						// ToDo error dialog
+					}
+				}
+				else return false;
+				return true;
+			});
+			popup.show();
 		});
 
 		fileManager = new FileManager(this);
@@ -71,6 +138,66 @@ public class FolderViewActivity extends Activity
 	{
 		ConfigManager.saveConfigs();
 		super.onDestroy();
+	}
+
+	@Override
+	protected void onResume()
+	{
+		super.onResume();
+		/*((FolderAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
+			dirs.clear();
+			dirs.addAll(folders.stream().filter(folder -> !folder.isHidden() || showHidden).collect(Collectors.toList()));
+		});*/
+		if (recycler == null || recycler.getAdapter() == null) return;
+		String text2 = search.getQuery().toString().toLowerCase(Locale.ROOT);
+		boolean showHidden = ConfigManager.getBooleanConfig(ConfigManager.Config.SHOW_HIDDEN);
+		((ThumbnailAdapter) recycler.getAdapter()).filter(dirs -> {
+			dirs.clear();
+			dirs.addAll(images.stream()
+					.filter(image -> (!image.isHidden() || showHidden) && image.getName().toLowerCase(Locale.ROOT).contains(text2))
+					.collect(Collectors.toList()));
+		});
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	{
+		if (resultCode != RESULT_OK || data == null) return;
+		final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
+		final List<BaseImageAdapter.ViewHolder> selected = adapter.getSelected;
+		Path path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]); // ToDo this is very hacky
+		List<String> failedFolders = new ArrayList<>();
+		switch (requestCode)
+		{
+			case MOVE_IMAGE_SELECT_ID:
+				for (BaseImageAdapter.ViewHolder tmp : selected)
+				{
+					ThumbnailAdapter.ViewHolder holder = (ThumbnailAdapter.ViewHolder) tmp;
+					Path p = Paths.get(holder.getImage().getPath().getPath());
+					if (!fileManager.moveFile(p, path)) failedFolders.add(holder.getImage().getName());
+				}
+				break;
+			case COPY_IMAGE_SELECT_ID:
+				for (BaseImageAdapter.ViewHolder tmp : selected)
+				{
+					ThumbnailAdapter.ViewHolder holder = (ThumbnailAdapter.ViewHolder) tmp;
+					Path p = Paths.get(holder.getImage().getPath().getPath());
+					if (!fileManager.copyFile(p, path)) failedFolders.add(holder.getImage().getName());
+				}
+				break;
+		}
+		if (failedFolders.size() == 0)
+		{
+			Toast.makeText(
+					this,
+					(requestCode == MOVE_IMAGE_SELECT_ID) ? R.string.popup_move_file_success : R.string.popup_copy_file_success,
+					Toast.LENGTH_SHORT
+			).show();
+		}
+		else
+		{
+			// ToDo error dialog
+		}
 	}
 
 	@Override
@@ -98,7 +225,6 @@ public class FolderViewActivity extends Activity
 
 		findViewById(R.id.load).setVisibility(View.GONE);
 		findViewById(R.id.mainLayout).setClickable(false);
-		SearchView search = findViewById(R.id.search_bar);
 
 		ConfigManager.addListener((c, v) -> {
 			if (c == ConfigManager.Config.SHOW_HIDDEN)
@@ -120,12 +246,14 @@ public class FolderViewActivity extends Activity
 			public boolean onQueryTextChange(String text)
 			{
 				String text2 = text.toLowerCase(Locale.ROOT);
+				boolean hide_hidden = !ConfigManager.getBooleanConfig(ConfigManager.Config.SHOW_HIDDEN);
 				((ThumbnailAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
 					dirs.clear();
-					images.forEach(image -> {
-						if (!image.getName().toLowerCase(Locale.ROOT).contains(text2)) return;
-						dirs.add(image);
-					});
+					for (ImageFile image : images)
+					{
+						if (hide_hidden && image.isHidden()) continue;
+						if (image.getName().toLowerCase(Locale.ROOT).contains(text2)) dirs.add(image);
+					}
 				});
 				return true;
 			}

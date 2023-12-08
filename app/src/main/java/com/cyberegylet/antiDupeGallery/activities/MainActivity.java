@@ -8,8 +8,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.view.Menu;
 import android.util.Log;
+import android.view.Menu;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.SearchView;
@@ -33,22 +33,17 @@ import com.cyberegylet.antiDupeGallery.models.Folder;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import kotlin.io.encoding.Base64Kt;
 
 public class MainActivity extends Activity
 {
@@ -61,6 +56,7 @@ public class MainActivity extends Activity
 	private List<Folder> folders;
 	private FolderAdapterAsync.MySortedSet<Folder> foldersCopy;
 	private FolderAdapterAsync.MySortedSet<Folder> folders2;
+	private SearchView search;
 
 	private SQLiteDatabase database;
 
@@ -84,6 +80,7 @@ public class MainActivity extends Activity
 		recycler = findViewById(R.id.items);
 		int span = ConfigManager.getIntConfig(ConfigManager.Config.FOLDER_COLUMN_NUMBER);
 		recycler.setLayoutManager(new GridLayoutManager(this, span));
+		search = findViewById(R.id.search_bar);
 
 		findViewById(R.id.more_button).setOnClickListener(v -> {
 			final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
@@ -130,12 +127,12 @@ public class MainActivity extends Activity
 					for (BaseImageAdapter.ViewHolder tmp : selected)
 					{
 						FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
-						Path p = Paths.get(holder.folder.getPath().getPath());
-						if (!fileManager.deleteFolder(p)) failedFolders.add(holder.folder.getName());
+						Path p = Paths.get(holder.getFolder().getPath().getPath());
+						if (!fileManager.deleteFolder(p)) failedFolders.add(holder.getFolder().getName());
 					}
 					if (failedFolders.size() == 0)
 					{
-						Toast.makeText(this, R.string.popup_delete_success, Toast.LENGTH_SHORT).show();
+						Toast.makeText(this, R.string.popup_delete_folder_success, Toast.LENGTH_SHORT).show();
 					}
 					else
 					{
@@ -149,10 +146,7 @@ public class MainActivity extends Activity
 		});
 
 		fileManager = new FileManager(this);
-		if (fileManager.hasFileAccess())
-		{
-			fileThings();
-		}
+		if (fileManager.hasFileAccess()) fileThings();
 	}
 
 	//ToDo make base Activity for merging codes
@@ -174,16 +168,18 @@ public class MainActivity extends Activity
 	protected void onResume()
 	{
 		super.onResume();
-		boolean showHidden = ConfigManager.getBooleanConfig(ConfigManager.Config.SHOW_HIDDEN);
 		/*((FolderAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
 			dirs.clear();
 			dirs.addAll(folders.stream().filter(folder -> !folder.isHidden() || showHidden).collect(Collectors.toList()));
 		});*/
 		if (recycler == null || recycler.getAdapter() == null) return;
-		if (recycler == null || recycler.getAdapter() == null) return;
+		boolean showHidden = ConfigManager.getBooleanConfig(ConfigManager.Config.SHOW_HIDDEN);
+		String text2 = search.getQuery().toString().toLowerCase(Locale.ROOT);
 		((FolderAdapterAsync) recycler.getAdapter()).filter(dirs -> {
 			dirs.clear();
-			dirs.addAll(folders2.stream().filter(folder -> !folder.isHidden() || showHidden).collect(Collectors.toList()));
+			dirs.addAll(folders2.stream()
+					.filter(folder -> (!folder.isHidden() || showHidden) && folder.getName().toLowerCase(Locale.ROOT).contains(text2))
+					.collect(Collectors.toList()));
 		});
 	}
 
@@ -201,16 +197,16 @@ public class MainActivity extends Activity
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
-					Path p = Paths.get(holder.folder.getPath().getPath());
-					if (!fileManager.moveFolder(p, path)) failedFolders.add(holder.folder.getName());
+					Path p = Paths.get(holder.getFolder().getPath().getPath());
+					if (!fileManager.moveFolder(p, path)) failedFolders.add(holder.getFolder().getName());
 				}
 				break;
 			case COPY_FOLDER_SELECT_ID:
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
-					Path p = Paths.get(holder.folder.getPath().getPath());
-					if (!fileManager.copyFolder(p, path)) failedFolders.add(holder.folder.getName());
+					Path p = Paths.get(holder.getFolder().getPath().getPath());
+					if (!fileManager.copyFolder(p, path)) failedFolders.add(holder.getFolder().getName());
 				}
 				break;
 		}
@@ -218,7 +214,7 @@ public class MainActivity extends Activity
 		{
 			Toast.makeText(
 					this,
-					(requestCode == MOVE_FOLDER_SELECT_ID) ? R.string.popup_move_success : R.string.popup_copy_success,
+					(requestCode == MOVE_FOLDER_SELECT_ID) ? R.string.popup_move_folder_success : R.string.popup_copy_folder_success,
 					Toast.LENGTH_SHORT
 			).show();
 		}
@@ -323,13 +319,7 @@ public class MainActivity extends Activity
 					}
 				};
 				String image_sort = ConfigSort.toSQLString(ConfigManager.getConfig(ConfigManager.Config.IMAGE_SORT));
-				fileManager.allImageAndVideoLoop(
-						image_sort,
-						wrapper,
-						MediaStore.MediaColumns._ID,
-						MediaStore.MediaColumns.DATA,
-						MediaStore.MediaColumns.MIME_TYPE
-				);
+				fileManager.allImageAndVideoLoop(image_sort, wrapper, MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DATA);
 				return null;
 			}
 
@@ -345,7 +335,6 @@ public class MainActivity extends Activity
 
 		findViewById(R.id.load).setVisibility(View.GONE);
 		findViewById(R.id.mainLayout).setClickable(false);
-		SearchView search = findViewById(R.id.search_bar);
 
 		search.setOnQueryTextListener(new SearchView.OnQueryTextListener()
 		{
@@ -356,6 +345,7 @@ public class MainActivity extends Activity
 			public boolean onQueryTextChange(String text)
 			{
 				String text2 = text.toLowerCase(Locale.ROOT);
+				boolean hide_hidden = !ConfigManager.getBooleanConfig(ConfigManager.Config.SHOW_HIDDEN);
 				((FolderAdapterAsync) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
 					dirs.clear();
 					for (Folder folder : folders2)
@@ -368,6 +358,7 @@ public class MainActivity extends Activity
 						Folder f = new Folder(folder);
 						dirs.add(f);
 						f.images.addAll(images);*/
+						if (hide_hidden && folder.isHidden()) continue;
 						if (folder.getName().toLowerCase(Locale.ROOT).contains(text2)) dirs.add(new Folder(folder, true));
 					}
 				});
