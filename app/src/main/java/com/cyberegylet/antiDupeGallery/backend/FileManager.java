@@ -195,11 +195,13 @@ public class FileManager
 		cursorLoop(wrapper, sort, IMAGES_AND_VIDEOS, EXTERNAL_URI, queries);
 	}
 
-	public void allImageLoop(String sort, CursorLoopWrapper wrapper, String... queries) {
+	public void allImageLoop(String sort, CursorLoopWrapper wrapper, String... queries)
+	{
 		cursorLoop(wrapper, sort, IMAGES, EXTERNAL_URI, queries);
 	}
 
-	public void allVideoLoop(String sort, CursorLoopWrapper wrapper, String... queries) {
+	public void allVideoLoop(String sort, CursorLoopWrapper wrapper, String... queries)
+	{
 		cursorLoop(wrapper, sort, VIDEOS, EXTERNAL_URI, queries);
 	}
 

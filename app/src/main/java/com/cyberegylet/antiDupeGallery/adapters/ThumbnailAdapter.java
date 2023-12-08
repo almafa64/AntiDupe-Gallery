@@ -33,6 +33,7 @@ public class ThumbnailAdapter extends BaseImageAdapter
 	public class ViewHolder extends BaseImageAdapter.ViewHolder
 	{
 		private ImageFile image;
+
 		public ViewHolder(View itemView)
 		{
 			super(itemView,
