@@ -295,7 +295,7 @@ public class FileManager
 		RequestOptions options = new RequestOptions().priority(Priority.LOW).diskCacheStrategy(DiskCacheStrategy.RESOURCE)
 				.format(DecodeFormat.PREFER_ARGB_8888).set(Downsampler.ALLOW_HARDWARE_CONFIG, true).centerCrop();
 
-		boolean playGIF = ConfigManager.getBooleanConfig(ConfigManager.Config.ANIMATE_GIF);
+		boolean playGIF = Config.getBooleanProperty(Config.Property.ANIMATE_GIF);
 		if (!playGIF) options = options.dontAnimate().decode(Bitmap.class);
 		else options = options.decode(Drawable.class);
 

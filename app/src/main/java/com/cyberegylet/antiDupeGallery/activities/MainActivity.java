@@ -25,7 +25,7 @@ import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.FolderAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.FolderAdapterAsync;
 import com.cyberegylet.antiDupeGallery.backend.Backend;
-import com.cyberegylet.antiDupeGallery.backend.ConfigManager;
+import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
@@ -70,8 +70,9 @@ public class MainActivity extends Activity
 		this.database = SQLiteDatabase.openOrCreateDatabase(getDatabasePath("data.db"), null);
 		Backend.init(this);
 
-		ConfigManager.init(this);
-		if (ConfigManager.getConfig(ConfigManager.Config.PIN_LOCK).length() != 0 && ActivityManager.getParam(this, "login") == null)
+		Config.init(this);
+
+		if (Config.getStringProperty(Config.Property.PIN_LOCK).length() != 0 && ActivityManager.getParam(this, "login") == null)
 		{
 			ActivityManager.switchActivity(this, PinActivity.class);
 			return;
@@ -80,7 +81,7 @@ public class MainActivity extends Activity
 		setContentView(R.layout.main_activity);
 
 		recycler = findViewById(R.id.items);
-		int span = ConfigManager.getIntConfig(ConfigManager.Config.FOLDER_COLUMN_NUMBER);
+		int span = Config.getIntProperty(Config.Property.FOLDER_COLUMN_NUMBER);
 		recycler.setLayoutManager(new GridLayoutManager(this, span));
 		search = findViewById(R.id.search_bar);
 
@@ -155,14 +156,14 @@ public class MainActivity extends Activity
 	@Override
 	protected void onStop()
 	{
-		ConfigManager.saveConfigs();
+		Config.save();
 		super.onStop();
 	}
 
 	@Override
 	protected void onDestroy()
 	{
-		ConfigManager.saveConfigs();
+		Config.save();
 		super.onDestroy();
 	}
 
@@ -175,7 +176,7 @@ public class MainActivity extends Activity
 			dirs.addAll(folders.stream().filter(folder -> !folder.isHidden() || showHidden).collect(Collectors.toList()));
 		});*/
 		if (recycler == null || recycler.getAdapter() == null) return;
-		boolean showHidden = ConfigManager.getBooleanConfig(ConfigManager.Config.SHOW_HIDDEN);
+		boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
 		String text2 = search.getQuery().toString().toLowerCase(Locale.ROOT);
 		((FolderAdapterAsync) recycler.getAdapter()).filter(dirs -> {
 			dirs.clear();
@@ -246,7 +247,7 @@ public class MainActivity extends Activity
 	{
 		boolean inWork = true;
 
-		String folder_sort_data = ConfigManager.getConfig(ConfigManager.Config.FOLDER_SORT);
+		String folder_sort_data = Config.getStringProperty(Config.Property.FOLDER_SORT);
 		Comparator<Folder> comparator;
 		switch (ConfigSort.getSortType(folder_sort_data))
 		{
@@ -302,8 +303,7 @@ public class MainActivity extends Activity
 							folder = new Folder(FileManager.stringToUri(folderAbs));
 							folderNames.put(folderAbs, folder);
 							folders2.add(folder);
-							if (!folder.isHidden() || ConfigManager.getBooleanConfig(ConfigManager.Config.SHOW_HIDDEN))
-								foldersCopy.add(folder);
+							if (!folder.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN)) foldersCopy.add(folder);
 						}
 						ImageFile image = new ImageFile(FileManager.stringToUri(path));
 
@@ -320,7 +320,7 @@ public class MainActivity extends Activity
 						}
 					}
 				};
-				String image_sort = ConfigSort.toSQLString(ConfigManager.getConfig(ConfigManager.Config.IMAGE_SORT));
+				String image_sort = ConfigSort.toSQLString(Config.getStringProperty(Config.Property.IMAGE_SORT));
 				fileManager.allImageAndVideoLoop(image_sort, wrapper, MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DATA);
 				return null;
 			}
@@ -347,7 +347,7 @@ public class MainActivity extends Activity
 			public boolean onQueryTextChange(String text)
 			{
 				String text2 = text.toLowerCase(Locale.ROOT);
-				boolean hide_hidden = !ConfigManager.getBooleanConfig(ConfigManager.Config.SHOW_HIDDEN);
+				boolean hide_hidden = !Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
 				((FolderAdapterAsync) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
 					dirs.clear();
 					for (Folder folder : folders2)

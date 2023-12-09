@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.R;
-import com.cyberegylet.antiDupeGallery.backend.ConfigManager;
+import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 
 import java.util.ArrayList;
@@ -127,9 +127,14 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 					@Override
 					public void onScaleEnd(@NonNull ScaleGestureDetector detector)
 					{
-						ConfigManager.Config key = adapter instanceof FolderAdapter ? ConfigManager.Config.FOLDER_COLUMN_NUMBER : ConfigManager.Config.IMAGE_COLUMN_NUMBER;
-						ConfigManager.setIntConfig(key, gridLayoutManager.getSpanCount());
-						ConfigManager.saveConfigs();
+						final Config.Property key;
+						if (adapter instanceof FolderAdapter) {
+							key = Config.Property.FOLDER_COLUMN_NUMBER;
+						} else {
+							key = Config.Property.IMAGE_COLUMN_NUMBER;
+						}
+						Config.setIntProperty(key, gridLayoutManager.getSpanCount());
+						Config.save();
 					}
 				}
 		);

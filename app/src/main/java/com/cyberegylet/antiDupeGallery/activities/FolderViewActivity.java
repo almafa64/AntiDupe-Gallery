@@ -18,7 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.ThumbnailAdapter;
-import com.cyberegylet.antiDupeGallery.backend.ConfigManager;
+import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
@@ -56,7 +56,7 @@ public class FolderViewActivity extends Activity
 		images = activityManager.getListParam("images");
 
 		recycler = findViewById(R.id.items);
-		int span = ConfigManager.getIntConfig(ConfigManager.Config.IMAGE_COLUMN_NUMBER);
+		int span = Config.getIntProperty(Config.Property.IMAGE_COLUMN_NUMBER);
 		recycler.setLayoutManager(new GridLayoutManager(this, span));
 		search = findViewById(R.id.search_bar);
 
@@ -131,14 +131,14 @@ public class FolderViewActivity extends Activity
 	@Override
 	protected void onStop()
 	{
-		ConfigManager.saveConfigs();
+		Config.save();
 		super.onStop();
 	}
 
 	@Override
 	protected void onDestroy()
 	{
-		ConfigManager.saveConfigs();
+		Config.save();
 		super.onDestroy();
 	}
 
@@ -152,7 +152,7 @@ public class FolderViewActivity extends Activity
 		});*/
 		if (recycler == null || recycler.getAdapter() == null) return;
 		String text2 = search.getQuery().toString().toLowerCase(Locale.ROOT);
-		boolean showHidden = ConfigManager.getBooleanConfig(ConfigManager.Config.SHOW_HIDDEN);
+		boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
 		((ThumbnailAdapter) recycler.getAdapter()).filter(dirs -> {
 			dirs.clear();
 			dirs.addAll(images.stream()
@@ -220,7 +220,7 @@ public class FolderViewActivity extends Activity
 	private void fileThings()
 	{
 		List<ImageFile> imagesCopy = images.stream()
-				.filter(image -> !image.isHidden() || ConfigManager.getBooleanConfig(ConfigManager.Config.SHOW_HIDDEN))
+				.filter(image -> !image.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN))
 				.collect(Collectors.toList());
 
 		recycler.setAdapter(new ThumbnailAdapter(imagesCopy, fileManager));
@@ -228,8 +228,8 @@ public class FolderViewActivity extends Activity
 		findViewById(R.id.load).setVisibility(View.GONE);
 		findViewById(R.id.mainLayout).setClickable(false);
 
-		ConfigManager.addListener((c, v) -> {
-			if (c == ConfigManager.Config.SHOW_HIDDEN)
+		Config.attachMutationListener((p, v) -> {
+			if (p == Config.Property.SHOW_HIDDEN)
 			{
 				boolean showHidden = Objects.equals(v, "1");
 				((ThumbnailAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(imgs -> {
@@ -248,7 +248,7 @@ public class FolderViewActivity extends Activity
 			public boolean onQueryTextChange(String text)
 			{
 				String text2 = text.toLowerCase(Locale.ROOT);
-				boolean hide_hidden = !ConfigManager.getBooleanConfig(ConfigManager.Config.SHOW_HIDDEN);
+				boolean hide_hidden = !Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
 				((ThumbnailAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
 					dirs.clear();
 					for (ImageFile image : images)

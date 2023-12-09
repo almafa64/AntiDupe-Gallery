@@ -200,11 +200,11 @@ public class SimpleActivityGenerator
 		return curLinearLayout;
 	}
 
-	public LinearLayout addConfigCheckRow(Integer textID, ConfigManager.Config config)
+	public LinearLayout addConfigCheckRow(Integer textID, Config.Property property)
 	{
 		AppCompatCheckBox button = new AppCompatCheckBox(activity);
-		button.setChecked(ConfigManager.getBooleanConfig(config));
-		button.setOnCheckedChangeListener((v, checked) -> ConfigManager.setBooleanConfig(config, checked));
+		button.setChecked(Config.getBooleanProperty(property));
+		button.setOnCheckedChangeListener((v, checked) -> Config.setBooleanProperty(property, checked));
 		return addRow(textID, button);
 	}
 }

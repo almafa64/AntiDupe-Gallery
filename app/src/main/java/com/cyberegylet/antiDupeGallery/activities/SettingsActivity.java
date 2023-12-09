@@ -14,7 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatCheckBox;
 
 import com.cyberegylet.antiDupeGallery.R;
-import com.cyberegylet.antiDupeGallery.backend.ConfigManager;
+import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.SimpleActivityGenerator;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 
@@ -34,11 +34,11 @@ public class SettingsActivity extends Activity
 		generator.newHeader(R.string.settings_general_heading);
 
 		AppCompatCheckBox checkBox = new AppCompatCheckBox(this);
-		checkBox.setChecked(ConfigManager.getConfig(ConfigManager.Config.PIN_LOCK).length() != 0);
+		checkBox.setChecked(Config.getStringProperty(Config.Property.PIN_LOCK).length() != 0);
 		checkBox.setOnClickListener(v -> {
 			if (!checkBox.isChecked())
 			{
-				ConfigManager.setConfig(ConfigManager.Config.PIN_LOCK, "");
+				Config.setStringProperty(Config.Property.PIN_LOCK, "");
 				return;
 			}
 			final boolean[] isGood = { false };
@@ -78,7 +78,7 @@ public class SettingsActivity extends Activity
 						}
 						else if (s.toString().equals(tmpPin[0]))
 						{
-							ConfigManager.setConfig(ConfigManager.Config.PIN_LOCK, s.toString());
+							Config.setStringProperty(Config.Property.PIN_LOCK, s.toString());
 							isGood[0] = true;
 							window.dismiss();
 						}
@@ -91,18 +91,18 @@ public class SettingsActivity extends Activity
 			});
 		});
 		generator.addRow(R.string.settings_pin, checkBox);
-		generator.addConfigCheckRow(R.string.settings_show_hidden, ConfigManager.Config.SHOW_HIDDEN);
-		generator.addConfigCheckRow(R.string.settings_use_bin, ConfigManager.Config.USE_BIN);
+		generator.addConfigCheckRow(R.string.settings_show_hidden, Config.Property.SHOW_HIDDEN);
+		generator.addConfigCheckRow(R.string.settings_use_bin, Config.Property.USE_BIN);
 
 		generator.newHeader(R.string.settings_thumbnail_heading);
-		generator.addConfigCheckRow(R.string.settings_animate_gif, ConfigManager.Config.ANIMATE_GIF);
+		generator.addConfigCheckRow(R.string.settings_animate_gif, Config.Property.ANIMATE_GIF);
 
 		generator.newHeader(R.string.settings_danger_header);
-		generator.addRow(R.string.settings_reset, v -> ConfigManager.resetConfigs());
+		generator.addRow(R.string.settings_reset, v -> Config.restoreDefaults());
 
 		findViewById(R.id.back_button).setOnClickListener(v -> {
 			activityManager.goBack();
-			ConfigManager.saveConfigs();
+			Config.save();
 		});
 	}
 }
