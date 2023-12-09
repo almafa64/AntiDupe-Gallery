@@ -47,6 +47,8 @@ import java.util.stream.Collectors;
 
 public class MainActivity extends Activity
 {
+	private static final String TAG = "MainActivity";
+
 	private static final int MOVE_FOLDER_SELECT_ID = 1;
 	private static final int COPY_FOLDER_SELECT_ID = 2;
 
@@ -328,7 +330,7 @@ public class MainActivity extends Activity
 			{
 				super.onPostExecute(unused);
 				long time = System.nanoTime() - this.timeStart;
-				Log.i("MainActivity", "media iteration took " + time + " ns");
+				Log.i(TAG, "media iteration took " + time + " ns");
 				runOnUiThread(adapter::notifyDataSetChanged);
 			}
 		}.execute();

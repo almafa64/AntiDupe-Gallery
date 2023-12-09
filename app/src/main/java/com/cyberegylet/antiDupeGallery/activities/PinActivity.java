@@ -15,6 +15,8 @@ import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
 
 public class PinActivity extends Activity
 {
+	private static final String TAG = "PinActivity";
+
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState)
 	{

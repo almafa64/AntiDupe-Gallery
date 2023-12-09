@@ -20,6 +20,8 @@ import java.io.Serializable;
 
 public class ImageViewActivity extends Activity implements Serializable
 {
+	private static final String TAG = "ImageViewActivity";
+
 	private static final float MIN_SCALE = 0.95f;
 	private static final float MAX_SCALE = Float.MAX_VALUE;
 	private static final float SCALE_SNAP_MIN = 0.9f;
@@ -70,14 +72,12 @@ public class ImageViewActivity extends Activity implements Serializable
 		imageView.setPivotY(scaleFocusY);
 		imageView.setScaleX(scaleFactor);
 		imageView.setScaleY(scaleFactor);
-		Log.i("image scaling", "current factor: " + scaleFactor);
 	}
 
 	private void onOffsetChange()
 	{
 		imageView.setTranslationX(offsetX);
 		imageView.setTranslationY(offsetY);
-		Log.i("image moving", "xoff: " + offsetX + ", yoff: " + offsetY);
 	}
 
 	private boolean onImageContainerTouchEvent(MotionEvent event)
@@ -106,7 +106,6 @@ public class ImageViewActivity extends Activity implements Serializable
 				lastPointerX = x;
 				lastPointerY = y;
 				activePointerID = event.getPointerId(pointerIndex);
-				Log.i("pointer down", "pointerX: " + lastPointerX + ", pointerY: " + lastPointerY);
 
 				break;
 			}
@@ -129,12 +128,8 @@ public class ImageViewActivity extends Activity implements Serializable
 				final float dx = x - lastPointerX;
 				final float dy = y - lastPointerY;
 
-				Log.i("pointer move", "x: " + x + ", y: " + y + ", lastPointerX: " + lastPointerX + ", lastPointerY: " + lastPointerY);
-
 				offsetX += dx;
 				offsetY += dy;
-
-				Log.i("pointer move", "dx: " + dx + ", dy: " + dy);
 
 				onOffsetChange();
 

@@ -34,6 +34,8 @@ import java.util.stream.Collectors;
 
 public class FolderViewActivity extends Activity
 {
+	private static final String TAG = "FolderViewActivity";
+
 	private static final int MOVE_IMAGE_SELECT_ID = 1;
 	private static final int COPY_IMAGE_SELECT_ID = 2;
 	private FileManager fileManager;

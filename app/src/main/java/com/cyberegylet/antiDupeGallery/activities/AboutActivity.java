@@ -11,6 +11,8 @@ import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 
 public class AboutActivity extends Activity
 {
+	private static final String TAG = "AboutActivity";
+
 	private final ActivityManager activityManager = new ActivityManager(this);
 
 	@Override

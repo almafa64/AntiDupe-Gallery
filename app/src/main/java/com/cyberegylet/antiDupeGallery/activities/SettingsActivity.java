@@ -20,6 +20,8 @@ import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 
 public class SettingsActivity extends Activity
 {
+	private static final String TAG = "SettingsActivity";
+
 	private final ActivityManager activityManager = new ActivityManager(this);
 
 	@Override
