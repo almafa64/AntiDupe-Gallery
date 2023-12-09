@@ -32,11 +32,11 @@ public class SettingsActivity extends Activity
 		generator.newHeader(R.string.settings_general_heading);
 
 		AppCompatCheckBox checkBox = new AppCompatCheckBox(this);
-		checkBox.setChecked(ConfigManager.getConfig(ConfigManager.Config.PIN_LOCk).length() != 0);
+		checkBox.setChecked(ConfigManager.getConfig(ConfigManager.Config.PIN_LOCK).length() != 0);
 		checkBox.setOnClickListener(v -> {
 			if (!checkBox.isChecked())
 			{
-				ConfigManager.setConfig(ConfigManager.Config.PIN_LOCk, "");
+				ConfigManager.setConfig(ConfigManager.Config.PIN_LOCK, "");
 				return;
 			}
 			final boolean[] isGood = { false };
@@ -76,7 +76,7 @@ public class SettingsActivity extends Activity
 						}
 						else if (s.toString().equals(tmpPin[0]))
 						{
-							ConfigManager.setConfig(ConfigManager.Config.PIN_LOCk, s.toString());
+							ConfigManager.setConfig(ConfigManager.Config.PIN_LOCK, s.toString());
 							isGood[0] = true;
 							window.dismiss();
 						}

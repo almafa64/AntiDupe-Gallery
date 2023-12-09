@@ -34,7 +34,7 @@ public class PinActivity extends Activity
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count)
 			{
-				if (s.length() == 4 && ConfigManager.getConfig(ConfigManager.Config.PIN_LOCk).equals(s.toString()))
+				if (s.length() == 4 && ConfigManager.getConfig(ConfigManager.Config.PIN_LOCK).equals(s.toString()))
 				{
 					ActivityManager.switchActivity(PinActivity.this, MainActivity.class, new ActivityParameter("login", true));
 				}

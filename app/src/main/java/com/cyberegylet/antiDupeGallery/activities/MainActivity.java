@@ -69,7 +69,7 @@ public class MainActivity extends Activity
 		Backend.init(this);
 
 		ConfigManager.init(this);
-		if (ConfigManager.getConfig(ConfigManager.Config.PIN_LOCk).length() != 0 && ActivityManager.getParam(this, "login") == null)
+		if (ConfigManager.getConfig(ConfigManager.Config.PIN_LOCK).length() != 0 && ActivityManager.getParam(this, "login") == null)
 		{
 			ActivityManager.switchActivity(this, PinActivity.class);
 			return;

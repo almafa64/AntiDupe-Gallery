@@ -40,7 +40,7 @@ public class ConfigManager
 		IMAGE_COLUMN_NUMBER("image_col"),
 		ANIMATE_GIF("anim_gif"),
 		SHOW_HIDDEN("show_hidden"),
-		PIN_LOCk("pin_lock"),
+		PIN_LOCK("pin_lock"),
 		USE_BIN("bin"),
 
 		/**
@@ -124,7 +124,7 @@ public class ConfigManager
 		configs.clear();
 		configs.putAll(Stream.of(
 				new AbstractMap.SimpleEntry<>(SHOW_HIDDEN.toString(), "0"),
-				new AbstractMap.SimpleEntry<>(PIN_LOCk.toString(), ""),
+				new AbstractMap.SimpleEntry<>(PIN_LOCK.toString(), ""),
 				new AbstractMap.SimpleEntry<>(FOLDER_SORT.toString(), "13"),
 				new AbstractMap.SimpleEntry<>(IMAGE_SORT.toString(), "00"),
 				new AbstractMap.SimpleEntry<>(USE_BIN.toString(), "1"),
