@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Properties;
 
 public final class Config
@@ -19,32 +18,38 @@ public final class Config
 	private static final String TAG = "Config";
 	private static final String CONFIG_FILE = "config";
 
-	private static Config INSTANCE;
-
-	private final Path filePath;
-	private final ArrayList<MutationListener> mutationListeners;
-	private final Properties properties;
+	private static Path filePath;
+	private static Properties properties;
 
 	public static void init(@NonNull Context context)
 	{
-		if (INSTANCE != null)
+		if (properties != null)
 		{
-			throw new RuntimeException("Config.init can only be called once");
+			Log.e(TAG, "Already called Config.init()");
+			return;
 		}
-		INSTANCE = new Config(context);
+
+		filePath = Paths.get(context.getFilesDir().getPath(), CONFIG_FILE);
+		properties = new Properties();
+		try (BufferedReader reader = Files.newBufferedReader(filePath))
+		{
+			properties.load(reader);
+		}
+		catch (IOException ex)
+		{
+			Log.e(TAG, "Config: Failed to load config file; using defaults", ex);
+			loadDefaults();
+			save();
+		}
 	}
 
 	public static void save()
 	{
-		if (INSTANCE == null)
+		checkInstance();
+		try (BufferedWriter writer = Files.newBufferedWriter(filePath))
 		{
-			return;
-		}
-
-		try (BufferedWriter writer = Files.newBufferedWriter(INSTANCE.filePath))
-		{
-			INSTANCE.properties.store(writer, null);
-			Log.i(TAG, "save: Saved config to " + INSTANCE.filePath.toString());
+			properties.store(writer, null);
+			Log.i(TAG, "save: Saved config to " + filePath.toString());
 			dump();
 		}
 		catch (IOException ex)
@@ -53,56 +58,46 @@ public final class Config
 		}
 	}
 
-	public static void attachMutationListener(@NonNull MutationListener listener)
-	{
-		checkInstance();
-		INSTANCE.mutationListeners.add(listener);
-	}
-
 	public static String getStringProperty(@NonNull Property property)
 	{
 		checkInstance();
-		return generalGetPropertyValue(property);
+		return properties.getProperty(property.name);
 	}
 
 	public static int getIntProperty(@NonNull Property property)
 	{
 		checkInstance();
-		return Integer.parseInt(generalGetPropertyValue(property));
+		return Integer.parseInt(properties.getProperty(property.name));
 	}
 
 	public static boolean getBooleanProperty(@NonNull Property property)
 	{
 		checkInstance();
-		return getIntProperty(property) != 0;
+		return properties.getProperty(property.name).equals("1");
 	}
 
 	public static void setStringProperty(@NonNull Property property, String value)
 	{
 		checkInstance();
-		generalSetPropertyValue(property, value);
+		properties.setProperty(property.name, value);
 	}
 
 	public static void setIntProperty(@NonNull Property property, int value)
 	{
 		checkInstance();
-		generalSetPropertyValue(property, String.valueOf(value));
+		properties.setProperty(property.name, String.valueOf(value));
 	}
 
 	public static void setBooleanProperty(@NonNull Property property, boolean value)
 	{
 		checkInstance();
-		setIntProperty(property, value ? 1 : 0);
+		properties.setProperty(property.name, value ? "1" : "0");
 	}
 
-	public static void restoreDefaults() {
-		checkInstance();
-		INSTANCE.loadDefaults();
-	}
-
-	public interface MutationListener
+	public static void restoreDefaults()
 	{
-		void onChange(@NonNull Property property, String newValue);
+		checkInstance();
+		loadDefaults();
 	}
 
 	public enum Property
@@ -142,31 +137,10 @@ public final class Config
 
 	private static void checkInstance()
 	{
-		if (INSTANCE == null)
-		{
-			throw new RuntimeException("Config.init was not called");
-		}
+		if (properties == null) throw new RuntimeException("Config.init was not called");
 	}
 
-	private static void invokeMutationListeners(@NonNull Property property, String value)
-	{
-		INSTANCE.mutationListeners.forEach(listener -> {
-			listener.onChange(property, value);
-		});
-	}
-
-	private static String generalGetPropertyValue(@NonNull Property property)
-	{
-		return INSTANCE.properties.getProperty(property.name);
-	}
-
-	private static void generalSetPropertyValue(@NonNull Property property, String value)
-	{
-		invokeMutationListeners(property, value);
-		INSTANCE.properties.setProperty(property.name, value);
-	}
-
-	private void loadDefaults()
+	private static void loadDefaults()
 	{
 		setBooleanProperty(Property.SHOW_HIDDEN, false);
 		setStringProperty(Property.PIN_LOCK, "");
@@ -181,20 +155,8 @@ public final class Config
 		setBooleanProperty(Property.ANIMATE_GIF, false);
 	}
 
-	private static void dump() {
-		INSTANCE.properties.list(System.out);
-	}
-
-	private Config(@NonNull Context context)
+	private static void dump()
 	{
-		this.mutationListeners = new ArrayList<>();
-		this.filePath = Paths.get(context.getFilesDir().getPath(), CONFIG_FILE);
-		this.properties = new Properties();
-		try (BufferedReader reader = Files.newBufferedReader(this.filePath)) {
-			this.properties.load(reader);
-		} catch (IOException ex) {
-			Log.e(TAG, "Config: Failed to load config file; using defaults", ex);
-			this.loadDefaults();
-		}
+		properties.list(System.out);
 	}
 }
