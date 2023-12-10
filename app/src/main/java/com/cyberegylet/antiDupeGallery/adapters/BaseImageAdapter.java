@@ -128,7 +128,7 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 					public void onScaleEnd(@NonNull ScaleGestureDetector detector)
 					{
 						final Config.Property key;
-						if (adapter instanceof FolderAdapter) {
+						if (adapter instanceof FolderAdapterAsync) {
 							key = Config.Property.FOLDER_COLUMN_NUMBER;
 						} else {
 							key = Config.Property.IMAGE_COLUMN_NUMBER;
