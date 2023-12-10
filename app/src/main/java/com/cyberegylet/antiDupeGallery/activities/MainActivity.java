@@ -22,7 +22,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
-import com.cyberegylet.antiDupeGallery.adapters.FolderAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.FolderAdapterAsync;
 import com.cyberegylet.antiDupeGallery.backend.Backend;
 import com.cyberegylet.antiDupeGallery.backend.Config;
@@ -41,13 +40,13 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class MainActivity extends Activity
 {
 	private static final String TAG = "MainActivity";
+	private static final String DATABASE_NAME = "data.db";
 
 	private static final int MOVE_FOLDER_SELECT_ID = 1;
 	private static final int COPY_FOLDER_SELECT_ID = 2;
@@ -55,7 +54,6 @@ public class MainActivity extends Activity
 	private FileManager fileManager;
 	private RecyclerView recycler;
 	private final ActivityManager activityManager = new ActivityManager(this);
-	private List<Folder> folders;
 	private FolderAdapterAsync.MySortedSet<Folder> foldersCopy;
 	private FolderAdapterAsync.MySortedSet<Folder> folders2;
 	private SearchView search;
@@ -67,9 +65,6 @@ public class MainActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 
-		this.database = SQLiteDatabase.openOrCreateDatabase(getDatabasePath("data.db"), null);
-		Backend.init(this);
-
 		Config.init(this);
 
 		if (Config.getStringProperty(Config.Property.PIN_LOCK).length() != 0 && ActivityManager.getParam(this, "login") == null)
@@ -77,6 +72,9 @@ public class MainActivity extends Activity
 			ActivityManager.switchActivity(this, PinActivity.class);
 			return;
 		}
+
+		database = SQLiteDatabase.openOrCreateDatabase(getDatabasePath(DATABASE_NAME), null);
+		Backend.init(this);
 
 		setContentView(R.layout.main_activity);
 
@@ -363,94 +361,6 @@ public class MainActivity extends Activity
 						if (hide_hidden && folder.isHidden()) continue;
 						if (folder.getName().toLowerCase(Locale.ROOT).contains(text2)) dirs.add(new Folder(folder, true));
 					}
-				});
-				return true;
-			}
-		});
-	}
-
-	private void fileThings2()
-	{
-		HashMap<String, Folder> folderNames = new HashMap<>();
-
-		FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
-		{
-			@Override
-			public void run()
-			{
-				String path = getPath();
-
-				if (!new File(path).canRead()) return;
-
-				String folderAbs = path.substring(0, path.lastIndexOf('/'));
-
-				Folder folder = folderNames.get(folderAbs);
-				if (folder == null)
-				{
-					folder = new Folder(FileManager.stringToUri(folderAbs));
-					folderNames.put(folderAbs, folder);
-				}
-				ImageFile image = new ImageFile(FileManager.stringToUri(path));
-				folder.images.add(image);
-			}
-		};
-		String image_sort = ConfigSort.toSQLString(ConfigManager.getConfig(ConfigManager.Config.IMAGE_SORT));
-		fileManager.allImageAndVideoLoop(image_sort, wrapper, MediaStore.MediaColumns.DATA);
-
-		String folder_sort_data = ConfigManager.getConfig(ConfigManager.Config.FOLDER_SORT);
-		Comparator<Folder> comparator;
-		switch (ConfigSort.getSortType(folder_sort_data))
-		{
-			case MODIFICATION_DATE:
-				comparator = Comparator.comparing(Folder::getModifiedDate);
-				break;
-			case CREATION_DATE:
-				comparator = Comparator.comparing(Folder::getCreationDate);
-				break;
-			case SIZE:
-				comparator = Comparator.comparing(Folder::getSize);
-				break;
-			default:
-				comparator = Comparator.comparing(Folder::getName);
-				break;
-		}
-		if (!ConfigSort.isAscending(folder_sort_data)) comparator = comparator.reversed();
-
-		folders = folderNames.entrySet().stream().sorted(Map.Entry.comparingByValue(comparator)).map(Map.Entry::getValue)
-				.collect(Collectors.toList());
-		List<Folder> foldersCopy = folders.stream()
-				.filter(folder -> !folder.isHidden() || ConfigManager.getBooleanConfig(ConfigManager.Config.SHOW_HIDDEN))
-				.collect(Collectors.toList());
-
-		recycler.setAdapter(new FolderAdapter(foldersCopy, fileManager));
-
-		findViewById(R.id.load).setVisibility(View.GONE);
-		findViewById(R.id.mainLayout).setClickable(false);
-		SearchView search = findViewById(R.id.search_bar);
-
-		search.setOnQueryTextListener(new SearchView.OnQueryTextListener()
-		{
-			@Override
-			public boolean onQueryTextSubmit(String query) { return false; }
-
-			@Override
-			public boolean onQueryTextChange(String text)
-			{
-				String text2 = text.toLowerCase(Locale.ROOT);
-				((FolderAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
-					dirs.clear();
-					folders.forEach(folder -> {
-						/*List<ImageFile> images = new ArrayList<>();
-						folder.images.forEach(image -> {
-							if (!image.getBasename().contains(text)) return;
-							images.add(image);
-						});
-						if (images.size() == 0) return;
-						Folder f = new Folder(folder);
-						dirs.add(f);
-						f.images.addAll(images);*/
-						if (folder.getName().toLowerCase(Locale.ROOT).contains(text2)) dirs.add(new Folder(folder, true));
-					});
 				});
 				return true;
 			}
