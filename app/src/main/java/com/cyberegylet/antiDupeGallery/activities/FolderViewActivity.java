@@ -220,8 +220,7 @@ public class FolderViewActivity extends Activity
 	private void fileThings()
 	{
 		List<ImageFile> imagesCopy = images.stream()
-				.filter(image -> !image.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN))
-				.collect(Collectors.toList());
+				.filter(image -> !image.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN)).collect(Collectors.toList());
 
 		recycler.setAdapter(new ThumbnailAdapter(imagesCopy, fileManager));
 
