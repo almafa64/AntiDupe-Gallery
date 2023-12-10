@@ -228,17 +228,6 @@ public class FolderViewActivity extends Activity
 		findViewById(R.id.load).setVisibility(View.GONE);
 		findViewById(R.id.mainLayout).setClickable(false);
 
-		Config.attachMutationListener((p, v) -> {
-			if (p == Config.Property.SHOW_HIDDEN)
-			{
-				boolean showHidden = Objects.equals(v, "1");
-				((ThumbnailAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(imgs -> {
-					imgs.clear();
-					imgs.addAll(images.stream().filter(image -> !image.isHidden() || showHidden).collect(Collectors.toList()));
-				});
-			}
-		});
-
 		search.setOnQueryTextListener(new SearchView.OnQueryTextListener()
 		{
 			@Override
