@@ -105,4 +105,18 @@ public class SettingsActivity extends Activity
 			Config.save();
 		});
 	}
+
+	@Override
+	protected void onStop()
+	{
+		Config.save();
+		super.onStop();
+	}
+
+	@Override
+	protected void onDestroy()
+	{
+		Config.save();
+		super.onDestroy();
+	}
 }
