@@ -11,6 +11,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.Properties;
 
 public final class Config
@@ -34,11 +38,26 @@ public final class Config
 		try (BufferedReader reader = Files.newBufferedReader(filePath))
 		{
 			properties.load(reader);
+			List<Object> toRemove = new ArrayList<>();
+			Property[] props = Property.values();
+			for (Enumeration<?> e = properties.propertyNames(); e.hasMoreElements(); )
+			{
+				String name = (String) e.nextElement();
+				if (Arrays.stream(props).noneMatch(p -> p.name.equals(name))) toRemove.add(name);
+			}
+			for (Object e : toRemove)
+			{
+				properties.remove(e);
+			}
+			for (Property p : props)
+			{
+				if (!properties.containsKey(p.name)) restoreDefault(p);
+			}
 		}
 		catch (IOException ex)
 		{
 			Log.e(TAG, "Config: Failed to load config file; using defaults", ex);
-			loadDefaults();
+			restoreDefaults();
 			save();
 		}
 	}
@@ -97,7 +116,52 @@ public final class Config
 	public static void restoreDefaults()
 	{
 		checkInstance();
-		loadDefaults();
+		properties.clear();
+		for (Property p : Property.values())
+		{
+			restoreDefault(p);
+		}
+	}
+
+	public static void restoreDefault(@NonNull Property property)
+	{
+		checkInstance();
+		switch (property)
+		{
+			case SHOW_HIDDEN:
+				setBooleanProperty(Property.SHOW_HIDDEN, false);
+				break;
+			case PIN_LOCK:
+				setStringProperty(Property.PIN_LOCK, "");
+				break;
+			case FOLDER_SORT:
+				setStringProperty(Property.FOLDER_SORT, "13");
+				break;
+			case IMAGE_SORT:
+				setStringProperty(Property.IMAGE_SORT, "00");
+				break;
+			case USE_BIN:
+				setBooleanProperty(Property.USE_BIN, true);
+				break;
+			case TEXT_COLOR:
+				setStringProperty(Property.TEXT_COLOR, "#FFF");
+				break;
+			case BACKGROUND_COLOR:
+				setStringProperty(Property.BACKGROUND_COLOR, "#000");
+				break;
+			case ETC_COLOR:
+				setStringProperty(Property.ETC_COLOR, "#30AFCF");
+				break;
+			case FOLDER_COLUMN_NUMBER:
+				setIntProperty(Property.FOLDER_COLUMN_NUMBER, 2);
+				break;
+			case IMAGE_COLUMN_NUMBER:
+				setIntProperty(Property.IMAGE_COLUMN_NUMBER, 3);
+				break;
+			case ANIMATE_GIF:
+				setBooleanProperty(Property.ANIMATE_GIF, false);
+				break;
+		}
 	}
 
 	public enum Property
@@ -138,21 +202,6 @@ public final class Config
 	private static void checkInstance()
 	{
 		if (properties == null) throw new RuntimeException("Config.init was not called");
-	}
-
-	private static void loadDefaults()
-	{
-		setBooleanProperty(Property.SHOW_HIDDEN, false);
-		setStringProperty(Property.PIN_LOCK, "");
-		setStringProperty(Property.FOLDER_SORT, "13");
-		setStringProperty(Property.IMAGE_SORT, "00");
-		setBooleanProperty(Property.USE_BIN, true);
-		setStringProperty(Property.TEXT_COLOR, "#FFF");
-		setStringProperty(Property.BACKGROUND_COLOR, "#000");
-		setStringProperty(Property.ETC_COLOR, "#30AFCF");
-		setIntProperty(Property.FOLDER_COLUMN_NUMBER, 2);
-		setIntProperty(Property.IMAGE_COLUMN_NUMBER, 3);
-		setBooleanProperty(Property.ANIMATE_GIF, false);
 	}
 
 	private static void dump()
