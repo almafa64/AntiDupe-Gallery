@@ -60,6 +60,8 @@ public class MainActivity extends Activity
 
 	private SQLiteDatabase database;
 
+	private static boolean hasBackendBeenCalled = false;
+
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState)
 	{
@@ -74,7 +76,8 @@ public class MainActivity extends Activity
 		}
 
 		database = SQLiteDatabase.openOrCreateDatabase(getDatabasePath(DATABASE_NAME), null);
-		Backend.init(this);
+		if(!hasBackendBeenCalled) Backend.init(this);
+		hasBackendBeenCalled = true;
 
 		setContentView(R.layout.main_activity);
 
@@ -169,10 +172,6 @@ public class MainActivity extends Activity
 	protected void onResume()
 	{
 		super.onResume();
-		/*((FolderAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
-			dirs.clear();
-			dirs.addAll(folders.stream().filter(folder -> !folder.isHidden() || showHidden).collect(Collectors.toList()));
-		});*/
 		if (recycler == null || recycler.getAdapter() == null) return;
 		boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
 		String text2 = search.getQuery().toString().toLowerCase(Locale.ROOT);
