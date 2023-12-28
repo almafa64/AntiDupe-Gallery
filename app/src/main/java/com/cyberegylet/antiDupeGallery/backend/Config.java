@@ -161,6 +161,9 @@ public final class Config
 			case ANIMATE_GIF:
 				setBooleanProperty(Property.ANIMATE_GIF, false);
 				break;
+			case DO_ANIMATIONS:
+				setBooleanProperty(Property.DO_ANIMATIONS, true);
+				break;
 		}
 	}
 
@@ -175,6 +178,7 @@ public final class Config
 		SHOW_HIDDEN("show_hidden"),
 		PIN_LOCK("pin_lock"),
 		USE_BIN("bin"),
+		DO_ANIMATIONS("do_anims"),
 
 		/**
 		 * 1. number: is_ascending<br>
