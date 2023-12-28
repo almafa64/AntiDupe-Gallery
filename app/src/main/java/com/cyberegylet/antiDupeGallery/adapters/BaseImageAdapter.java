@@ -80,7 +80,7 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 			});
 			itemView.setOnLongClickListener(v -> {
 				ImageView selectedImg = v.findViewById(R.id.selected_logo);
-				if (selectedImg.getVisibility() == View.INVISIBLE) selectView(this, selectedImg);
+				if (selectedImg.getVisibility() >= View.INVISIBLE) selectView(this, selectedImg);
 				return true;
 			});
 		}
