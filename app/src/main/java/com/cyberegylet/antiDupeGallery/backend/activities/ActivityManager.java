@@ -22,12 +22,13 @@ public class ActivityManager
 
 	public ActivityManager(Activity activity) { this.activity = activity; }
 
-	public PopupWindow MakePopupWindow(int layoutId, PopupWindow.OnDismissListener listener)
-	{
-		return MakePopupWindow(activity, layoutId, listener);
-	}
+	public PopupWindow MakePopupWindow(int layoutId) { return MakePopupWindow(activity, layoutId, null); }
 
-	public PopupWindow MakePopupWindow(Activity activity, int layoutId, PopupWindow.OnDismissListener listener)
+	public PopupWindow MakePopupWindow(int layoutId, PopupWindow.OnDismissListener listener) { return MakePopupWindow(activity, layoutId, listener); }
+
+	public static PopupWindow MakePopupWindow(Activity activity, int layoutId) { return MakePopupWindow(activity, layoutId, null); }
+
+	public static PopupWindow MakePopupWindow(Activity activity, int layoutId, PopupWindow.OnDismissListener listener)
 	{
 		ViewGroup root = (ViewGroup) activity.getWindow().getDecorView();
 		ViewGroup popup = (ViewGroup) activity.getLayoutInflater().inflate(layoutId, root, false);
@@ -35,7 +36,7 @@ public class ActivityManager
 		ActivityManager.applyDim(root, 0.5f);
 		window.showAtLocation(root, Gravity.CENTER, 0, 0);
 		window.setOnDismissListener(() -> {
-			listener.onDismiss();
+			if(listener != null) listener.onDismiss();
 			ActivityManager.clearDim(root);
 		});
 		return window;
