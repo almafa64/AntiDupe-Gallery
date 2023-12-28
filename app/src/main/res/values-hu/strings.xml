@@ -35,4 +35,5 @@
     <string name="popup_move_file_success">Fájlok sikeresen mozgatva</string>
     <string name="popup_copy_file_success">Fájlok sikeresen másolva</string>
     <string name="popup_delete_file_success">Fájlok sikeresen törölve</string>
+    <string name="pin_didnt_match">Pin nem egyezett első pinnel</string>
 </resources>

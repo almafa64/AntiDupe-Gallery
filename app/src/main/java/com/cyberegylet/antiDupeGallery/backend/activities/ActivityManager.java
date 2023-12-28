@@ -8,7 +8,9 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.view.Gravity;
 import android.view.ViewGroup;
+import android.widget.PopupWindow;
 
 import androidx.annotation.NonNull;
 
@@ -16,18 +18,37 @@ import java.util.ArrayList;
 
 public class ActivityManager
 {
-	private final Activity currentActivity;
+	public final Activity activity;
 
-	public ActivityManager(Activity currentActivity) { this.currentActivity = currentActivity; }
+	public ActivityManager(Activity activity) { this.activity = activity; }
+
+	public PopupWindow MakePopupWindow(int layoutId, PopupWindow.OnDismissListener listener)
+	{
+		return MakePopupWindow(activity, layoutId, listener);
+	}
+
+	public PopupWindow MakePopupWindow(Activity activity, int layoutId, PopupWindow.OnDismissListener listener)
+	{
+		ViewGroup root = (ViewGroup) activity.getWindow().getDecorView();
+		ViewGroup popup = (ViewGroup) activity.getLayoutInflater().inflate(layoutId, root, false);
+		PopupWindow window = new PopupWindow(popup, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+		ActivityManager.applyDim(root, 0.5f);
+		window.showAtLocation(root, Gravity.CENTER, 0, 0);
+		window.setOnDismissListener(() -> {
+			listener.onDismiss();
+			ActivityManager.clearDim(root);
+		});
+		return window;
+	}
 
 	public void switchActivity(Class<? extends Activity> newActivity, ActivityParameter... params)
 	{
-		switchActivity(currentActivity, newActivity, params);
+		switchActivity(activity, newActivity, params);
 	}
 
-	public static void switchActivity(Activity currentActivity, Class<? extends Activity> newActivity, ActivityParameter... params)
+	public static void switchActivity(Activity activity, Class<? extends Activity> newActivity, ActivityParameter... params)
 	{
-		Intent intent = new Intent(currentActivity, newActivity);
+		Intent intent = new Intent(activity, newActivity);
 		for (ActivityParameter param : params)
 		{
 			switch (param.type)
@@ -53,26 +74,26 @@ public class ActivityManager
 					break;
 			}
 		}
-		currentActivity.startActivity(intent);
+		activity.startActivity(intent);
 	}
 
-	public void goBack() { goBack(currentActivity); }
+	public void goBack() { goBack(activity); }
 
-	public static void goBack(Activity currentActivity) { currentActivity.finish(); }
+	public static void goBack(Activity activity) { activity.finish(); }
 
-	public Object getParam(String name) { return getParam(currentActivity, name); }
+	public Object getParam(String name) { return getParam(activity, name); }
 
-	public static Object getParam(Activity currentActivity, String name)
+	public static Object getParam(Activity activity, String name)
 	{
-		Bundle b = currentActivity.getIntent().getExtras();
+		Bundle b = activity.getIntent().getExtras();
 		return b == null ? null : b.get(name);
 	}
 
-	public <T extends Parcelable> ArrayList<T> getListParam(String name) { return getListParam(currentActivity, name); }
+	public <T extends Parcelable> ArrayList<T> getListParam(String name) { return getListParam(activity, name); }
 
-	public static <T extends Parcelable> ArrayList<T> getListParam(Activity currentActivity, String name)
+	public static <T extends Parcelable> ArrayList<T> getListParam(Activity activity, String name)
 	{
-		return currentActivity.getIntent().getParcelableArrayListExtra(name);
+		return activity.getIntent().getParcelableArrayListExtra(name);
 	}
 
 	public static void applyDim(@NonNull ViewGroup parent, float dimAmount)

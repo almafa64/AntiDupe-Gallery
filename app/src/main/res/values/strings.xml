@@ -18,6 +18,7 @@
     <!-- pin -->
     <string name="pin_enter_pin">Enter the PIN</string>
     <string name="pin_enter_pin_again">Enter the PIN again</string>
+    <string name="pin_didnt_match">Pin didn\'t match first pin</string>
 
     <!-- general -->
     <string name="settings_button">Settings</string>

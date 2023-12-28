@@ -4,11 +4,11 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatCheckBox;
@@ -43,17 +43,12 @@ public class SettingsActivity extends Activity
 			}
 			final boolean[] isGood = { false };
 			final String[] tmpPin = new String[]{ "" };
-			ViewGroup popup = (ViewGroup) getLayoutInflater().inflate(R.layout.dialog_enter_pin, (ViewGroup) v.getRootView(), false);
+			PopupWindow window = activityManager.MakePopupWindow(R.layout.dialog_enter_pin, () -> {
+				if (!isGood[0]) checkBox.setChecked(false);
+			});
+			ViewGroup popup = (ViewGroup) window.getContentView();
 			TextView text = popup.findViewById(R.id.header_title);
 			text.setText(R.string.pin_enter_pin);
-			PopupWindow window = new PopupWindow(popup, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
-			ViewGroup root = (ViewGroup) getWindow().getDecorView().getRootView();
-			ActivityManager.applyDim(root, 0.5f);
-			window.showAtLocation(v, Gravity.CENTER, 0, 0);
-			window.setOnDismissListener(() -> {
-				if (!isGood[0]) checkBox.setChecked(false);
-				ActivityManager.clearDim(root);
-			});
 			EditText editText = popup.findViewById(R.id.pin_input);
 			editText.addTextChangedListener(new TextWatcher()
 			{
@@ -85,6 +80,7 @@ public class SettingsActivity extends Activity
 						else
 						{
 							text.setText(R.string.pin_enter_pin);
+							Toast.makeText(activityManager.activity, R.string.pin_didnt_match, Toast.LENGTH_SHORT).show();
 						}
 					}
 				}
