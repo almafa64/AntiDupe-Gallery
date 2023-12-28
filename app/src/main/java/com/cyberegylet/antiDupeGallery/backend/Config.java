@@ -27,9 +27,9 @@ public final class Config
 
 	public static void init(@NonNull Context context)
 	{
-		if (properties != null)
+		if (hasBeenCalled())
 		{
-			Log.e(TAG, "Already called Config.init()");
+			Log.i(TAG, "Already called Config.init()");
 			return;
 		}
 
@@ -56,7 +56,7 @@ public final class Config
 		}
 		catch (IOException ex)
 		{
-			Log.e(TAG, "Config: Failed to load config file; using defaults", ex);
+			Log.w(TAG, "Config: Failed to load config file; using defaults", ex);
 			restoreDefaults();
 			save();
 		}
@@ -64,12 +64,10 @@ public final class Config
 
 	public static void save()
 	{
-		checkInstance();
+		crashIfNotCalled();
 		try (BufferedWriter writer = Files.newBufferedWriter(filePath))
 		{
 			properties.store(writer, null);
-			Log.i(TAG, "save: Saved config to " + filePath.toString());
-			dump();
 		}
 		catch (IOException ex)
 		{
@@ -79,43 +77,43 @@ public final class Config
 
 	public static String getStringProperty(@NonNull Property property)
 	{
-		checkInstance();
+		crashIfNotCalled();
 		return properties.getProperty(property.name);
 	}
 
 	public static int getIntProperty(@NonNull Property property)
 	{
-		checkInstance();
+		crashIfNotCalled();
 		return Integer.parseInt(properties.getProperty(property.name));
 	}
 
 	public static boolean getBooleanProperty(@NonNull Property property)
 	{
-		checkInstance();
+		crashIfNotCalled();
 		return properties.getProperty(property.name).equals("1");
 	}
 
 	public static void setStringProperty(@NonNull Property property, String value)
 	{
-		checkInstance();
+		crashIfNotCalled();
 		properties.setProperty(property.name, value);
 	}
 
 	public static void setIntProperty(@NonNull Property property, int value)
 	{
-		checkInstance();
+		crashIfNotCalled();
 		properties.setProperty(property.name, String.valueOf(value));
 	}
 
 	public static void setBooleanProperty(@NonNull Property property, boolean value)
 	{
-		checkInstance();
+		crashIfNotCalled();
 		properties.setProperty(property.name, value ? "1" : "0");
 	}
 
 	public static void restoreDefaults()
 	{
-		checkInstance();
+		crashIfNotCalled();
 		properties.clear();
 		for (Property p : Property.values())
 		{
@@ -125,7 +123,7 @@ public final class Config
 
 	public static void restoreDefault(@NonNull Property property)
 	{
-		checkInstance();
+		crashIfNotCalled();
 		switch (property)
 		{
 			case SHOW_HIDDEN:
@@ -193,20 +191,19 @@ public final class Config
 
 		private final String name;
 
-		Property(String name)
-		{
-			this.name = name;
-		}
+		Property(String name) { this.name = name; }
 
 		@NonNull
 		@Override
 		public String toString() { return name; }
 	}
 
-	private static void checkInstance()
+	private static void crashIfNotCalled()
 	{
-		if (properties == null) throw new RuntimeException("Config.init was not called");
+		if (!hasBeenCalled()) throw new RuntimeException("Config.init was not called");
 	}
+
+	public static boolean hasBeenCalled() { return properties != null; }
 
 	private static void dump()
 	{
