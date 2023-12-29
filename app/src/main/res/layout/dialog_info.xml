@@ -10,47 +10,55 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/secondary_text_color"
-        android:text="@string/info_name" />
+        android:text="@string/info_name"
+        android:textAlignment="viewStart" />
 
     <TextView
         android:id="@+id/info_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/secondary_text_color" />
+        android:background="@color/secondary_text_color"
+        android:textAlignment="viewStart" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/secondary_text_color"
-        android:text="@string/info_file_count" />
+        android:text="@string/info_file_count"
+        android:textAlignment="viewStart" />
 
     <TextView
         android:id="@+id/info_count"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/secondary_text_color" />
+        android:background="@color/secondary_text_color"
+        android:textAlignment="viewStart" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/secondary_text_color"
-        android:text="@string/info_path" />
+        android:text="@string/info_path"
+        android:textAlignment="viewStart" />
 
     <TextView
         android:id="@+id/info_path"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/secondary_text_color" />
+        android:background="@color/secondary_text_color"
+        android:textAlignment="viewStart" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/secondary_text_color"
-        android:text="@string/info_size" />
+        android:text="@string/info_size"
+        android:textAlignment="viewStart" />
 
     <TextView
         android:id="@+id/info_size"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/secondary_text_color" />
+        android:background="@color/secondary_text_color"
+        android:textAlignment="viewStart" />
 </LinearLayout>

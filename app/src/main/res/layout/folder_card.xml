@@ -14,10 +14,11 @@
         android:id="@+id/fileCount"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/image"
         android:background="#B2000000"
+        android:textAlignment="viewStart"
         android:textColor="@color/secondary_text_color"
-        android:textStyle="bold"
-        android:layout_alignBottom="@id/image"/>
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/folderName"
@@ -25,8 +26,9 @@
         android:layout_height="wrap_content"
         android:layout_above="@+id/fileCount"
         android:background="#B2000000"
+        android:textAlignment="viewStart"
         android:textColor="@color/secondary_text_color"
-        android:textStyle="bold"/>
+        android:textStyle="bold" />
 
     <ImageView
         android:id="@+id/selected_logo"
