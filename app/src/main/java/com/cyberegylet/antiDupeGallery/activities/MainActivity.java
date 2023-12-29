@@ -11,8 +11,10 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.PopupMenu;
 import android.widget.SearchView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -26,6 +28,7 @@ import com.cyberegylet.antiDupeGallery.adapters.FolderAdapterAsync;
 import com.cyberegylet.antiDupeGallery.backend.Backend;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
+import com.cyberegylet.antiDupeGallery.backend.Utils;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.models.Folder;
@@ -62,6 +65,7 @@ public class MainActivity extends Activity
 
 	private static boolean hasBackendBeenCalled = false;
 
+	@SuppressLint("SetTextI18n")
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState)
 	{
@@ -94,17 +98,20 @@ public class MainActivity extends Activity
 			final int moveId;
 			final int copyId;
 			final int deleteId;
+			final int infoId;
 			if (selected.size() != 0)
 			{
 				moveId = View.generateViewId();
 				copyId = View.generateViewId();
 				deleteId = View.generateViewId();
+				infoId = View.generateViewId();
 				Menu menu = popup.getMenu();
 				menu.add(Menu.NONE, moveId, Menu.NONE, R.string.popup_move);
 				menu.add(Menu.NONE, copyId, Menu.NONE, R.string.popup_copy);
 				menu.add(Menu.NONE, deleteId, Menu.NONE, R.string.popup_delete);
+				menu.add(Menu.NONE, infoId, Menu.NONE, R.string.popup_info);
 			}
-			else deleteId = copyId = moveId = -1;
+			else deleteId = copyId = moveId = infoId = -1;
 			popup.setOnMenuItemClickListener(item -> {
 				int id = item.getItemId();
 				if (id == R.id.settings)
@@ -142,6 +149,40 @@ public class MainActivity extends Activity
 					{
 						// ToDo error dialog
 					}
+				}
+				else if(id == infoId)
+				{
+					ViewGroup popupInfo = (ViewGroup) activityManager.MakePopupWindow(R.layout.dialog_info).getContentView();
+					TextView name = popupInfo.findViewById(R.id.info_name);
+					TextView count = popupInfo.findViewById(R.id.info_count);
+					TextView path = popupInfo.findViewById(R.id.info_path);
+					TextView size = popupInfo.findViewById(R.id.info_size);
+					if(selected.size() == 1)
+					{
+						File f = new File(((FolderAdapterAsync.ViewHolder)selected.get(0)).getFolder().getPath().getPath());
+						path.setText(f.getParent());
+						name.setText(f.getName());
+					}
+					else
+					{
+						path.setVisibility(View.GONE);
+						popupInfo.getChildAt(4).setVisibility(View.GONE);
+
+						((TextView)popupInfo.getChildAt(0)).setText(R.string.popup_items_selected);
+						name.setText(String.valueOf(selected.size()));
+					}
+
+					long sizeB = 0;
+					long imageCount = 0;
+					for(BaseImageAdapter.ViewHolder holder : selected)
+					{
+						Folder folder = ((FolderAdapterAsync.ViewHolder)holder).getFolder();
+						sizeB += folder.getSize();
+						imageCount += folder.images.size();
+					}
+
+					size.setText(Utils.getByteStringFromSize(sizeB));
+					count.setText(String.valueOf(imageCount));
 				}
 				else return false;
 				return true;

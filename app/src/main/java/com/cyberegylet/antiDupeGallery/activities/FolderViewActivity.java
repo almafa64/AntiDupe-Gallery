@@ -6,8 +6,10 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.PopupMenu;
 import android.widget.SearchView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -20,9 +22,11 @@ import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.ThumbnailAdapter;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
+import com.cyberegylet.antiDupeGallery.backend.Utils;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -69,17 +73,20 @@ public class FolderViewActivity extends Activity
 			final int moveId;
 			final int copyId;
 			final int deleteId;
+			final int infoId;
 			if (selected.size() != 0)
 			{
 				moveId = View.generateViewId();
 				copyId = View.generateViewId();
 				deleteId = View.generateViewId();
+				infoId = View.generateViewId();
 				Menu menu = popup.getMenu();
 				menu.add(Menu.NONE, moveId, Menu.NONE, R.string.popup_move);
 				menu.add(Menu.NONE, copyId, Menu.NONE, R.string.popup_copy);
 				menu.add(Menu.NONE, deleteId, Menu.NONE, R.string.popup_delete);
+				menu.add(Menu.NONE, infoId, Menu.NONE, R.string.popup_info);
 			}
-			else deleteId = copyId = moveId = -1;
+			else deleteId = copyId = moveId = infoId = -1;
 			popup.setOnMenuItemClickListener(item -> {
 				int id = item.getItemId();
 				if (id == R.id.settings)
@@ -118,6 +125,39 @@ public class FolderViewActivity extends Activity
 						// ToDo error dialog
 					}
 				}
+				else if(id == infoId)
+				{
+					ViewGroup popupInfo = (ViewGroup) activityManager.MakePopupWindow(R.layout.dialog_info).getContentView();
+					TextView name = popupInfo.findViewById(R.id.info_name);
+					TextView count = popupInfo.findViewById(R.id.info_count);
+					TextView path = popupInfo.findViewById(R.id.info_path);
+					TextView size = popupInfo.findViewById(R.id.info_size);
+					if(selected.size() == 1)
+					{
+						File f = new File(((ThumbnailAdapter.ViewHolder)selected.get(0)).getImage().getPath().getPath());
+						path.setText(f.getParent());
+						name.setText(f.getName());
+					}
+					else
+					{
+						path.setVisibility(View.GONE);
+						popupInfo.getChildAt(4).setVisibility(View.GONE);
+						name.setVisibility(View.GONE);
+						popupInfo.getChildAt(0).setVisibility(View.GONE);
+					}
+
+					long sizeB = 0;
+					for(BaseImageAdapter.ViewHolder holder : selected)
+					{
+						ImageFile image = ((ThumbnailAdapter.ViewHolder)holder).getImage();
+						sizeB += image.getSize();
+					}
+
+					size.setText(Utils.getByteStringFromSize(sizeB));
+
+					((TextView)popupInfo.getChildAt(2)).setText(R.string.popup_items_selected);
+					count.setText(String.valueOf(selected.size()));
+				}
 				else return false;
 				return true;
 			});
@@ -146,10 +186,6 @@ public class FolderViewActivity extends Activity
 	protected void onResume()
 	{
 		super.onResume();
-		/*((FolderAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
-			dirs.clear();
-			dirs.addAll(folders.stream().filter(folder -> !folder.isHidden() || showHidden).collect(Collectors.toList()));
-		});*/
 		if (recycler == null || recycler.getAdapter() == null) return;
 		String text2 = search.getQuery().toString().toLowerCase(Locale.ROOT);
 		boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
