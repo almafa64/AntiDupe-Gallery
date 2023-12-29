@@ -113,7 +113,7 @@ public class FolderViewActivity extends Activity
 					for (BaseImageAdapter.ViewHolder tmp : selected)
 					{
 						ThumbnailAdapter.ViewHolder holder = (ThumbnailAdapter.ViewHolder) tmp;
-						Path p = Paths.get(holder.getImage().getPath().getPath());
+						Path p = Paths.get(holder.getImage().getPath());
 						if (!fileManager.deleteFile(p)) failedImages.add(holder.getImage().getName());
 					}
 					if (failedImages.size() == 0)
@@ -134,7 +134,7 @@ public class FolderViewActivity extends Activity
 					TextView size = popupInfo.findViewById(R.id.info_size);
 					if(selected.size() == 1)
 					{
-						File f = new File(((ThumbnailAdapter.ViewHolder)selected.get(0)).getImage().getPath().getPath());
+						File f = ((ThumbnailAdapter.ViewHolder)selected.get(0)).getImage().getFile();
 						path.setText(f.getParent());
 						name.setText(f.getName());
 					}
@@ -211,7 +211,7 @@ public class FolderViewActivity extends Activity
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					ThumbnailAdapter.ViewHolder holder = (ThumbnailAdapter.ViewHolder) tmp;
-					Path p = Paths.get(holder.getImage().getPath().getPath());
+					Path p = Paths.get(holder.getImage().getPath());
 					if (!fileManager.moveFile(p, path)) failedFolders.add(holder.getImage().getName());
 				}
 				break;
@@ -219,7 +219,7 @@ public class FolderViewActivity extends Activity
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					ThumbnailAdapter.ViewHolder holder = (ThumbnailAdapter.ViewHolder) tmp;
-					Path p = Paths.get(holder.getImage().getPath().getPath());
+					Path p = Paths.get(holder.getImage().getPath());
 					if (!fileManager.copyFile(p, path)) failedFolders.add(holder.getImage().getName());
 				}
 				break;

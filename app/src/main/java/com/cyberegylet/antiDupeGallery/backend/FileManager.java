@@ -292,7 +292,7 @@ public class FileManager
 
 	public static boolean isGooglePhotosUri(Uri uri) { return "com.google.android.apps.photos.content".equals(uri.getAuthority()); }
 
-	public void thumbnailIntoImageView(ImageView imageView, Uri uri)
+	public void thumbnailIntoImageView(ImageView imageView, String path)
 	{
 		RequestOptions options = new RequestOptions().priority(Priority.LOW).diskCacheStrategy(DiskCacheStrategy.RESOURCE)
 				.format(DecodeFormat.PREFER_ARGB_8888).set(Downsampler.ALLOW_HARDWARE_CONFIG, true).centerCrop();
@@ -301,7 +301,7 @@ public class FileManager
 		if (!playGIF) options = options.dontAnimate().decode(Bitmap.class);
 		else options = options.decode(Drawable.class);
 
-		Glide.with(context).load(uri).apply(options).transition(DrawableTransitionOptions.withCrossFade()).into(imageView);
+		Glide.with(context).load(path).apply(options).transition(DrawableTransitionOptions.withCrossFade()).into(imageView);
 	}
 
 	public boolean moveFile(Path fromFile, Path toFolder)
@@ -411,9 +411,8 @@ public class FileManager
 		return true;
 	}
 
-	public static long getSize(Uri path)
+	public static long getSize(File f)
 	{
-		File f = new File(Objects.requireNonNull(path.getPath()));
 		if(!f.isDirectory()) return f.length();
 		long size = 0;
 		for(File file : Objects.requireNonNull(f.listFiles()))

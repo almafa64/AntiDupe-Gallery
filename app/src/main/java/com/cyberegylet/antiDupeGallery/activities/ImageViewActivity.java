@@ -2,7 +2,6 @@ package com.cyberegylet.antiDupeGallery.activities;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -30,7 +29,7 @@ public class ImageViewActivity extends Activity implements Serializable
 	private static final float DRAG_Y_SNAP_MIN = -40.0f;
 	private static final float DRAG_Y_SNAP_MAX = 40.0f;
 
-	private Uri imageUri;
+	private String imagePath;
 	private ImageView imageView;
 	private ConstraintLayout imageContainer;
 	private ScaleGestureDetector scaleGestureDetector;
@@ -52,7 +51,7 @@ public class ImageViewActivity extends Activity implements Serializable
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.image_view);
 
-		imageUri = (Uri) activityManager.getParam("imageUri");
+		imagePath = (String) activityManager.getParam("imagePath");
 
 		imageView = findViewById(R.id.imageView);
 		imageContainer = findViewById(R.id.imageContainer);
@@ -62,7 +61,7 @@ public class ImageViewActivity extends Activity implements Serializable
 
 		imageContainer.setOnTouchListener((v, event) -> onImageContainerTouchEvent(event));
 
-		Glide.with(this.getApplicationContext()).load(imageUri).into(imageView);
+		Glide.with(this.getApplicationContext()).load(imagePath).into(imageView);
 	}
 
 	private void onScaleFactorChange()

@@ -138,7 +138,7 @@ public class MainActivity extends Activity
 					for (BaseImageAdapter.ViewHolder tmp : selected)
 					{
 						FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
-						Path p = Paths.get(holder.getFolder().getPath().getPath());
+						Path p = Paths.get(holder.getFolder().getPath());
 						if (!fileManager.deleteFolder(p)) failedFolders.add(holder.getFolder().getName());
 					}
 					if (failedFolders.size() == 0)
@@ -159,7 +159,7 @@ public class MainActivity extends Activity
 					TextView size = popupInfo.findViewById(R.id.info_size);
 					if(selected.size() == 1)
 					{
-						File f = new File(((FolderAdapterAsync.ViewHolder)selected.get(0)).getFolder().getPath().getPath());
+						File f = ((FolderAdapterAsync.ViewHolder)selected.get(0)).getFolder().getFile();
 						path.setText(f.getParent());
 						name.setText(f.getName());
 					}
@@ -238,7 +238,7 @@ public class MainActivity extends Activity
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
-					Path p = Paths.get(holder.getFolder().getPath().getPath());
+					Path p = Paths.get(holder.getFolder().getPath());
 					if (!fileManager.moveFolder(p, path)) failedFolders.add(holder.getFolder().getName());
 				}
 				break;
@@ -246,7 +246,7 @@ public class MainActivity extends Activity
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
-					Path p = Paths.get(holder.getFolder().getPath().getPath());
+					Path p = Paths.get(holder.getFolder().getPath());
 					if (!fileManager.copyFolder(p, path)) failedFolders.add(holder.getFolder().getName());
 				}
 				break;
@@ -338,12 +338,12 @@ public class MainActivity extends Activity
 						Folder folder = folderNames.get(folderAbs);
 						if (folder == null)
 						{
-							folder = new Folder(FileManager.stringToUri(folderAbs));
+							folder = new Folder(folderAbs);
 							folderNames.put(folderAbs, folder);
 							folders2.add(folder);
 							if (!folder.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN)) foldersCopy.add(folder);
 						}
-						ImageFile image = new ImageFile(FileManager.stringToUri(path));
+						ImageFile image = new ImageFile(path);
 
 						long id = getID();
 
