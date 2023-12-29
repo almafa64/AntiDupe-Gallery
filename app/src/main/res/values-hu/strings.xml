@@ -15,6 +15,19 @@
     <string name="settings_reset">Beállítások visszaállítása</string>
     <string name="settings_danger_header">Veszély zóna</string>
     <string name="settings_use_bin">Fájlok kukába rakása törlés helyett</string>
+    <string name="settings_sort_button">Rendezési beállítások</string>
+
+    <!-- sorting -->
+    <string name="sorting_album_header">Album rendezés</string>
+    <string name="sorting_image_header">Kép rendezés</string>
+    <string name="sorting_sort_text">Szerint</string>
+    <string name="sorting_asc_text">Növekvő</string>
+    <string-array name="sorting_sort_types">
+        <item>Módsítási Dátum</item>
+        <item>Készítési Dátum</item>
+        <item>Méret</item>
+        <item>Név</item>
+    </string-array>
 
     <!-- pin -->
     <string name="pin_enter_pin">Írd be a PIN kódott</string>

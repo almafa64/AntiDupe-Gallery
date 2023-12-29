@@ -14,13 +14,26 @@
     <string name="settings_reset">Reset all settings</string>
     <string name="settings_danger_header">Danger zone</string>
     <string name="settings_use_bin">Move items into the Recycle Bin instead of deleting</string>
+    <string name="settings_sort_button">Sorting settings</string>
+
+    <!-- sorting -->
+    <string name="sorting_album_header">Album sort</string>
+    <string name="sorting_image_header">Image sort</string>
+    <string name="sorting_sort_text">Sort by</string>
+    <string name="sorting_asc_text">Ascending</string>
+    <string-array name="sorting_sort_types">
+        <item>Modification Date</item>
+        <item>Creation Date</item>
+        <item>Size</item>
+        <item>Name</item>
+    </string-array>
 
     <!-- pin -->
     <string name="pin_enter_pin">Enter the PIN</string>
     <string name="pin_enter_pin_again">Enter the PIN again</string>
     <string name="pin_didnt_match">Pin didn\'t match first pin</string>
 
-    <!-- popup -->
+    <!-- popup menu -->
     <string name="popup_move">Move</string>
     <string name="popup_copy">Copy</string>
     <string name="popup_delete">Delete</string>

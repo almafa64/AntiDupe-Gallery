@@ -320,7 +320,7 @@ public class MainActivity extends Activity
 			@Override
 			protected void onPreExecute()
 			{
-				timeStart = System.nanoTime();
+				timeStart = System.currentTimeMillis();
 			}
 
 			@Override
@@ -377,8 +377,8 @@ public class MainActivity extends Activity
 			protected void onPostExecute(Void unused)
 			{
 				super.onPostExecute(unused);
-				long time = System.nanoTime() - this.timeStart;
-				Log.i(TAG, "media iteration took " + time + " ns");
+				long time = System.currentTimeMillis() - this.timeStart;
+				Log.i(TAG, "media iteration took " + time + " ms");
 				runOnUiThread(adapter::notifyDataSetChanged);
 			}
 		}.execute();
