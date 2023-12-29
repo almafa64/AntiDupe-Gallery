@@ -20,12 +20,6 @@
     <string name="pin_enter_pin_again">Enter the PIN again</string>
     <string name="pin_didnt_match">Pin didn\'t match first pin</string>
 
-    <!-- general -->
-    <string name="settings_button">Settings</string>
-    <string name="more_button">More</string>
-    <string name="no_storage_permission">No storage permission</string>
-    <string name="back_arrow_text">Back</string>
-
     <!-- popup -->
     <string name="popup_move">Move</string>
     <string name="popup_copy">Copy</string>
@@ -36,6 +30,20 @@
     <string name="popup_move_file_success">Successfully moved files</string>
     <string name="popup_copy_file_success">Successfully copied files</string>
     <string name="popup_delete_file_success">Successfully deleted files</string>
+    <string name="popup_info">Info</string>
+    <string name="popup_items_selected">Items selected</string>
+
+    <!-- general -->
+    <string name="settings_button">Settings</string>
+    <string name="more_button">More</string>
+    <string name="no_storage_permission">No storage permission</string>
+    <string name="back_arrow_text">Back</string>
+
+    <!-- info popup -->
+    <string name="info_name">Name</string>
+    <string name="info_file_count">File count</string>
+    <string name="info_path">Path</string>
+    <string name="info_size">Size</string>
 
     <!-- info -->
     <string name="email" translatable="false">something@gmail.com</string>

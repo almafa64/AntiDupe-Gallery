@@ -19,6 +19,7 @@
     <!-- pin -->
     <string name="pin_enter_pin">Írd be a PIN kódott</string>
     <string name="pin_enter_pin_again">Írd be a PIN kódott mégegyszer</string>
+    <string name="pin_didnt_match">Pin nem egyezett első pinnel</string>
 
     <!-- popup -->
     <string name="popup_move">Mozgatás</string>
@@ -27,13 +28,21 @@
     <string name="popup_move_folder_success">Mappák sikeresen mozgatva</string>
     <string name="popup_copy_folder_success">Mappák sikeresen másolva</string>
     <string name="popup_delete_folder_success">Mappák sikeresen törölve</string>
+    <string name="popup_move_file_success">Fájlok sikeresen mozgatva</string>
+    <string name="popup_copy_file_success">Fájlok sikeresen másolva</string>
+    <string name="popup_delete_file_success">Fájlok sikeresen törölve</string>
+    <string name="popup_info">Info</string>
+    <string name="popup_items_selected">Elemek kiválasztva</string>
+
+    <!-- info popup -->
+    <string name="info_name">Név</string>
+    <string name="info_file_count">Fájlok száma</string>
+    <string name="info_path">Útvonal</string>
+    <string name="info_size">Méret</string>
+
     <!-- general -->
     <string name="settings_button">Beállítások</string>
     <string name="more_button">Továbbiak</string>
     <string name="no_storage_permission">Nincs tárhely engedély</string>
     <string name="back_arrow_text">Vissza</string>
-    <string name="popup_move_file_success">Fájlok sikeresen mozgatva</string>
-    <string name="popup_copy_file_success">Fájlok sikeresen másolva</string>
-    <string name="popup_delete_file_success">Fájlok sikeresen törölve</string>
-    <string name="pin_didnt_match">Pin nem egyezett első pinnel</string>
 </resources>
