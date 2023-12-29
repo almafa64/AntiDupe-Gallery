@@ -26,6 +26,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
 import com.cyberegylet.antiDupeGallery.R;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.DirectoryStream;
@@ -35,6 +36,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class FileManager
 {
@@ -407,5 +409,17 @@ public class FileManager
 			return false;
 		}
 		return true;
+	}
+
+	public static long getSize(Uri path)
+	{
+		File f = new File(Objects.requireNonNull(path.getPath()));
+		if(!f.isDirectory()) return f.length();
+		long size = 0;
+		for(File file : Objects.requireNonNull(f.listFiles()))
+		{
+			size += file.length();
+		}
+		return size;
 	}
 }

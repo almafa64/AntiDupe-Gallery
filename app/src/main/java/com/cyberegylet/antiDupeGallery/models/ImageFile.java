@@ -6,6 +6,8 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
+import com.cyberegylet.antiDupeGallery.backend.FileManager;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -30,7 +32,7 @@ public class ImageFile implements Parcelable
 		try
 		{
 			BasicFileAttributes attr = Files.readAttributes(Paths.get(stringPath), BasicFileAttributes.class);
-			size = attr.size();
+			size = FileManager.getSize(path);
 			modifiedDate = attr.lastModifiedTime().toMillis();
 			creationDate = attr.creationTime().toMillis();
 		}

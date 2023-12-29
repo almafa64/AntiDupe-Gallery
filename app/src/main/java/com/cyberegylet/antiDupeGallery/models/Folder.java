@@ -4,6 +4,8 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
+import com.cyberegylet.antiDupeGallery.backend.FileManager;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -33,7 +35,7 @@ public class Folder
 		try
 		{
 			BasicFileAttributes attr = Files.readAttributes(Paths.get(stringPath), BasicFileAttributes.class);
-			size = attr.size();
+			size = FileManager.getSize(path);
 			modifiedDate = attr.lastModifiedTime().toMillis();
 			creationDate = attr.creationTime().toMillis();
 		}
