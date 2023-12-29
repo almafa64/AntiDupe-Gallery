@@ -6,7 +6,7 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 
 import com.cyberegylet.antiDupeGallery.R;
-import com.cyberegylet.antiDupeGallery.backend.SimpleActivityGenerator;
+import com.cyberegylet.antiDupeGallery.helpers.SimpleActivityGenerator;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 
 public class AboutActivity extends Activity

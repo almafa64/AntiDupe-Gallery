@@ -1,4 +1,4 @@
-package com.cyberegylet.antiDupeGallery.backend;
+package com.cyberegylet.antiDupeGallery.helpers;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

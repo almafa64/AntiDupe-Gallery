@@ -1,4 +1,4 @@
-package com.cyberegylet.antiDupeGallery.backend;
+package com.cyberegylet.antiDupeGallery.helpers;
 
 import android.app.Activity;
 import android.content.res.Resources;
@@ -19,6 +19,7 @@ import android.widget.TextView;
 import androidx.appcompat.widget.AppCompatCheckBox;
 
 import com.cyberegylet.antiDupeGallery.R;
+import com.cyberegylet.antiDupeGallery.backend.Config;
 
 public class SimpleActivityGenerator
 {
