@@ -38,5 +38,8 @@ public final class ActivityParameter
 
 	public ActivityParameter(String name, Uri data) { this(name, data, Type.URI); }
 
-	public <T extends Parcelable> ActivityParameter(String name, ArrayList<T> data) { this(name, data, Type.PARCELABLE); }
+	public <T extends Parcelable> ActivityParameter(String name, ArrayList<T> data)
+	{
+		this(name, data, Type.PARCELABLE);
+	}
 }

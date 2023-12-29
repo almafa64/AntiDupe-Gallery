@@ -36,12 +36,10 @@ public class ThumbnailAdapter extends BaseImageAdapter
 
 		public ViewHolder(View itemView)
 		{
-			super(itemView,
-					pos -> ActivityManager.switchActivity(fileManager.activity,
-							ImageViewActivity.class,
-							new ActivityParameter("imagePath", images.get(pos).getPath())
-					)
-			);
+			super(itemView, pos -> ActivityManager.switchActivity(fileManager.activity,
+					ImageViewActivity.class,
+					new ActivityParameter("imagePath", images.get(pos).getPath())
+			));
 		}
 
 		public void reIndexImage()

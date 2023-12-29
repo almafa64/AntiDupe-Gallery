@@ -38,7 +38,11 @@ public class PinActivity extends Activity
 			{
 				if (s.length() == 4 && Config.getStringProperty(Config.Property.PIN_LOCK).equals(s.toString()))
 				{
-					ActivityManager.switchActivity(PinActivity.this, MainActivity.class, new ActivityParameter("login", true));
+					ActivityManager.switchActivity(
+							PinActivity.this,
+							MainActivity.class,
+							new ActivityParameter("login", true)
+					);
 				}
 			}
 		});

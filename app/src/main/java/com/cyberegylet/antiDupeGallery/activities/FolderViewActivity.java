@@ -125,16 +125,17 @@ public class FolderViewActivity extends Activity
 						// ToDo error dialog
 					}
 				}
-				else if(id == infoId)
+				else if (id == infoId)
 				{
-					ViewGroup popupInfo = (ViewGroup) activityManager.MakePopupWindow(R.layout.dialog_info).getContentView();
+					ViewGroup popupInfo = (ViewGroup) activityManager.MakePopupWindow(R.layout.dialog_info)
+							.getContentView();
 					TextView name = popupInfo.findViewById(R.id.info_name);
 					TextView count = popupInfo.findViewById(R.id.info_count);
 					TextView path = popupInfo.findViewById(R.id.info_path);
 					TextView size = popupInfo.findViewById(R.id.info_size);
-					if(selected.size() == 1)
+					if (selected.size() == 1)
 					{
-						File f = ((ThumbnailAdapter.ViewHolder)selected.get(0)).getImage().getFile();
+						File f = ((ThumbnailAdapter.ViewHolder) selected.get(0)).getImage().getFile();
 						path.setText(f.getParent());
 						name.setText(f.getName());
 					}
@@ -147,15 +148,15 @@ public class FolderViewActivity extends Activity
 					}
 
 					long sizeB = 0;
-					for(BaseImageAdapter.ViewHolder holder : selected)
+					for (BaseImageAdapter.ViewHolder holder : selected)
 					{
-						ImageFile image = ((ThumbnailAdapter.ViewHolder)holder).getImage();
+						ImageFile image = ((ThumbnailAdapter.ViewHolder) holder).getImage();
 						sizeB += image.getSize();
 					}
 
 					size.setText(Utils.getByteStringFromSize(sizeB));
 
-					((TextView)popupInfo.getChildAt(2)).setText(R.string.popup_items_selected);
+					((TextView) popupInfo.getChildAt(2)).setText(R.string.popup_items_selected);
 					count.setText(String.valueOf(selected.size()));
 				}
 				else return false;
@@ -192,8 +193,8 @@ public class FolderViewActivity extends Activity
 		((ThumbnailAdapter) recycler.getAdapter()).filter(dirs -> {
 			dirs.clear();
 			dirs.addAll(images.stream()
-					.filter(image -> (!image.isHidden() || showHidden) && image.getName().toLowerCase(Locale.ROOT).contains(text2))
-					.collect(Collectors.toList()));
+					.filter(image -> (!image.isHidden() || showHidden) && image.getName().toLowerCase(Locale.ROOT)
+							.contains(text2)).collect(Collectors.toList()));
 		});
 	}
 
@@ -203,7 +204,8 @@ public class FolderViewActivity extends Activity
 		if (resultCode != RESULT_OK || data == null) return;
 		final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
 		final List<BaseImageAdapter.ViewHolder> selected = adapter.getSelected;
-		Path path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]); // ToDo this is very hacky
+		Path path = Paths.get("/storage/emulated/0/" + data.getData().getPath()
+				.split(":")[1]); // ToDo this is very hacky
 		List<String> failedFolders = new ArrayList<>();
 		switch (requestCode)
 		{
@@ -256,7 +258,8 @@ public class FolderViewActivity extends Activity
 	private void fileThings()
 	{
 		List<ImageFile> imagesCopy = images.stream()
-				.filter(image -> !image.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN)).collect(Collectors.toList());
+				.filter(image -> !image.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN))
+				.collect(Collectors.toList());
 
 		recycler.setAdapter(new ThumbnailAdapter(imagesCopy, fileManager));
 

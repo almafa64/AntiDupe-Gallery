@@ -56,12 +56,10 @@ public class FolderAdapterAsync extends BaseImageAdapter
 
 		public ViewHolder(View itemView)
 		{
-			super(itemView,
-					pos -> ActivityManager.switchActivity(fileManager.activity,
-							FolderViewActivity.class,
-							new ActivityParameter("images", folders.get(pos).images)
-					)
-			);
+			super(itemView, pos -> ActivityManager.switchActivity(fileManager.activity,
+					FolderViewActivity.class,
+					new ActivityParameter("images", folders.get(pos).images)
+			));
 			name = itemView.findViewById(R.id.folderName);
 			count = itemView.findViewById(R.id.fileCount);
 		}

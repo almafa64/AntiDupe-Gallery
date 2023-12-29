@@ -16,14 +16,13 @@ public class SquareThumbnailImage extends AppCompatImageView
 
 	public SquareThumbnailImage(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr)
 	{
-		super(
-				context,
-				attrs,
-				defStyleAttr
-		);
+		super(context, attrs, defStyleAttr);
 	}
 
 	/**  */
 	@Override
-	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) { super.onMeasure(widthMeasureSpec, widthMeasureSpec); }
+	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
+	{
+		super.onMeasure(widthMeasureSpec, widthMeasureSpec);
+	}
 }

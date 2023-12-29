@@ -37,7 +37,10 @@ public class SimpleActivityGenerator
 		toPx = res.getDisplayMetrics().density;
 		RelativeLayout root = new RelativeLayout(activity);
 		activity.addContentView(root,
-				new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+				new RelativeLayout.LayoutParams(
+						ViewGroup.LayoutParams.MATCH_PARENT,
+						ViewGroup.LayoutParams.MATCH_PARENT
+				)
 		);
 
 		ImageButton back = new ImageButton(new ContextThemeWrapper(activity, R.style.BackArrow), null, 0);
@@ -126,9 +129,15 @@ public class SimpleActivityGenerator
 
 	public LinearLayout addRow(Integer textID, View customView) { return addRow(textID, customView, null, null); }
 
-	public LinearLayout addRow(Integer textID, View customView, Integer iconID) { return addRow(textID, customView, null, iconID); }
+	public LinearLayout addRow(Integer textID, View customView, Integer iconID)
+	{
+		return addRow(textID, customView, null, iconID);
+	}
 
-	public LinearLayout addRow(Integer textID, View.OnClickListener clickListener) { return addRow(textID, null, clickListener, null); }
+	public LinearLayout addRow(Integer textID, View.OnClickListener clickListener)
+	{
+		return addRow(textID, null, clickListener, null);
+	}
 
 	public LinearLayout addRow(Integer textID, View.OnClickListener clickListener, Integer iconID)
 	{

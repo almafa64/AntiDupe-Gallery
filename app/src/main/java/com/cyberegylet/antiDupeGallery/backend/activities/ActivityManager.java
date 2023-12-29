@@ -24,19 +24,30 @@ public class ActivityManager
 
 	public PopupWindow MakePopupWindow(int layoutId) { return MakePopupWindow(activity, layoutId, null); }
 
-	public PopupWindow MakePopupWindow(int layoutId, PopupWindow.OnDismissListener listener) { return MakePopupWindow(activity, layoutId, listener); }
+	public PopupWindow MakePopupWindow(int layoutId, PopupWindow.OnDismissListener listener)
+	{
+		return MakePopupWindow(activity, layoutId, listener);
+	}
 
-	public static PopupWindow MakePopupWindow(Activity activity, int layoutId) { return MakePopupWindow(activity, layoutId, null); }
+	public static PopupWindow MakePopupWindow(Activity activity, int layoutId)
+	{
+		return MakePopupWindow(activity, layoutId, null);
+	}
 
 	public static PopupWindow MakePopupWindow(Activity activity, int layoutId, PopupWindow.OnDismissListener listener)
 	{
 		ViewGroup root = (ViewGroup) activity.getWindow().getDecorView();
 		ViewGroup popup = (ViewGroup) activity.getLayoutInflater().inflate(layoutId, root, false);
-		PopupWindow window = new PopupWindow(popup, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+		PopupWindow window = new PopupWindow(
+				popup,
+				ViewGroup.LayoutParams.MATCH_PARENT,
+				ViewGroup.LayoutParams.WRAP_CONTENT,
+				true
+		);
 		ActivityManager.applyDim(root, 0.5f);
 		window.showAtLocation(root, Gravity.CENTER, 0, 0);
 		window.setOnDismissListener(() -> {
-			if(listener != null) listener.onDismiss();
+			if (listener != null) listener.onDismiss();
 			ActivityManager.clearDim(root);
 		});
 		return window;
@@ -47,7 +58,11 @@ public class ActivityManager
 		switchActivity(activity, newActivity, params);
 	}
 
-	public static void switchActivity(Activity activity, Class<? extends Activity> newActivity, ActivityParameter... params)
+	public static void switchActivity(
+			Activity activity,
+			Class<? extends Activity> newActivity,
+			ActivityParameter... params
+	)
 	{
 		Intent intent = new Intent(activity, newActivity);
 		for (ActivityParameter param : params)

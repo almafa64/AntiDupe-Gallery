@@ -73,14 +73,17 @@ public class MainActivity extends Activity
 
 		Config.init(this);
 
-		if (Config.getStringProperty(Config.Property.PIN_LOCK).length() != 0 && ActivityManager.getParam(this, "login") == null)
+		if (Config.getStringProperty(Config.Property.PIN_LOCK).length() != 0 && ActivityManager.getParam(
+				this,
+				"login"
+		) == null)
 		{
 			ActivityManager.switchActivity(this, PinActivity.class);
 			return;
 		}
 
 		database = SQLiteDatabase.openOrCreateDatabase(getDatabasePath(DATABASE_NAME), null);
-		if(!hasBackendBeenCalled) Backend.init(this);
+		if (!hasBackendBeenCalled) Backend.init(this);
 		hasBackendBeenCalled = true;
 
 		setContentView(R.layout.main_activity);
@@ -150,16 +153,17 @@ public class MainActivity extends Activity
 						// ToDo error dialog
 					}
 				}
-				else if(id == infoId)
+				else if (id == infoId)
 				{
-					ViewGroup popupInfo = (ViewGroup) activityManager.MakePopupWindow(R.layout.dialog_info).getContentView();
+					ViewGroup popupInfo = (ViewGroup) activityManager.MakePopupWindow(R.layout.dialog_info)
+							.getContentView();
 					TextView name = popupInfo.findViewById(R.id.info_name);
 					TextView count = popupInfo.findViewById(R.id.info_count);
 					TextView path = popupInfo.findViewById(R.id.info_path);
 					TextView size = popupInfo.findViewById(R.id.info_size);
-					if(selected.size() == 1)
+					if (selected.size() == 1)
 					{
-						File f = ((FolderAdapterAsync.ViewHolder)selected.get(0)).getFolder().getFile();
+						File f = ((FolderAdapterAsync.ViewHolder) selected.get(0)).getFolder().getFile();
 						path.setText(f.getParent());
 						name.setText(f.getName());
 					}
@@ -168,15 +172,15 @@ public class MainActivity extends Activity
 						path.setVisibility(View.GONE);
 						popupInfo.getChildAt(4).setVisibility(View.GONE);
 
-						((TextView)popupInfo.getChildAt(0)).setText(R.string.popup_items_selected);
+						((TextView) popupInfo.getChildAt(0)).setText(R.string.popup_items_selected);
 						name.setText(String.valueOf(selected.size()));
 					}
 
 					long sizeB = 0;
 					long imageCount = 0;
-					for(BaseImageAdapter.ViewHolder holder : selected)
+					for (BaseImageAdapter.ViewHolder holder : selected)
 					{
-						Folder folder = ((FolderAdapterAsync.ViewHolder)holder).getFolder();
+						Folder folder = ((FolderAdapterAsync.ViewHolder) holder).getFolder();
 						sizeB += folder.getSize();
 						imageCount += folder.images.size();
 					}
@@ -219,8 +223,8 @@ public class MainActivity extends Activity
 		((FolderAdapterAsync) recycler.getAdapter()).filter(dirs -> {
 			dirs.clear();
 			dirs.addAll(folders2.stream()
-					.filter(folder -> (!folder.isHidden() || showHidden) && folder.getName().toLowerCase(Locale.ROOT).contains(text2))
-					.collect(Collectors.toList()));
+					.filter(folder -> (!folder.isHidden() || showHidden) && folder.getName().toLowerCase(Locale.ROOT)
+							.contains(text2)).collect(Collectors.toList()));
 		});
 	}
 
@@ -230,7 +234,8 @@ public class MainActivity extends Activity
 		if (resultCode != RESULT_OK || data == null) return;
 		final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
 		final List<BaseImageAdapter.ViewHolder> selected = adapter.getSelected;
-		Path path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]); // ToDo this is very hacky
+		Path path = Paths.get("/storage/emulated/0/" + data.getData().getPath()
+				.split(":")[1]); // ToDo this is very hacky
 		List<String> failedFolders = new ArrayList<>();
 		switch (requestCode)
 		{
@@ -253,8 +258,7 @@ public class MainActivity extends Activity
 		}
 		if (failedFolders.size() == 0)
 		{
-			Toast.makeText(
-					this,
+			Toast.makeText(this,
 					(requestCode == MOVE_FOLDER_SELECT_ID) ? R.string.popup_move_folder_success : R.string.popup_copy_folder_success,
 					Toast.LENGTH_SHORT
 			).show();
@@ -341,7 +345,8 @@ public class MainActivity extends Activity
 							folder = new Folder(folderAbs);
 							folderNames.put(folderAbs, folder);
 							folders2.add(folder);
-							if (!folder.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN)) foldersCopy.add(folder);
+							if (!folder.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN))
+								foldersCopy.add(folder);
 						}
 						ImageFile image = new ImageFile(path);
 
@@ -359,7 +364,12 @@ public class MainActivity extends Activity
 					}
 				};
 				String image_sort = ConfigSort.toSQLString(Config.getStringProperty(Config.Property.IMAGE_SORT));
-				fileManager.allImageAndVideoLoop(image_sort, wrapper, MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DATA);
+				fileManager.allImageAndVideoLoop(
+						image_sort,
+						wrapper,
+						MediaStore.MediaColumns._ID,
+						MediaStore.MediaColumns.DATA
+				);
 				return null;
 			}
 
@@ -399,7 +409,8 @@ public class MainActivity extends Activity
 						dirs.add(f);
 						f.images.addAll(images);*/
 						if (hide_hidden && folder.isHidden()) continue;
-						if (folder.getName().toLowerCase(Locale.ROOT).contains(text2)) dirs.add(new Folder(folder, true));
+						if (folder.getName().toLowerCase(Locale.ROOT).contains(text2))
+							dirs.add(new Folder(folder, true));
 					}
 				});
 				return true;

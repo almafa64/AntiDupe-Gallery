@@ -55,10 +55,10 @@ public class FileManager
 
 	public static class Mimes
 	{
-		public static final String[] MIME_VIDEOS = new String[]{ "video/quicktime", "video/mpeg", "video/mp4", "video/3gpp", "video/webm",
-				"video/avi" };
-		public static final String[] MIME_IMAGES = new String[]{ "image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp",
-				"image/ico", "image/svg" };
+		public static final String[] MIME_VIDEOS = new String[]{ "video/quicktime", "video/mpeg", "video/mp4",
+				"video/3gpp", "video/webm", "video/avi" };
+		public static final String[] MIME_IMAGES = new String[]{ "image/jpeg", "image/png", "image/gif", "image/webp",
+				"image/bmp", "image/ico", "image/svg" };
 
 		public enum Type
 		{
@@ -150,7 +150,13 @@ public class FileManager
 	}
 
 	public void cursorLoop(
-			CursorLoopWrapper wrapper, int cursorStart, String sort, String selection, String[] args, Uri uri, String... queries
+			CursorLoopWrapper wrapper,
+			int cursorStart,
+			String sort,
+			String selection,
+			String[] args,
+			Uri uri,
+			String... queries
 	)
 	{
 		try (Cursor cursor = contentResolver.query(uri, queries, selection, args, sort))
@@ -185,12 +191,22 @@ public class FileManager
 		cursorLoop(wrapper, 0, null, selection, args, uri, queries);
 	}
 
-	public void cursorLoop(CursorLoopWrapper wrapper, String sort, String selection, String[] args, Uri uri, String... queries)
+	public void cursorLoop(
+			CursorLoopWrapper wrapper,
+			String sort,
+			String selection,
+			String[] args,
+			Uri uri,
+			String... queries
+	)
 	{
 		cursorLoop(wrapper, 0, sort, selection, args, uri, queries);
 	}
 
-	public void cursorLoop(CursorLoopWrapper wrapper, Uri uri, String... queries) { cursorLoop(wrapper, null, uri, queries); }
+	public void cursorLoop(CursorLoopWrapper wrapper, Uri uri, String... queries)
+	{
+		cursorLoop(wrapper, null, uri, queries);
+	}
 
 	public void allImageAndVideoLoop(String sort, CursorLoopWrapper wrapper, String... queries)
 	{
@@ -207,9 +223,21 @@ public class FileManager
 		cursorLoop(wrapper, sort, VIDEOS, EXTERNAL_URI, queries);
 	}
 
-	public void allImageAndVideoInFolderLoop(String absoluteFolder, String sort, CursorLoopWrapper wrapper, String... queries)
+	public void allImageAndVideoInFolderLoop(
+			String absoluteFolder,
+			String sort,
+			CursorLoopWrapper wrapper,
+			String... queries
+	)
 	{
-		cursorLoop(wrapper, sort, PATH_FILTER_IMAGES_AND_VIDEOS, new String[]{ absoluteFolder + "/%" }, EXTERNAL_URI, queries);
+		cursorLoop(
+				wrapper,
+				sort,
+				PATH_FILTER_IMAGES_AND_VIDEOS,
+				new String[]{ absoluteFolder + "/%" },
+				EXTERNAL_URI,
+				queries
+		);
 	}
 
 	private List<String> getAllPaths(Uri uri)
@@ -294,14 +322,16 @@ public class FileManager
 
 	public void thumbnailIntoImageView(ImageView imageView, String path)
 	{
-		RequestOptions options = new RequestOptions().priority(Priority.LOW).diskCacheStrategy(DiskCacheStrategy.RESOURCE)
-				.format(DecodeFormat.PREFER_ARGB_8888).set(Downsampler.ALLOW_HARDWARE_CONFIG, true).centerCrop();
+		RequestOptions options = new RequestOptions().priority(Priority.LOW)
+				.diskCacheStrategy(DiskCacheStrategy.RESOURCE).format(DecodeFormat.PREFER_ARGB_8888)
+				.set(Downsampler.ALLOW_HARDWARE_CONFIG, true).centerCrop();
 
 		boolean playGIF = Config.getBooleanProperty(Config.Property.ANIMATE_GIF);
 		if (!playGIF) options = options.dontAnimate().decode(Bitmap.class);
 		else options = options.decode(Drawable.class);
 
-		Glide.with(context).load(path).apply(options).transition(DrawableTransitionOptions.withCrossFade()).into(imageView);
+		Glide.with(context).load(path).apply(options).transition(DrawableTransitionOptions.withCrossFade())
+				.into(imageView);
 	}
 
 	public boolean moveFile(Path fromFile, Path toFolder)
@@ -413,9 +443,9 @@ public class FileManager
 
 	public static long getSize(File f)
 	{
-		if(!f.isDirectory()) return f.length();
+		if (!f.isDirectory()) return f.length();
 		long size = 0;
-		for(File file : Objects.requireNonNull(f.listFiles()))
+		for (File file : Objects.requireNonNull(f.listFiles()))
 		{
 			size += file.length();
 		}

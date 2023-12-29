@@ -8,10 +8,10 @@ public class Utils
 	public static String getByteStringFromSize(long size)
 	{
 		final double kb = 1024;
-		if(size >= kb * kb * kb * kb) return doubleString(size / (kb * kb * kb * kb)) + " TB";
-		else if(size >= kb * kb * kb) return doubleString(size / (kb * kb * kb)) + " GB";
-		else if(size >= kb * kb) return doubleString(size / (kb * kb)) + " MB";
-		else if(size >= kb) return doubleString(size / kb) + " KB";
+		if (size >= kb * kb * kb * kb) return doubleString(size / (kb * kb * kb * kb)) + " TB";
+		else if (size >= kb * kb * kb) return doubleString(size / (kb * kb * kb)) + " GB";
+		else if (size >= kb * kb) return doubleString(size / (kb * kb)) + " MB";
+		else if (size >= kb) return doubleString(size / kb) + " KB";
 		return doubleString((double) size) + " B";
 	}
 
