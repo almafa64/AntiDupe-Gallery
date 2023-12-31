@@ -19,10 +19,10 @@ public class Folder
 	public final ArrayList<ImageFile> images = new ArrayList<>();
 	private File file;
 	@NotNull
-	private String name;
-	private long size;
-	private long modifiedDate;
-	private long creationDate;
+	private final String name;
+	private final long size;
+	private final long modifiedDate;
+	private final long creationDate;
 	private boolean isHidden;
 
 	public Folder(File file)
