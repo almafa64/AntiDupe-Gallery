@@ -1,11 +1,9 @@
 package com.cyberegylet.antiDupeGallery.activities;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -28,9 +26,10 @@ import com.cyberegylet.antiDupeGallery.adapters.FolderAdapterAsync;
 import com.cyberegylet.antiDupeGallery.backend.Backend;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
-import com.cyberegylet.antiDupeGallery.helpers.Utils;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
+import com.cyberegylet.antiDupeGallery.helpers.MyAsyncTask;
+import com.cyberegylet.antiDupeGallery.helpers.Utils;
 import com.cyberegylet.antiDupeGallery.models.Folder;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
@@ -313,18 +312,15 @@ public class MainActivity extends Activity
 		FolderAdapterAsync adapter = new FolderAdapterAsync(foldersCopy, fileManager);
 		recycler.setAdapter(adapter);
 
-		new AsyncTask<Void, Void, Void>()
+		new MyAsyncTask()
 		{
 			private long timeStart = 0;
 
 			@Override
-			protected void onPreExecute()
-			{
-				timeStart = System.currentTimeMillis();
-			}
+			public void onPreExecute() { timeStart = System.currentTimeMillis(); }
 
 			@Override
-			protected Void doInBackground(Void... voids)
+			public void doInBackground()
 			{
 				HashMap<String, Folder> folderNames = new HashMap<>();
 				final int[] timeout = { 0 };
@@ -335,7 +331,8 @@ public class MainActivity extends Activity
 					{
 						String path = getPath();
 
-						if (!new File(path).canRead()) return;
+						File image = new File(path);
+						if (!image.canRead()) return;
 
 						final String folderAbs = path.substring(0, path.lastIndexOf('/'));
 
@@ -348,13 +345,12 @@ public class MainActivity extends Activity
 							if (!folder.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN))
 								foldersCopy.add(folder);
 						}
-						ImageFile image = new ImageFile(path);
+						ImageFile imageFile = new ImageFile(image);
 
 						long id = getID();
-
 						Backend.queueFile(id, path);
 
-						folder.images.add(image);
+						folder.addImage(imageFile);
 
 						if (timeout[0]++ == 20)
 						{
@@ -370,13 +366,11 @@ public class MainActivity extends Activity
 						MediaStore.MediaColumns._ID,
 						MediaStore.MediaColumns.DATA
 				);
-				return null;
 			}
 
 			@Override
-			protected void onPostExecute(Void unused)
+			public void onPostExecute()
 			{
-				super.onPostExecute(unused);
 				long time = System.currentTimeMillis() - this.timeStart;
 				Log.i(TAG, "media iteration took " + time + " ms");
 				runOnUiThread(adapter::notifyDataSetChanged);
