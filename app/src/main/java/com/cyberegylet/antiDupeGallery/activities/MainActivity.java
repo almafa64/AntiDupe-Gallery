@@ -43,15 +43,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class MainActivity extends Activity
 {
 	private static final String TAG = "MainActivity";
 	private static final String DATABASE_NAME = "data.db";
 
-	private static final int MOVE_FOLDER_SELECT_ID = 1;
-	private static final int COPY_FOLDER_SELECT_ID = 2;
+	private static final int MOVE_SELECTED_FOLDERS = 1;
+	private static final int COPY_SELECTED_FOLDERS = 2;
+	private static final int DELETE_SELECTED_FOLDERS = 3;
 
 	private FileManager fileManager;
 	private RecyclerView recycler;
@@ -60,11 +60,10 @@ public class MainActivity extends Activity
 	private FolderAdapterAsync.MySortedSet<Folder> folders2;
 	private SearchView search;
 
-	private SQLiteDatabase database;
+	public static SQLiteDatabase database;
 
 	private static boolean hasBackendBeenCalled = false;
 
-	@SuppressLint("SetTextI18n")
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState)
 	{
@@ -127,30 +126,16 @@ public class MainActivity extends Activity
 				else if (id == moveId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					startActivityForResult(intent, MOVE_FOLDER_SELECT_ID);
+					startActivityForResult(intent, MOVE_SELECTED_FOLDERS);
 				}
 				else if (id == copyId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					startActivityForResult(intent, COPY_FOLDER_SELECT_ID);
+					startActivityForResult(intent, COPY_SELECTED_FOLDERS);
 				}
 				else if (id == deleteId)
 				{
-					List<String> failedFolders = new ArrayList<>();
-					for (BaseImageAdapter.ViewHolder tmp : selected)
-					{
-						FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
-						Path p = Paths.get(holder.getFolder().getPath());
-						if (!fileManager.deleteFolder(p)) failedFolders.add(holder.getFolder().getName());
-					}
-					if (failedFolders.size() == 0)
-					{
-						Toast.makeText(this, R.string.popup_delete_folder_success, Toast.LENGTH_SHORT).show();
-					}
-					else
-					{
-						// ToDo error dialog
-					}
+					onActivityResult(DELETE_SELECTED_FOLDERS, RESULT_OK, new Intent());
 				}
 				else if (id == infoId)
 				{
@@ -217,14 +202,7 @@ public class MainActivity extends Activity
 	{
 		super.onResume();
 		if (recycler == null || recycler.getAdapter() == null) return;
-		boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
-		String text2 = search.getQuery().toString().toLowerCase(Locale.ROOT);
-		((FolderAdapterAsync) recycler.getAdapter()).filter(dirs -> {
-			dirs.clear();
-			dirs.addAll(folders2.stream()
-					.filter(folder -> (!folder.isHidden() || showHidden) && folder.getName().toLowerCase(Locale.ROOT)
-							.contains(text2)).collect(Collectors.toList()));
-		});
+		filterRecycle(search.getQuery().toString());
 	}
 
 	@Override
@@ -233,12 +211,19 @@ public class MainActivity extends Activity
 		if (resultCode != RESULT_OK || data == null) return;
 		final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
 		final List<BaseImageAdapter.ViewHolder> selected = adapter.getSelected;
-		Path path = Paths.get("/storage/emulated/0/" + data.getData().getPath()
-				.split(":")[1]); // ToDo this is very hacky
+		// ToDo test on sd card
+		Log.d("app", String.valueOf(data));
+		Path path = null;
+		if (requestCode != DELETE_SELECTED_FOLDERS)
+		{
+			path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]);
+		}
 		List<String> failedFolders = new ArrayList<>();
+		int textId = 0;
 		switch (requestCode)
 		{
-			case MOVE_FOLDER_SELECT_ID:
+			case MOVE_SELECTED_FOLDERS:
+				textId = R.string.popup_move_folder_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
@@ -246,7 +231,8 @@ public class MainActivity extends Activity
 					if (!fileManager.moveFolder(p, path)) failedFolders.add(holder.getFolder().getName());
 				}
 				break;
-			case COPY_FOLDER_SELECT_ID:
+			case COPY_SELECTED_FOLDERS:
+				textId = R.string.popup_copy_folder_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
@@ -254,14 +240,17 @@ public class MainActivity extends Activity
 					if (!fileManager.copyFolder(p, path)) failedFolders.add(holder.getFolder().getName());
 				}
 				break;
+			case DELETE_SELECTED_FOLDERS:
+				textId = R.string.popup_delete_folder_success;
+				for (BaseImageAdapter.ViewHolder tmp : selected)
+				{
+					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
+					Path p = Paths.get(holder.getFolder().getPath());
+					if (!fileManager.deleteFolder(p)) failedFolders.add(holder.getFolder().getName());
+				}
+				break;
 		}
-		if (failedFolders.size() == 0)
-		{
-			Toast.makeText(this,
-					(requestCode == MOVE_FOLDER_SELECT_ID) ? R.string.popup_move_folder_success : R.string.popup_copy_folder_success,
-					Toast.LENGTH_SHORT
-			).show();
-		}
+		if (failedFolders.size() == 0) Toast.makeText(this, textId, Toast.LENGTH_SHORT).show();
 		else
 		{
 			// ToDo error dialog
@@ -283,7 +272,6 @@ public class MainActivity extends Activity
 		}
 	}
 
-	@SuppressLint("StaticFieldLeak")
 	private void fileThings()
 	{
 		boolean inWork = true;
@@ -388,32 +376,27 @@ public class MainActivity extends Activity
 			@Override
 			public boolean onQueryTextChange(String text)
 			{
-				String text2 = text.toLowerCase(Locale.ROOT);
-				boolean hide_hidden = !Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
-				((FolderAdapterAsync) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
-					dirs.clear();
-					for (Folder folder : folders2)
-					{/*List<ImageFile> images = new ArrayList<>();
-						folder.images.forEach(image -> {
-							if (!image.getBasename().contains(text)) return;
-							images.add(image);
-						});
-						if (images.size() == 0) return;
-						Folder f = new Folder(folder);
-						dirs.add(f);
-						f.images.addAll(images);*/
-						if (hide_hidden && folder.isHidden()) continue;
-						if (folder.getName().toLowerCase(Locale.ROOT).contains(text2))
-							dirs.add(new Folder(folder, true));
-					}
-				});
+				filterRecycle(text);
 				return true;
 			}
 		});
 	}
 
-	private String getDbPath(String name)
+	private String getDbPath(String name) { return getDatabasePath(name).getAbsolutePath(); }
+
+	private void filterRecycle(String text)
 	{
-		return getDatabasePath(name).getAbsolutePath();
+		String text2 = text.toLowerCase(Locale.ROOT);
+		boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
+		((FolderAdapterAsync) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
+			dirs.clear();
+			for (Folder folder : folders2)
+			{
+				if ((showHidden || !folder.isHidden()) && folder.getName().toLowerCase(Locale.ROOT).contains(text2))
+				{
+					dirs.add(new Folder(folder, true));
+				}
+			}
+		});
 	}
 }
