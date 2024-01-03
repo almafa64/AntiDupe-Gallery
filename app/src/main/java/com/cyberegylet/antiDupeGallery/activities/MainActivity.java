@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
+import android.widget.ScrollView;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -71,8 +72,7 @@ public class MainActivity extends Activity
 
 		Config.init(this);
 
-		if (Config.getStringProperty(Config.Property.PIN_LOCK).length() != 0 && ActivityManager.getParam(
-				this,
+		if (Config.getStringProperty(Config.Property.PIN_LOCK).length() != 0 && ActivityManager.getParam(this,
 				"login"
 		) == null)
 		{
@@ -218,7 +218,7 @@ public class MainActivity extends Activity
 		{
 			path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]);
 		}
-		List<String> failedFolders = new ArrayList<>();
+		List<Folder> failedFolders = new ArrayList<>();
 		int textId = 0;
 		switch (requestCode)
 		{
@@ -228,7 +228,7 @@ public class MainActivity extends Activity
 				{
 					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
 					Path p = Paths.get(holder.getFolder().getPath());
-					if (!fileManager.moveFolder(p, path)) failedFolders.add(holder.getFolder().getName());
+					if (!fileManager.moveFolder(p, path)) failedFolders.add(holder.getFolder());
 				}
 				break;
 			case COPY_SELECTED_FOLDERS:
@@ -237,7 +237,7 @@ public class MainActivity extends Activity
 				{
 					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
 					Path p = Paths.get(holder.getFolder().getPath());
-					if (!fileManager.copyFolder(p, path)) failedFolders.add(holder.getFolder().getName());
+					if (!fileManager.copyFolder(p, path)) failedFolders.add(holder.getFolder());
 				}
 				break;
 			case DELETE_SELECTED_FOLDERS:
@@ -246,14 +246,21 @@ public class MainActivity extends Activity
 				{
 					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
 					Path p = Paths.get(holder.getFolder().getPath());
-					if (!fileManager.deleteFolder(p)) failedFolders.add(holder.getFolder().getName());
+					if (!fileManager.deleteFolder(p)) failedFolders.add(holder.getFolder());
 				}
 				break;
 		}
 		if (failedFolders.size() == 0) Toast.makeText(this, textId, Toast.LENGTH_SHORT).show();
 		else
 		{
-			// ToDo error dialog
+			ScrollView scroll = activityManager.makePopupWindow(R.layout.dialog_scroll).getContentView()
+					.findViewById(R.id.dialog_scroll);
+			for(Folder f : failedFolders)
+			{
+				TextView textView = new TextView(this);
+				textView.setText(f.getPath());
+				scroll.addView(textView);
+			}
 		}
 	}
 
@@ -348,8 +355,7 @@ public class MainActivity extends Activity
 					}
 				};
 				String image_sort = ConfigSort.toSQLString(Config.getStringProperty(Config.Property.IMAGE_SORT));
-				fileManager.allImageAndVideoLoop(
-						image_sort,
+				fileManager.allImageAndVideoLoop(image_sort,
 						wrapper,
 						MediaStore.MediaColumns._ID,
 						MediaStore.MediaColumns.DATA
