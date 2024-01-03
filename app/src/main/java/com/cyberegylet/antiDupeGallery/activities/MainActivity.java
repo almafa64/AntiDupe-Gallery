@@ -297,7 +297,7 @@ public class MainActivity extends Activity
 				comparator = Comparator.comparing(Folder::getSize);
 				break;
 			default:
-				comparator = Comparator.comparing(Folder::getName);
+				comparator = Comparator.comparing(f -> f.getName().toLowerCase(Locale.ROOT));
 				break;
 		}
 		if (!ConfigSort.isAscending(folder_sort_data)) comparator = comparator.reversed();
