@@ -8,6 +8,7 @@ import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
+import android.widget.ScrollView;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -184,7 +185,7 @@ public class FolderViewActivity extends Activity
 		{
 			path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]);
 		}
-		List<String> failedImages = new ArrayList<>();
+		List<ImageFile> failedImages = new ArrayList<>();
 		int textId = 0;
 		switch (requestCode)
 		{
@@ -194,7 +195,7 @@ public class FolderViewActivity extends Activity
 				{
 					ThumbnailAdapter.ViewHolder holder = (ThumbnailAdapter.ViewHolder) tmp;
 					Path p = Paths.get(holder.getImage().getPath());
-					if (!fileManager.moveFile(p, path)) failedImages.add(holder.getImage().getName());
+					if (!fileManager.moveFile(p, path)) failedImages.add(holder.getImage());
 				}
 				break;
 			case COPY_SELECTED_IMAGES:
@@ -203,7 +204,7 @@ public class FolderViewActivity extends Activity
 				{
 					ThumbnailAdapter.ViewHolder holder = (ThumbnailAdapter.ViewHolder) tmp;
 					Path p = Paths.get(holder.getImage().getPath());
-					if (!fileManager.copyFile(p, path)) failedImages.add(holder.getImage().getName());
+					if (!fileManager.copyFile(p, path)) failedImages.add(holder.getImage());
 				}
 				break;
 			case DELETE_SELECTED_IMAGES:
@@ -212,14 +213,21 @@ public class FolderViewActivity extends Activity
 				{
 					ThumbnailAdapter.ViewHolder holder = (ThumbnailAdapter.ViewHolder) tmp;
 					Path p = Paths.get(holder.getImage().getPath());
-					if (!fileManager.deleteFile(p)) failedImages.add(holder.getImage().getName());
+					if (!fileManager.deleteFile(p)) failedImages.add(holder.getImage());
 				}
 				break;
 		}
 		if (failedImages.size() == 0) Toast.makeText(this, textId, Toast.LENGTH_SHORT).show();
 		else
 		{
-			// ToDo error dialog
+			ScrollView scroll = activityManager.makePopupWindow(R.layout.dialog_scroll).getContentView()
+					.findViewById(R.id.dialog_scroll);
+			for(ImageFile i : failedImages)
+			{
+				TextView textView = new TextView(this);
+				textView.setText(i.getPath());
+				scroll.addView(textView);
+			}
 		}
 	}
 
