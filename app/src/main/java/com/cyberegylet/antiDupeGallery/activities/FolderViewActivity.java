@@ -108,7 +108,7 @@ public class FolderViewActivity extends Activity
 				}
 				else if (id == infoId)
 				{
-					ViewGroup popupInfo = (ViewGroup) activityManager.MakePopupWindow(R.layout.dialog_info)
+					ViewGroup popupInfo = (ViewGroup) activityManager.makePopupWindow(R.layout.dialog_info)
 							.getContentView();
 					TextView name = popupInfo.findViewById(R.id.info_name);
 					TextView count = popupInfo.findViewById(R.id.info_count);

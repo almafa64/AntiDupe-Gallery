@@ -48,7 +48,7 @@ public class SettingsActivity extends Activity
 			}
 			final boolean[] isGood = { false };
 			final String[] tmpPin = new String[]{ "" };
-			PopupWindow window = activityManager.MakePopupWindow(R.layout.dialog_enter_pin, () -> {
+			PopupWindow window = activityManager.makePopupWindow(R.layout.dialog_enter_pin, () -> {
 				if (!isGood[0]) checkBox.setChecked(false);
 			});
 			ViewGroup popup = (ViewGroup) window.getContentView();
@@ -98,7 +98,7 @@ public class SettingsActivity extends Activity
 		generator.addConfigCheckRow(R.string.settings_use_bin, Config.Property.USE_BIN);
 
 		generator.addRow(R.string.settings_sort_button, (v) -> {
-			ViewGroup popup = (ViewGroup) activityManager.MakePopupWindow(R.layout.dialog_sorting).getContentView();
+			ViewGroup popup = (ViewGroup) activityManager.makePopupWindow(R.layout.dialog_sorting).getContentView();
 			Spinner folderSpinner = popup.findViewById(R.id.sorting_folder_type);
 			Spinner imageSpinner = popup.findViewById(R.id.sorting_image_type);
 			CheckBox folderAsc = popup.findViewById(R.id.sorting_folder_asc);

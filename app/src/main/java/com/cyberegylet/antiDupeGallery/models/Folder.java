@@ -15,9 +15,9 @@ import java.util.Objects;
 public class Folder
 {
 	public final ArrayList<ImageFile> images = new ArrayList<>();
-	private File file;
 	@NotNull
 	private String name;
+	private File file;
 	private long modifiedDate;
 	private long creationDate;
 	private long size;
@@ -57,7 +57,6 @@ public class Folder
 	}
 
 	public Folder(String path) { this(new File(path)); }
-	public Folder(Folder folder) { this(folder, false); }
 
 	public void addImage(ImageFile file)
 	{

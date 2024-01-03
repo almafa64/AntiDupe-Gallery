@@ -22,19 +22,19 @@ public class ActivityManager
 
 	public ActivityManager(Activity activity) { this.activity = activity; }
 
-	public PopupWindow MakePopupWindow(int layoutId) { return MakePopupWindow(activity, layoutId, null); }
+	public PopupWindow makePopupWindow(int layoutId) { return makePopupWindow(activity, layoutId, null); }
 
-	public PopupWindow MakePopupWindow(int layoutId, PopupWindow.OnDismissListener listener)
+	public PopupWindow makePopupWindow(int layoutId, PopupWindow.OnDismissListener listener)
 	{
-		return MakePopupWindow(activity, layoutId, listener);
+		return makePopupWindow(activity, layoutId, listener);
 	}
 
-	public static PopupWindow MakePopupWindow(Activity activity, int layoutId)
+	public static PopupWindow makePopupWindow(Activity activity, int layoutId)
 	{
-		return MakePopupWindow(activity, layoutId, null);
+		return makePopupWindow(activity, layoutId, null);
 	}
 
-	public static PopupWindow MakePopupWindow(Activity activity, int layoutId, PopupWindow.OnDismissListener listener)
+	public static PopupWindow makePopupWindow(Activity activity, int layoutId, PopupWindow.OnDismissListener listener)
 	{
 		ViewGroup root = (ViewGroup) activity.getWindow().getDecorView();
 		ViewGroup popup = (ViewGroup) activity.getLayoutInflater().inflate(layoutId, root, false);
