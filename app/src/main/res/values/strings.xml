@@ -58,6 +58,9 @@
     <string name="info_path">Path</string>
     <string name="info_size">Size</string>
 
+    <!-- Filter -->
+    <string name="filter_header_text">Filter</string>
+
     <!-- info -->
     <string name="email" translatable="false">something@gmail.com</string>
     <string name="version_text" translatable="false">Version 0.0.2</string>

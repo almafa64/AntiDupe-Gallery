@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mainLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:fillViewport="true"
+    android:gravity="center">
+
+    <ImageButton
+        android:id="@+id/more_button"
+        style="?android:attr/actionOverflowButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/more_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/back_button"
+        style="@style/BackArrow"
+        android:tooltipText="@string/back_arrow_text"
+        android:contentDescription="@string/back_arrow_text"
+        app:layout_constraintBottom_toBottomOf="@+id/more_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/activity_header"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:gravity="center_vertical"
+        android:textAppearance="@style/MainHeader"
+        android:textDirection="locale"
+        android:text="@string/filter_header_text"
+        app:layout_constraintBottom_toBottomOf="@+id/more_button"
+        app:layout_constraintEnd_toStartOf="@+id/more_button"
+        app:layout_constraintStart_toEndOf="@+id/back_button"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
