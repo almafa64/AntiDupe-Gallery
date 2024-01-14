@@ -1,29 +1,21 @@
 package com.cyberegylet.antiDupeGallery.activities;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
 import android.widget.ScrollView;
-import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.ThumbnailAdapter;
 import com.cyberegylet.antiDupeGallery.backend.Config;
-import com.cyberegylet.antiDupeGallery.backend.FileManager;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
@@ -31,7 +23,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -39,32 +30,25 @@ import java.util.stream.Collectors;
 
 public class ImagesActivity extends ImageListBaseActivity
 {
-	private static final String TAG = "FolderViewActivity";
-
 	private static final int MOVE_SELECTED_IMAGES = 1;
 	private static final int COPY_SELECTED_IMAGES = 2;
 	private static final int DELETE_SELECTED_IMAGES = 3;
 
-	private FileManager fileManager;
-	private RecyclerView recycler;
 	private String currentFolder;
-	private final ActivityManager activityManager = new ActivityManager(this);
 	private List<ImageFile> images;
-	private SearchView search;
+
+	public ImagesActivity()
+	{
+		super("FolderViewActivity");
+	}
 
 	@Override
-	protected void onCreate(@Nullable Bundle savedInstanceState)
+	protected void myOnCreate(@Nullable Bundle savedInstanceState)
 	{
-		super.onCreate(savedInstanceState);
-
-		setContentView(R.layout.folder_view);
+		setContentView(R.layout.images_activity);
+		contentSet();
 
 		images = activityManager.getListParam("images");
-
-		recycler = findViewById(R.id.items);
-		int span = Config.getIntProperty(Config.Property.IMAGE_COLUMN_NUMBER);
-		recycler.setLayoutManager(new GridLayoutManager(this, span));
-		search = findViewById(R.id.search_bar);
 
 		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
 		findViewById(R.id.more_button).setOnClickListener(v -> {
@@ -146,31 +130,6 @@ public class ImagesActivity extends ImageListBaseActivity
 			});
 			popup.show();
 		});
-
-		fileManager = new FileManager(this);
-		if (fileManager.hasFileAccess()) fileThings();
-	}
-
-	@Override
-	protected void onStop()
-	{
-		Config.save();
-		super.onStop();
-	}
-
-	@Override
-	protected void onDestroy()
-	{
-		Config.save();
-		super.onDestroy();
-	}
-
-	@Override
-	protected void onResume()
-	{
-		super.onResume();
-		if (recycler == null || recycler.getAdapter() == null) return;
-		filterRecycle(search.getQuery().toString());
 	}
 
 	@Override
@@ -232,21 +191,7 @@ public class ImagesActivity extends ImageListBaseActivity
 	}
 
 	@Override
-	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
-	{
-		if (requestCode == FileManager.STORAGE_REQUEST_CODE && Arrays.stream(grantResults)
-				.allMatch(v -> v == PackageManager.PERMISSION_GRANTED))
-		{
-			fileThings();
-		}
-		else
-		{
-			Toast.makeText(this, getString(R.string.no_storage_permission), Toast.LENGTH_SHORT).show();
-			finishAndRemoveTask();
-		}
-	}
-
-	private void fileThings()
+	protected void fileThings()
 	{
 		List<ImageFile> imagesCopy = images.stream()
 				.filter(image -> !image.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN))

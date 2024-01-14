@@ -1,9 +1,6 @@
 package com.cyberegylet.antiDupeGallery.activities;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -12,14 +9,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
 import android.widget.ScrollView;
-import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
@@ -38,7 +31,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -47,29 +39,23 @@ import java.util.Objects;
 
 public class FoldersActivity extends ImageListBaseActivity
 {
-	private static final String TAG = "MainActivity";
-	private static final String DATABASE_NAME = "data.db";
-
 	private static final int MOVE_SELECTED_FOLDERS = 1;
 	private static final int COPY_SELECTED_FOLDERS = 2;
 	private static final int DELETE_SELECTED_FOLDERS = 3;
 
-	private FileManager fileManager;
-	private RecyclerView recycler;
-	private final ActivityManager activityManager = new ActivityManager(this);
 	private FolderAdapterAsync.MySortedSet<Folder> foldersCopy;
 	private FolderAdapterAsync.MySortedSet<Folder> folders2;
-	private SearchView search;
-
-	public static SQLiteDatabase database;
 
 	private static boolean hasBackendBeenCalled = false;
 
-	@Override
-	protected void onCreate(@Nullable Bundle savedInstanceState)
+	public FoldersActivity()
 	{
-		super.onCreate(savedInstanceState);
+		super("MainActivity");
+	}
 
+	@Override
+	protected void myOnCreate(@Nullable Bundle savedInstanceState)
+	{
 		Config.init(this);
 
 		if (Config.getStringProperty(Config.Property.PIN_LOCK).length() != 0 && ActivityManager.getParam(this,
@@ -80,16 +66,11 @@ public class FoldersActivity extends ImageListBaseActivity
 			return;
 		}
 
-		database = SQLiteDatabase.openOrCreateDatabase(getDatabasePath(DATABASE_NAME), null);
 		if (!hasBackendBeenCalled) Backend.init(this);
 		hasBackendBeenCalled = true;
 
-		setContentView(R.layout.main_activity);
-
-		recycler = findViewById(R.id.items);
-		int span = Config.getIntProperty(Config.Property.FOLDER_COLUMN_NUMBER);
-		recycler.setLayoutManager(new GridLayoutManager(this, span));
-		search = findViewById(R.id.search_bar);
+		setContentView(R.layout.folders_activity);
+		contentSet();
 
 		findViewById(R.id.more_button).setOnClickListener(v -> {
 			final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
@@ -181,32 +162,6 @@ public class FoldersActivity extends ImageListBaseActivity
 			});
 			popup.show();
 		});
-
-		fileManager = new FileManager(this);
-		if (fileManager.hasFileAccess()) fileThings();
-	}
-
-	//ToDo make base Activity for merging codes
-	@Override
-	protected void onStop()
-	{
-		Config.save();
-		super.onStop();
-	}
-
-	@Override
-	protected void onDestroy()
-	{
-		Config.save();
-		super.onDestroy();
-	}
-
-	@Override
-	protected void onResume()
-	{
-		super.onResume();
-		if (recycler == null || recycler.getAdapter() == null) return;
-		filterRecycle(search.getQuery().toString());
 	}
 
 	@Override
@@ -269,24 +224,8 @@ public class FoldersActivity extends ImageListBaseActivity
 	}
 
 	@Override
-	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
+	protected void fileThings()
 	{
-		if (requestCode == FileManager.STORAGE_REQUEST_CODE && Arrays.stream(grantResults)
-				.allMatch(v -> v == PackageManager.PERMISSION_GRANTED))
-		{
-			fileThings();
-		}
-		else
-		{
-			Toast.makeText(this, getString(R.string.no_storage_permission), Toast.LENGTH_SHORT).show();
-			finishAndRemoveTask();
-		}
-	}
-
-	private void fileThings()
-	{
-		boolean inWork = true;
-
 		String folder_sort_data = Config.getStringProperty(Config.Property.FOLDER_SORT);
 		Comparator<Folder> comparator;
 		switch (ConfigSort.getSortType(folder_sort_data))
