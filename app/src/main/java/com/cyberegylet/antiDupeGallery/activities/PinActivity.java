@@ -40,7 +40,7 @@ public class PinActivity extends Activity
 				{
 					ActivityManager.switchActivity(
 							PinActivity.this,
-							MainActivity.class,
+							FoldersActivity.class,
 							new ActivityParameter("login", true)
 					);
 				}

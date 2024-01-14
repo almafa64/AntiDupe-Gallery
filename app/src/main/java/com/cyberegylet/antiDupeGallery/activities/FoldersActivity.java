@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-public class MainActivity extends Activity
+public class FoldersActivity extends ImageListBaseActivity
 {
 	private static final String TAG = "MainActivity";
 	private static final String DATABASE_NAME = "data.db";
@@ -115,13 +115,17 @@ public class MainActivity extends Activity
 			else deleteId = copyId = moveId = infoId = -1;
 			popup.setOnMenuItemClickListener(item -> {
 				int id = item.getItemId();
-				if (id == R.id.settings)
+				if (id == R.id.menu_settings)
 				{
 					activityManager.switchActivity(SettingsActivity.class);
 				}
-				else if (id == R.id.about)
+				else if (id == R.id.menu_about)
 				{
 					activityManager.switchActivity(AboutActivity.class);
+				}
+				else if (id == R.id.menu_filter)
+				{
+					activityManager.switchActivity(FilterActivity.class);
 				}
 				else if (id == moveId)
 				{
@@ -255,7 +259,7 @@ public class MainActivity extends Activity
 		{
 			ScrollView scroll = activityManager.makePopupWindow(R.layout.dialog_scroll).getContentView()
 					.findViewById(R.id.dialog_scroll);
-			for(Folder f : failedFolders)
+			for (Folder f : failedFolders)
 			{
 				TextView textView = new TextView(this);
 				textView.setText(f.getPath());
@@ -318,9 +322,10 @@ public class MainActivity extends Activity
 			public void doInBackground()
 			{
 				HashMap<String, Folder> folderNames = new HashMap<>();
-				final int[] timeout = { 0 };
 				FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
 				{
+					int timeout = 0;
+
 					@Override
 					public void run()
 					{
@@ -347,9 +352,9 @@ public class MainActivity extends Activity
 
 						folder.addImage(imageFile);
 
-						if (timeout[0]++ == 20)
+						if (timeout++ == 20)
 						{
-							timeout[0] = 0;
+							timeout = 0;
 							runOnUiThread(adapter::notifyDataSetChanged);
 						}
 					}
@@ -370,27 +375,10 @@ public class MainActivity extends Activity
 				runOnUiThread(adapter::notifyDataSetChanged);
 			}
 		}.execute();
-
-		findViewById(R.id.load).setVisibility(View.GONE);
-		findViewById(R.id.mainLayout).setClickable(false);
-
-		search.setOnQueryTextListener(new SearchView.OnQueryTextListener()
-		{
-			@Override
-			public boolean onQueryTextSubmit(String query) { return false; }
-
-			@Override
-			public boolean onQueryTextChange(String text)
-			{
-				filterRecycle(text);
-				return true;
-			}
-		});
 	}
 
-	private String getDbPath(String name) { return getDatabasePath(name).getAbsolutePath(); }
-
-	private void filterRecycle(String text)
+	@Override
+	protected void filterRecycle(String text)
 	{
 		String text2 = text.toLowerCase(Locale.ROOT);
 		boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);

@@ -8,7 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 
 import com.cyberegylet.antiDupeGallery.R;
-import com.cyberegylet.antiDupeGallery.activities.FolderViewActivity;
+import com.cyberegylet.antiDupeGallery.activities.ImagesActivity;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
@@ -57,7 +57,7 @@ public class FolderAdapterAsync extends BaseImageAdapter
 		public ViewHolder(View itemView)
 		{
 			super(itemView, pos -> ActivityManager.switchActivity(fileManager.activity,
-					FolderViewActivity.class,
+					ImagesActivity.class,
 					new ActivityParameter("images", folders.get(pos).images)
 			));
 			name = itemView.findViewById(R.id.folderName);

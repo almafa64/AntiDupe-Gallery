@@ -37,7 +37,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class FolderViewActivity extends Activity
+public class ImagesActivity extends ImageListBaseActivity
 {
 	private static final String TAG = "FolderViewActivity";
 
@@ -91,8 +91,8 @@ public class FolderViewActivity extends Activity
 			else deleteId = copyId = moveId = infoId = -1;
 			popup.setOnMenuItemClickListener(item -> {
 				int id = item.getItemId();
-				if (id == R.id.settings) activityManager.switchActivity(SettingsActivity.class);
-				else if (id == R.id.about) activityManager.switchActivity(AboutActivity.class);
+				if (id == R.id.menu_settings) activityManager.switchActivity(SettingsActivity.class);
+				else if (id == R.id.menu_about) activityManager.switchActivity(AboutActivity.class);
 				else if (id == moveId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
@@ -253,25 +253,10 @@ public class FolderViewActivity extends Activity
 				.collect(Collectors.toList());
 
 		recycler.setAdapter(new ThumbnailAdapter(imagesCopy, fileManager));
-
-		findViewById(R.id.load).setVisibility(View.GONE);
-		findViewById(R.id.mainLayout).setClickable(false);
-
-		search.setOnQueryTextListener(new SearchView.OnQueryTextListener()
-		{
-			@Override
-			public boolean onQueryTextSubmit(String query) { return false; }
-
-			@Override
-			public boolean onQueryTextChange(String text)
-			{
-				filterRecycle(text);
-				return true;
-			}
-		});
 	}
 
-	private void filterRecycle(String text)
+	@Override
+	protected void filterRecycle(String text)
 	{
 		String text2 = text.toLowerCase(Locale.ROOT);
 		boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
