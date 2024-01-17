@@ -2,6 +2,7 @@ package com.cyberegylet.antiDupeGallery.activities;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TextView;
 
@@ -27,9 +28,14 @@ public class ImageViewActivity extends Activity implements Serializable
 	{
 		super.onCreate(savedInstanceState);
 
+		String imagePath;
+		Intent intent = getIntent();
+		//ToDo make safe
+		if(Intent.ACTION_VIEW.equals(intent.getAction())) imagePath = intent.getData().getPath();
+		else imagePath = (String) activityManager.getParam("imagePath");
+
 		setContentView(R.layout.image_view);
 
-		String imagePath = (String) activityManager.getParam("imagePath");
 
 		TextView textView = findViewById(R.id.activity_header);
 		textView.setText(new File(imagePath).getName());
