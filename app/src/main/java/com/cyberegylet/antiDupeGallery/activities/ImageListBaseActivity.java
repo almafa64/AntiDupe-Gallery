@@ -27,6 +27,8 @@ public abstract class ImageListBaseActivity extends Activity
 	private static final String DATABASE_NAME = "data.db";
 	public static SQLiteDatabase database;
 
+	public final String tableDigests = "digests";
+
 	protected FileManager fileManager;
 	protected RecyclerView recycler;
 	protected final ActivityManager activityManager = new ActivityManager(this);
@@ -53,7 +55,7 @@ public abstract class ImageListBaseActivity extends Activity
 		myOnCreate(savedInstanceState);
 		if (recycler == null) throw new RuntimeException("contentSet() wasn't called");
 
-		int span = Config.getIntProperty((this instanceof FoldersActivity) ? Config.Property.FOLDER_COLUMN_NUMBER : Config.Property.IMAGE_COLUMN_NUMBER);
+		int span = Config.getIntProperty((this instanceof AlbumActivity) ? Config.Property.ALBUM_COLUMN_NUMBER : Config.Property.IMAGE_COLUMN_NUMBER);
 		recycler.setLayoutManager(new GridLayoutManager(this, span));
 
 		search.setOnQueryTextListener(new SearchView.OnQueryTextListener()
@@ -70,7 +72,7 @@ public abstract class ImageListBaseActivity extends Activity
 		});
 
 		fileManager = new FileManager(this);
-		if (fileManager.hasFileAccess()) fileThings();
+		if (fileManager.hasFileAccess()) fileFinding();
 	}
 
 	@Override
@@ -104,7 +106,7 @@ public abstract class ImageListBaseActivity extends Activity
 		if (requestCode == FileManager.STORAGE_REQUEST_CODE && Arrays.stream(grantResults)
 				.allMatch(v -> v == PackageManager.PERMISSION_GRANTED))
 		{
-			fileThings();
+			fileFinding();
 		}
 		else
 		{
@@ -113,7 +115,7 @@ public abstract class ImageListBaseActivity extends Activity
 		}
 	}
 
-	protected abstract void fileThings();
+	protected abstract void fileFinding();
 
 	protected String getDbPath(String name) { return getDatabasePath(name).getAbsolutePath(); }
 

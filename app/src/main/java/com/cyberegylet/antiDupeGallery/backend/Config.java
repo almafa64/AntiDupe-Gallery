@@ -132,8 +132,8 @@ public final class Config
 			case PIN_LOCK:
 				setStringProperty(Property.PIN_LOCK, "");
 				break;
-			case FOLDER_SORT:
-				setStringProperty(Property.FOLDER_SORT, "13");
+			case ALBUM_SORT:
+				setStringProperty(Property.ALBUM_SORT, "13");
 				break;
 			case IMAGE_SORT:
 				setStringProperty(Property.IMAGE_SORT, "00");
@@ -150,8 +150,8 @@ public final class Config
 			case ETC_COLOR:
 				setStringProperty(Property.ETC_COLOR, "#30AFCF");
 				break;
-			case FOLDER_COLUMN_NUMBER:
-				setIntProperty(Property.FOLDER_COLUMN_NUMBER, 2);
+			case ALBUM_COLUMN_NUMBER:
+				setIntProperty(Property.ALBUM_COLUMN_NUMBER, 2);
 				break;
 			case IMAGE_COLUMN_NUMBER:
 				setIntProperty(Property.IMAGE_COLUMN_NUMBER, 3);
@@ -170,7 +170,7 @@ public final class Config
 		TEXT_COLOR("fg_color"),
 		BACKGROUND_COLOR("bg_color"),
 		ETC_COLOR("etc_color"),
-		FOLDER_COLUMN_NUMBER("folder_col"),
+		ALBUM_COLUMN_NUMBER("folder_col"),
 		IMAGE_COLUMN_NUMBER("image_col"),
 		ANIMATE_GIF("anim_gif"),
 		SHOW_HIDDEN("show_hidden"),
@@ -182,7 +182,7 @@ public final class Config
 		 * 1. number: is_ascending<br>
 		 * 2. number: sort type (0: mod date, 1: create date, 2: size, 3: name)
 		 */
-		FOLDER_SORT("f_sort"),
+		ALBUM_SORT("f_sort"),
 		/**
 		 * 1. number: is_ascending<br>
 		 * 2. number: sort type (0: mod date, 1: create date, 2: size, 3: name)

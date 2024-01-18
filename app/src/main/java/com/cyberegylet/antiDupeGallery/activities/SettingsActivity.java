@@ -104,7 +104,7 @@ public class SettingsActivity extends Activity
 			CheckBox folderAsc = popup.findViewById(R.id.sorting_folder_asc);
 			CheckBox imageAsc = popup.findViewById(R.id.sorting_image_asc);
 
-			String folderSort = Config.getStringProperty(Config.Property.FOLDER_SORT);
+			String folderSort = Config.getStringProperty(Config.Property.ALBUM_SORT);
 			String imageSort = Config.getStringProperty(Config.Property.IMAGE_SORT);
 
 			folderAsc.setChecked(ConfigSort.isAscending(folderSort));
@@ -113,8 +113,8 @@ public class SettingsActivity extends Activity
 			imageSpinner.setSelection(Character.getNumericValue(imageSort.charAt(1)));
 
 			folderAsc.setOnCheckedChangeListener((v2, checked) -> Config.setStringProperty(
-					Config.Property.FOLDER_SORT,
-					(checked ? "1" : "0") + Config.getStringProperty(Config.Property.FOLDER_SORT).charAt(1)
+					Config.Property.ALBUM_SORT,
+					(checked ? "1" : "0") + Config.getStringProperty(Config.Property.ALBUM_SORT).charAt(1)
 			));
 			imageAsc.setOnCheckedChangeListener((v2, checked) -> Config.setStringProperty(
 					Config.Property.IMAGE_SORT,
@@ -127,8 +127,8 @@ public class SettingsActivity extends Activity
 				public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
 				{
 					Config.setStringProperty(
-							Config.Property.FOLDER_SORT,
-							Config.getStringProperty(Config.Property.FOLDER_SORT).charAt(0) + String.valueOf(position)
+							Config.Property.ALBUM_SORT,
+							Config.getStringProperty(Config.Property.ALBUM_SORT).charAt(0) + String.valueOf(position)
 					);
 				}
 

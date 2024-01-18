@@ -50,7 +50,7 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 		selected.remove(holder);
 	}
 
-	public class ViewHolder extends RecyclerView.ViewHolder
+	public abstract class ViewHolder extends RecyclerView.ViewHolder
 	{
 		public ImageView img;
 
@@ -84,6 +84,8 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 				return true;
 			});
 		}
+
+		public abstract void reIndex();
 	}
 
 	@Override
@@ -128,7 +130,7 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 					public void onScaleEnd(@NonNull ScaleGestureDetector detector)
 					{
 						Config.Property key;
-						if (adapter instanceof FolderAdapterAsync) key = Config.Property.FOLDER_COLUMN_NUMBER;
+						if (adapter instanceof AlbumAdapter) key = Config.Property.ALBUM_COLUMN_NUMBER;
 						else key = Config.Property.IMAGE_COLUMN_NUMBER;
 						Config.setIntProperty(key, gridLayoutManager.getSpanCount());
 						Config.save();

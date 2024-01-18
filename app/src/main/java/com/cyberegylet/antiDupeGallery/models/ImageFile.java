@@ -40,7 +40,7 @@ public class ImageFile implements Parcelable
 		}
 		catch (IOException e)
 		{
-			throw new RuntimeException(e.getMessage());
+			throw new RuntimeException(e);
 		}
 	}
 

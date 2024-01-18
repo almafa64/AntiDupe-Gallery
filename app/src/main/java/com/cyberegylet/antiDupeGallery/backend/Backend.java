@@ -1,6 +1,6 @@
 package com.cyberegylet.antiDupeGallery.backend;
 
-import com.cyberegylet.antiDupeGallery.activities.FoldersActivity;
+import com.cyberegylet.antiDupeGallery.activities.AlbumActivity;
 
 public class Backend
 {
@@ -19,7 +19,7 @@ public class Backend
 		}
 	}
 
-	public static native void init(FoldersActivity mainActivity);
+	public static native void init(AlbumActivity mainActivity);
 
 	public static native void queueFile(long id, String path);
 

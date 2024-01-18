@@ -15,7 +15,7 @@ import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.util.List;
 
-public class ThumbnailAdapter extends BaseImageAdapter
+public class ImagesAdapter extends BaseImageAdapter
 {
 	public interface FilterRun
 	{
@@ -24,7 +24,7 @@ public class ThumbnailAdapter extends BaseImageAdapter
 
 	private final List<ImageFile> images;
 
-	public ThumbnailAdapter(List<ImageFile> images, FileManager fileManager)
+	public ImagesAdapter(List<ImageFile> images, FileManager fileManager)
 	{
 		super(fileManager);
 		this.images = images;
@@ -36,13 +36,15 @@ public class ThumbnailAdapter extends BaseImageAdapter
 
 		public ViewHolder(View itemView)
 		{
-			super(itemView, pos -> ActivityManager.switchActivity(fileManager.activity,
+			super(itemView, pos -> ActivityManager.switchActivity(
+					fileManager.activity,
 					ImageViewActivity.class,
 					new ActivityParameter("imagePath", images.get(pos).getPath())
 			));
 		}
 
-		public void reIndexImage()
+		@Override
+		public void reIndex()
 		{
 			image = images.get(getAdapterPosition());
 		}
@@ -54,7 +56,7 @@ public class ThumbnailAdapter extends BaseImageAdapter
 	@Override
 	public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
 	{
-		View contactView = layoutInflater.inflate(R.layout.thumbnail_card, parent, false);
+		View contactView = layoutInflater.inflate(R.layout.image_card, parent, false);
 		return new ViewHolder(contactView);
 	}
 
@@ -63,7 +65,7 @@ public class ThumbnailAdapter extends BaseImageAdapter
 	{
 		ImageFile imageFile = images.get(position);
 		fileManager.thumbnailIntoImageView(holder.img, imageFile.getPath());
-		((ViewHolder) holder).reIndexImage();
+		holder.reIndex();
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 package com.cyberegylet.antiDupeGallery.activities;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
@@ -14,8 +15,9 @@ import androidx.annotation.Nullable;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
-import com.cyberegylet.antiDupeGallery.adapters.ThumbnailAdapter;
+import com.cyberegylet.antiDupeGallery.adapters.ImagesAdapter;
 import com.cyberegylet.antiDupeGallery.backend.Config;
+import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
@@ -35,7 +37,7 @@ public class ImagesActivity extends ImageListBaseActivity
 	private static final int DELETE_SELECTED_IMAGES = 3;
 
 	private String currentFolder;
-	private List<ImageFile> images;
+	private final List<ImageFile> images = new ArrayList<>();
 
 	public ImagesActivity()
 	{
@@ -48,7 +50,28 @@ public class ImagesActivity extends ImageListBaseActivity
 		setContentView(R.layout.images_activity);
 		contentSet();
 
-		images = activityManager.getListParam("images");
+		String path = (String) activityManager.getParam("path");
+
+		Cursor cursor = database.query(
+				tableDigests,
+				new String[]{ "path" },
+				"path like ?",
+				new String[]{ path + "/%" },
+				null,
+				null,
+				null
+		);
+		cursor.moveToFirst();
+		int pathCol = cursor.getColumnIndex("path");
+		do
+		{
+			File imageFile = new File(cursor.getString(pathCol));
+			if (!imageFile.canRead() || !Objects.equals(imageFile.getParent(), path)) continue;
+			images.add(new ImageFile(imageFile));
+		} while (cursor.moveToNext());
+		cursor.close();
+
+		images.sort(ConfigSort.getImageComparator());
 
 		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
 		findViewById(R.id.more_button).setOnClickListener(v -> {
@@ -95,35 +118,35 @@ public class ImagesActivity extends ImageListBaseActivity
 				{
 					ViewGroup popupInfo = (ViewGroup) activityManager.makePopupWindow(R.layout.dialog_info)
 							.getContentView();
-					TextView name = popupInfo.findViewById(R.id.info_name);
-					TextView count = popupInfo.findViewById(R.id.info_count);
-					TextView path = popupInfo.findViewById(R.id.info_path);
-					TextView size = popupInfo.findViewById(R.id.info_size);
+					TextView nameField = popupInfo.findViewById(R.id.info_name);
+					TextView countField = popupInfo.findViewById(R.id.info_count);
+					TextView pathField = popupInfo.findViewById(R.id.info_path);
+					TextView sizeField = popupInfo.findViewById(R.id.info_size);
 					if (selected.size() == 1)
 					{
-						File f = ((ThumbnailAdapter.ViewHolder) selected.get(0)).getImage().getFile();
-						path.setText(f.getParent());
-						name.setText(f.getName());
+						File f = ((ImagesAdapter.ViewHolder) selected.get(0)).getImage().getFile();
+						pathField.setText(f.getParent());
+						nameField.setText(f.getName());
 					}
 					else
 					{
-						path.setVisibility(View.GONE);
+						pathField.setVisibility(View.GONE);
 						popupInfo.getChildAt(4).setVisibility(View.GONE);
-						name.setVisibility(View.GONE);
+						nameField.setVisibility(View.GONE);
 						popupInfo.getChildAt(0).setVisibility(View.GONE);
 					}
 
 					long sizeB = 0;
 					for (BaseImageAdapter.ViewHolder holder : selected)
 					{
-						ImageFile image = ((ThumbnailAdapter.ViewHolder) holder).getImage();
+						ImageFile image = ((ImagesAdapter.ViewHolder) holder).getImage();
 						sizeB += image.getSize();
 					}
 
-					size.setText(Utils.getByteStringFromSize(sizeB));
+					sizeField.setText(Utils.getByteStringFromSize(sizeB));
 
 					((TextView) popupInfo.getChildAt(2)).setText(R.string.popup_items_selected);
-					count.setText(String.valueOf(selected.size()));
+					countField.setText(String.valueOf(selected.size()));
 				}
 				else return false;
 				return true;
@@ -152,7 +175,7 @@ public class ImagesActivity extends ImageListBaseActivity
 				textId = R.string.popup_move_file_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
-					ThumbnailAdapter.ViewHolder holder = (ThumbnailAdapter.ViewHolder) tmp;
+					ImagesAdapter.ViewHolder holder = (ImagesAdapter.ViewHolder) tmp;
 					Path p = Paths.get(holder.getImage().getPath());
 					if (!fileManager.moveFile(p, path)) failedImages.add(holder.getImage());
 				}
@@ -161,7 +184,7 @@ public class ImagesActivity extends ImageListBaseActivity
 				textId = R.string.popup_copy_file_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
-					ThumbnailAdapter.ViewHolder holder = (ThumbnailAdapter.ViewHolder) tmp;
+					ImagesAdapter.ViewHolder holder = (ImagesAdapter.ViewHolder) tmp;
 					Path p = Paths.get(holder.getImage().getPath());
 					if (!fileManager.copyFile(p, path)) failedImages.add(holder.getImage());
 				}
@@ -170,7 +193,7 @@ public class ImagesActivity extends ImageListBaseActivity
 				textId = R.string.popup_delete_file_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
-					ThumbnailAdapter.ViewHolder holder = (ThumbnailAdapter.ViewHolder) tmp;
+					ImagesAdapter.ViewHolder holder = (ImagesAdapter.ViewHolder) tmp;
 					Path p = Paths.get(holder.getImage().getPath());
 					if (!fileManager.deleteFile(p)) failedImages.add(holder.getImage());
 				}
@@ -181,7 +204,7 @@ public class ImagesActivity extends ImageListBaseActivity
 		{
 			ScrollView scroll = activityManager.makePopupWindow(R.layout.dialog_scroll).getContentView()
 					.findViewById(R.id.dialog_scroll);
-			for(ImageFile i : failedImages)
+			for (ImageFile i : failedImages)
 			{
 				TextView textView = new TextView(this);
 				textView.setText(i.getPath());
@@ -191,13 +214,13 @@ public class ImagesActivity extends ImageListBaseActivity
 	}
 
 	@Override
-	protected void fileThings()
+	protected void fileFinding()
 	{
 		List<ImageFile> imagesCopy = images.stream()
 				.filter(image -> !image.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN))
 				.collect(Collectors.toList());
 
-		recycler.setAdapter(new ThumbnailAdapter(imagesCopy, fileManager));
+		recycler.setAdapter(new ImagesAdapter(imagesCopy, fileManager));
 	}
 
 	@Override
@@ -205,7 +228,7 @@ public class ImagesActivity extends ImageListBaseActivity
 	{
 		String text2 = text.toLowerCase(Locale.ROOT);
 		boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
-		((ThumbnailAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(files -> {
+		((ImagesAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(files -> {
 			files.clear();
 			for (ImageFile image : images)
 			{

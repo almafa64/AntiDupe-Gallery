@@ -192,12 +192,7 @@ public class FileManager
 	}
 
 	public void cursorLoop(
-			CursorLoopWrapper wrapper,
-			String sort,
-			String selection,
-			String[] args,
-			Uri uri,
-			String... queries
+			CursorLoopWrapper wrapper, String sort, String selection, String[] args, Uri uri, String... queries
 	)
 	{
 		cursorLoop(wrapper, 0, sort, selection, args, uri, queries);
@@ -224,14 +219,10 @@ public class FileManager
 	}
 
 	public void allImageAndVideoInFolderLoop(
-			String absoluteFolder,
-			String sort,
-			CursorLoopWrapper wrapper,
-			String... queries
+			String absoluteFolder, String sort, CursorLoopWrapper wrapper, String... queries
 	)
 	{
-		cursorLoop(
-				wrapper,
+		cursorLoop(wrapper,
 				sort,
 				PATH_FILTER_IMAGES_AND_VIDEOS,
 				new String[]{ absoluteFolder + "/%" },
@@ -239,24 +230,6 @@ public class FileManager
 				queries
 		);
 	}
-
-	private List<String> getAllPaths(Uri uri)
-	{
-		List<String> paths = new ArrayList<>();
-		cursorLoop(new CursorLoopWrapper()
-		{
-			@Override
-			public void run()
-			{
-				paths.add(getPath());
-			}
-		}, uri, MediaStore.MediaColumns.DATA);
-		return paths;
-	}
-
-	public List<String> getAllImagePaths() { return getAllPaths(MediaStore.Images.Media.EXTERNAL_CONTENT_URI); }
-
-	public List<String> getAllVideoPaths() { return getAllPaths(MediaStore.Video.Media.EXTERNAL_CONTENT_URI); }
 
 	public Uri getUriFromID(int id)
 	{

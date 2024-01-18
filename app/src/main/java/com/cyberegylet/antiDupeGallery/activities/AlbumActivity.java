@@ -15,8 +15,8 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 
 import com.cyberegylet.antiDupeGallery.R;
+import com.cyberegylet.antiDupeGallery.adapters.AlbumAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
-import com.cyberegylet.antiDupeGallery.adapters.FolderAdapterAsync;
 import com.cyberegylet.antiDupeGallery.backend.Backend;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
@@ -24,8 +24,7 @@ import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.helpers.MyAsyncTask;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
-import com.cyberegylet.antiDupeGallery.models.Folder;
-import com.cyberegylet.antiDupeGallery.models.ImageFile;
+import com.cyberegylet.antiDupeGallery.models.Album;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -37,21 +36,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-public class FoldersActivity extends ImageListBaseActivity
+public class AlbumActivity extends ImageListBaseActivity
 {
-	private static final int MOVE_SELECTED_FOLDERS = 1;
-	private static final int COPY_SELECTED_FOLDERS = 2;
-	private static final int DELETE_SELECTED_FOLDERS = 3;
+	private static final int MOVE_SELECTED_ALBUMS = 1;
+	private static final int COPY_SELECTED_ALBUMS = 2;
+	private static final int DELETE_SELECTED_ALBUMS = 3;
 
-	private FolderAdapterAsync.MySortedSet<Folder> foldersCopy;
-	private FolderAdapterAsync.MySortedSet<Folder> folders2;
+	private AlbumAdapter.MySortedSet<Album> allAlbums;
 
 	private static boolean hasBackendBeenCalled = false;
 
-	public FoldersActivity()
-	{
-		super("MainActivity");
-	}
+	public AlbumActivity() { super("AlbumActivity"); }
 
 	@Override
 	protected void myOnCreate(@Nullable Bundle savedInstanceState)
@@ -69,11 +64,11 @@ public class FoldersActivity extends ImageListBaseActivity
 		if (!hasBackendBeenCalled) Backend.init(this);
 		hasBackendBeenCalled = true;
 
-		setContentView(R.layout.folders_activity);
+		setContentView(R.layout.album_activity);
 		contentSet();
 
 		findViewById(R.id.more_button).setOnClickListener(v -> {
-			final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
+			final BaseImageAdapter adapter = (BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter());
 			final List<BaseImageAdapter.ViewHolder> selected = adapter.getSelected;
 			PopupMenu popup = new PopupMenu(this, v);
 			popup.inflate(R.menu.main_popup_menu);
@@ -111,16 +106,16 @@ public class FoldersActivity extends ImageListBaseActivity
 				else if (id == moveId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					startActivityForResult(intent, MOVE_SELECTED_FOLDERS);
+					startActivityForResult(intent, MOVE_SELECTED_ALBUMS);
 				}
 				else if (id == copyId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					startActivityForResult(intent, COPY_SELECTED_FOLDERS);
+					startActivityForResult(intent, COPY_SELECTED_ALBUMS);
 				}
 				else if (id == deleteId)
 				{
-					onActivityResult(DELETE_SELECTED_FOLDERS, RESULT_OK, new Intent());
+					onActivityResult(DELETE_SELECTED_ALBUMS, RESULT_OK, new Intent());
 				}
 				else if (id == infoId)
 				{
@@ -132,7 +127,7 @@ public class FoldersActivity extends ImageListBaseActivity
 					TextView size = popupInfo.findViewById(R.id.info_size);
 					if (selected.size() == 1)
 					{
-						File f = ((FolderAdapterAsync.ViewHolder) selected.get(0)).getFolder().getFile();
+						File f = ((AlbumAdapter.ViewHolder) selected.get(0)).getAlbum().getFile();
 						path.setText(f.getParent());
 						name.setText(f.getName());
 					}
@@ -149,9 +144,9 @@ public class FoldersActivity extends ImageListBaseActivity
 					long imageCount = 0;
 					for (BaseImageAdapter.ViewHolder holder : selected)
 					{
-						Folder folder = ((FolderAdapterAsync.ViewHolder) holder).getFolder();
+						Album folder = ((AlbumAdapter.ViewHolder) holder).getAlbum();
 						sizeB += folder.getSize();
-						imageCount += folder.images.size();
+						imageCount += folder.getCount();
 					}
 
 					size.setText(Utils.getByteStringFromSize(sizeB));
@@ -173,48 +168,48 @@ public class FoldersActivity extends ImageListBaseActivity
 		// ToDo test on sd card
 		Log.d("app", String.valueOf(data));
 		Path path = null;
-		if (requestCode != DELETE_SELECTED_FOLDERS)
+		if (requestCode != DELETE_SELECTED_ALBUMS)
 		{
 			path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]);
 		}
-		List<Folder> failedFolders = new ArrayList<>();
+		List<Album> failedAlbums = new ArrayList<>();
 		int textId = 0;
 		switch (requestCode)
 		{
-			case MOVE_SELECTED_FOLDERS:
+			case MOVE_SELECTED_ALBUMS:
 				textId = R.string.popup_move_folder_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
-					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
-					Path p = Paths.get(holder.getFolder().getPath());
-					if (!fileManager.moveFolder(p, path)) failedFolders.add(holder.getFolder());
+					AlbumAdapter.ViewHolder holder = (AlbumAdapter.ViewHolder) tmp;
+					Path p = Paths.get(holder.getAlbum().getPath());
+					if (!fileManager.moveFolder(p, path)) failedAlbums.add(holder.getAlbum());
 				}
 				break;
-			case COPY_SELECTED_FOLDERS:
+			case COPY_SELECTED_ALBUMS:
 				textId = R.string.popup_copy_folder_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
-					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
-					Path p = Paths.get(holder.getFolder().getPath());
-					if (!fileManager.copyFolder(p, path)) failedFolders.add(holder.getFolder());
+					AlbumAdapter.ViewHolder holder = (AlbumAdapter.ViewHolder) tmp;
+					Path p = Paths.get(holder.getAlbum().getPath());
+					if (!fileManager.copyFolder(p, path)) failedAlbums.add(holder.getAlbum());
 				}
 				break;
-			case DELETE_SELECTED_FOLDERS:
+			case DELETE_SELECTED_ALBUMS:
 				textId = R.string.popup_delete_folder_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
-					FolderAdapterAsync.ViewHolder holder = (FolderAdapterAsync.ViewHolder) tmp;
-					Path p = Paths.get(holder.getFolder().getPath());
-					if (!fileManager.deleteFolder(p)) failedFolders.add(holder.getFolder());
+					AlbumAdapter.ViewHolder holder = (AlbumAdapter.ViewHolder) tmp;
+					Path p = Paths.get(holder.getAlbum().getPath());
+					if (!fileManager.deleteFolder(p)) failedAlbums.add(holder.getAlbum());
 				}
 				break;
 		}
-		if (failedFolders.size() == 0) Toast.makeText(this, textId, Toast.LENGTH_SHORT).show();
+		if (failedAlbums.size() == 0) Toast.makeText(this, textId, Toast.LENGTH_SHORT).show();
 		else
 		{
 			ScrollView scroll = activityManager.makePopupWindow(R.layout.dialog_scroll).getContentView()
 					.findViewById(R.id.dialog_scroll);
-			for (Folder f : failedFolders)
+			for (Album f : failedAlbums)
 			{
 				TextView textView = new TextView(this);
 				textView.setText(f.getPath());
@@ -224,45 +219,33 @@ public class FoldersActivity extends ImageListBaseActivity
 	}
 
 	@Override
-	protected void fileThings()
+	protected void fileFinding()
 	{
-		String folder_sort_data = Config.getStringProperty(Config.Property.FOLDER_SORT);
-		Comparator<Folder> comparator;
-		switch (ConfigSort.getSortType(folder_sort_data))
-		{
-			case MODIFICATION_DATE:
-				comparator = Comparator.comparing(Folder::getModifiedDate);
-				break;
-			case CREATION_DATE:
-				comparator = Comparator.comparing(Folder::getCreationDate);
-				break;
-			case SIZE:
-				comparator = Comparator.comparing(Folder::getSize);
-				break;
-			default:
-				comparator = Comparator.comparing(f -> f.getName().toLowerCase(Locale.ROOT));
-				break;
-		}
-		if (!ConfigSort.isAscending(folder_sort_data)) comparator = comparator.reversed();
-		folders2 = new FolderAdapterAsync.MySortedSet<>(comparator);
-		foldersCopy = new FolderAdapterAsync.MySortedSet<>(comparator);
+		Comparator<Album> comparator = ConfigSort.getAlbumComparator();
+		allAlbums = new AlbumAdapter.MySortedSet<>(comparator);
+		AlbumAdapter.MySortedSet<Album> albums = new AlbumAdapter.MySortedSet<>(comparator);
 
-		FolderAdapterAsync adapter = new FolderAdapterAsync(foldersCopy, fileManager);
+		AlbumAdapter adapter = new AlbumAdapter(albums, fileManager);
 		recycler.setAdapter(adapter);
 
+		// ToDo remove deleted files
 		new MyAsyncTask()
 		{
 			private long timeStart = 0;
 
 			@Override
-			public void onPreExecute() { timeStart = System.currentTimeMillis(); }
+			public void onPreExecute()
+			{
+				timeStart = System.currentTimeMillis();
+			}
 
 			@Override
 			public void doInBackground()
 			{
-				HashMap<String, Folder> folderNames = new HashMap<>();
+				HashMap<String, Album> albumNames = new HashMap<>();
 				FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
 				{
+					final boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
 					int timeout = 0;
 
 					@Override
@@ -273,25 +256,23 @@ public class FoldersActivity extends ImageListBaseActivity
 						File image = new File(path);
 						if (!image.canRead()) return;
 
-						final String folderAbs = path.substring(0, path.lastIndexOf('/'));
+						final String albumPath = path.substring(0, path.lastIndexOf('/'));
 
-						Folder folder = folderNames.get(folderAbs);
-						if (folder == null)
+						Album album = albumNames.get(albumPath);
+						if (album == null)
 						{
-							folder = new Folder(folderAbs);
-							folderNames.put(folderAbs, folder);
-							folders2.add(folder);
-							if (!folder.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN))
-								foldersCopy.add(folder);
+							album = new Album(albumPath);
+							albumNames.put(albumPath, album);
+							allAlbums.add(album);
+							if (!album.isHidden() || showHidden) albums.add(album);
 						}
-						ImageFile imageFile = new ImageFile(image);
 
 						long id = getID();
 						Backend.queueFile(id, path);
 
-						folder.addImage(imageFile);
+						album.addImage(image);
 
-						if (timeout++ == 20)
+						if (timeout++ == 30)
 						{
 							timeout = 0;
 							runOnUiThread(adapter::notifyDataSetChanged);
@@ -321,13 +302,13 @@ public class FoldersActivity extends ImageListBaseActivity
 	{
 		String text2 = text.toLowerCase(Locale.ROOT);
 		boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
-		((FolderAdapterAsync) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
+		((AlbumAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
 			dirs.clear();
-			for (Folder folder : folders2)
+			for (Album folder : allAlbums)
 			{
 				if ((showHidden || !folder.isHidden()) && folder.getName().toLowerCase(Locale.ROOT).contains(text2))
 				{
-					dirs.add(new Folder(folder, true));
+					dirs.add(new Album(folder, true));
 				}
 			}
 		});

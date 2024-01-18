@@ -12,13 +12,13 @@ import com.cyberegylet.antiDupeGallery.activities.ImagesActivity;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
-import com.cyberegylet.antiDupeGallery.models.Folder;
+import com.cyberegylet.antiDupeGallery.models.Album;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.util.Comparator;
 import java.util.TreeSet;
 
-public class FolderAdapterAsync extends BaseImageAdapter
+public class AlbumAdapter extends BaseImageAdapter
 {
 	public static class MySortedSet<T> extends TreeSet<T>
 	{
@@ -37,77 +37,73 @@ public class FolderAdapterAsync extends BaseImageAdapter
 
 	public interface FilterRun
 	{
-		void filter(MySortedSet<Folder> folders);
+		void filter(MySortedSet<Album> folders);
 	}
 
-	private final MySortedSet<Folder> folders;
+	private final MySortedSet<Album> albums;
 
-	public FolderAdapterAsync(MySortedSet<Folder> folders, FileManager fileManager)
+	public AlbumAdapter(MySortedSet<Album> albums, FileManager fileManager)
 	{
 		super(fileManager);
-		this.folders = folders;
+		this.albums = albums;
 	}
 
 	public class ViewHolder extends BaseImageAdapter.ViewHolder
 	{
-		public final TextView name;
-		public final TextView count;
-		private Folder folder;
+		public final TextView nameField;
+		public final TextView countField;
+		private Album album;
 
 		public ViewHolder(View itemView)
 		{
-			super(itemView, pos -> ActivityManager.switchActivity(fileManager.activity,
+			super(itemView, pos -> ActivityManager.switchActivity(
+					fileManager.activity,
 					ImagesActivity.class,
-					new ActivityParameter("images", folders.get(pos).images)
+					new ActivityParameter("path", albums.get(pos).getPath())
 			));
-			name = itemView.findViewById(R.id.folderName);
-			count = itemView.findViewById(R.id.fileCount);
+			nameField = itemView.findViewById(R.id.folderName);
+			countField = itemView.findViewById(R.id.fileCount);
 		}
 
-		public void reIndexFolder()
-		{
-			folder = folders.get(getAdapterPosition());
-		}
+		@Override
+		public void reIndex() { album = albums.get(getAdapterPosition()); }
 
-		public Folder getFolder()
-		{
-			return folder;
-		}
+		public Album getAlbum() { return album; }
 	}
 
 	@NonNull
 	@Override
 	public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
 	{
-		View contactView = layoutInflater.inflate(R.layout.folder_card, parent, false);
+		View contactView = layoutInflater.inflate(R.layout.album_card, parent, false);
 		return new ViewHolder(contactView);
 	}
 
 	@Override
 	public void onBindViewHolder(@NonNull BaseImageAdapter.ViewHolder holder, int position)
 	{
-		Folder folder = folders.get(position);
-		if (folder.images.size() > 0)
+		Album album = albums.get(position);
+		if (album.getIndexImage() != null)
 		{
-			ImageFile image = folder.images.get(0);
+			ImageFile image = album.getIndexImage();
 			fileManager.thumbnailIntoImageView(holder.img, image.getPath());
 		}
 		ViewHolder thisHolder = (ViewHolder) holder;
-		thisHolder.name.setText(folder.getName());
-		thisHolder.count.setText(String.valueOf(folder.images.size()));
-		thisHolder.reIndexFolder();
+		thisHolder.nameField.setText(album.getName());
+		thisHolder.countField.setText(String.valueOf(album.getCount()));
+		holder.reIndex();
 	}
 
 	@Override
 	public int getItemCount()
 	{
-		return folders.size();
+		return albums.size();
 	}
 
 	@SuppressLint("NotifyDataSetChanged")
 	public void filter(FilterRun filterRun)
 	{
-		filterRun.filter(folders);
+		filterRun.filter(albums);
 		notifyDataSetChanged();
 	}
 }

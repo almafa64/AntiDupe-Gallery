@@ -38,9 +38,8 @@ public class PinActivity extends Activity
 			{
 				if (s.length() == 4 && Config.getStringProperty(Config.Property.PIN_LOCK).equals(s.toString()))
 				{
-					ActivityManager.switchActivity(
-							PinActivity.this,
-							FoldersActivity.class,
+					ActivityManager.switchActivity(PinActivity.this,
+							AlbumActivity.class,
 							new ActivityParameter("login", true)
 					);
 				}

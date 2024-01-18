@@ -2,6 +2,13 @@ package com.cyberegylet.antiDupeGallery.helpers;
 
 import android.provider.MediaStore;
 
+import com.cyberegylet.antiDupeGallery.backend.Config;
+import com.cyberegylet.antiDupeGallery.models.Album;
+import com.cyberegylet.antiDupeGallery.models.ImageFile;
+
+import java.util.Comparator;
+import java.util.Locale;
+
 public class ConfigSort
 {
 	public enum SortType
@@ -47,5 +54,55 @@ public class ConfigSort
 		}
 		if (!ConfigSort.isAscending(configString)) sort += " DESC";
 		return sort;
+	}
+
+	public static Comparator<Album> getAlbumComparator()
+	{
+		String sortData = Config.getStringProperty(Config.Property.ALBUM_SORT);
+		Comparator<Album> comparator;
+		switch (ConfigSort.getSortType(sortData))
+		{
+			case MODIFICATION_DATE:
+				comparator = Comparator.comparing(Album::getModifiedDate);
+				break;
+			case CREATION_DATE:
+				comparator = Comparator.comparing(Album::getCreationDate);
+				break;
+			case SIZE:
+				comparator = Comparator.comparing(Album::getSize);
+				break;
+			case NAME:
+				comparator = Comparator.comparing(f -> f.getName().toLowerCase(Locale.ROOT));
+				break;
+			default:
+				throw new RuntimeException("Bad folder sorting");
+		}
+		if (!ConfigSort.isAscending(sortData)) comparator = comparator.reversed();
+		return comparator;
+	}
+
+	public static Comparator<ImageFile> getImageComparator()
+	{
+		String sortData = Config.getStringProperty(Config.Property.IMAGE_SORT);
+		Comparator<ImageFile> comparator;
+		switch (ConfigSort.getSortType(sortData))
+		{
+			case MODIFICATION_DATE:
+				comparator = Comparator.comparing(ImageFile::getModifiedDate);
+				break;
+			case CREATION_DATE:
+				comparator = Comparator.comparing(ImageFile::getCreationDate);
+				break;
+			case SIZE:
+				comparator = Comparator.comparing(ImageFile::getSize);
+				break;
+			case NAME:
+				comparator = Comparator.comparing(f -> f.getName().toLowerCase(Locale.ROOT));
+				break;
+			default:
+				throw new RuntimeException("Bad folder sorting");
+		}
+		if (!ConfigSort.isAscending(sortData)) comparator = comparator.reversed();
+		return comparator;
 	}
 }
