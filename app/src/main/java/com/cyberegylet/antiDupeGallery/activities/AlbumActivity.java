@@ -49,7 +49,7 @@ public class AlbumActivity extends ImageListBaseActivity
 	public AlbumActivity() { super("AlbumActivity"); }
 
 	@Override
-	protected void myOnCreate(@Nullable Bundle savedInstanceState)
+	protected boolean myOnCreate(@Nullable Bundle savedInstanceState)
 	{
 		Config.init(this);
 
@@ -58,7 +58,7 @@ public class AlbumActivity extends ImageListBaseActivity
 		) == null)
 		{
 			ActivityManager.switchActivity(this, PinActivity.class);
-			return;
+			return false;
 		}
 
 		if (!hasBackendBeenCalled) Backend.init(this);
@@ -157,6 +157,7 @@ public class AlbumActivity extends ImageListBaseActivity
 			});
 			popup.show();
 		});
+		return true;
 	}
 
 	@Override

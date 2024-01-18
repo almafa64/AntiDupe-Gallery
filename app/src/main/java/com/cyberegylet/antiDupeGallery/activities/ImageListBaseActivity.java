@@ -39,7 +39,7 @@ public abstract class ImageListBaseActivity extends Activity
 		TAG = tag;
 	}
 
-	protected abstract void myOnCreate(@Nullable Bundle savedInstanceState);
+	protected abstract boolean myOnCreate(@Nullable Bundle savedInstanceState);
 
 	protected void contentSet()
 	{
@@ -52,7 +52,7 @@ public abstract class ImageListBaseActivity extends Activity
 	protected void onCreate(@Nullable Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		myOnCreate(savedInstanceState);
+		if(!myOnCreate(savedInstanceState)) return;
 		if (recycler == null) throw new RuntimeException("contentSet() wasn't called");
 
 		int span = Config.getIntProperty((this instanceof AlbumActivity) ? Config.Property.ALBUM_COLUMN_NUMBER : Config.Property.IMAGE_COLUMN_NUMBER);

@@ -45,7 +45,7 @@ public class ImagesActivity extends ImageListBaseActivity
 	}
 
 	@Override
-	protected void myOnCreate(@Nullable Bundle savedInstanceState)
+	protected boolean myOnCreate(@Nullable Bundle savedInstanceState)
 	{
 		setContentView(R.layout.images_activity);
 		contentSet();
@@ -153,6 +153,7 @@ public class ImagesActivity extends ImageListBaseActivity
 			});
 			popup.show();
 		});
+		return true;
 	}
 
 	@Override
