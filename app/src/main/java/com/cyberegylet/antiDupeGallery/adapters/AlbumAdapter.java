@@ -16,33 +16,19 @@ import com.cyberegylet.antiDupeGallery.models.Album;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.util.Comparator;
-import java.util.TreeSet;
+import java.util.List;
 
 public class AlbumAdapter extends BaseImageAdapter
 {
-	public static class MySortedSet<T> extends TreeSet<T>
-	{
-		public MySortedSet(Comparator<T> comparator) { super(comparator); }
-
-		public T get(int i)
-		{
-			int tmp = 0;
-			for (T e : this)
-			{
-				if (tmp++ == i) return e;
-			}
-			return null;
-		}
-	}
 
 	public interface FilterRun
 	{
-		void filter(MySortedSet<Album> folders);
+		void filter(List<Album> folders);
 	}
 
-	private final MySortedSet<Album> albums;
+	private final List<Album> albums;
 
-	public AlbumAdapter(MySortedSet<Album> albums, FileManager fileManager)
+	public AlbumAdapter(List<Album> albums, FileManager fileManager)
 	{
 		super(fileManager);
 		this.albums = albums;
@@ -105,5 +91,11 @@ public class AlbumAdapter extends BaseImageAdapter
 	{
 		filterRun.filter(albums);
 		notifyDataSetChanged();
+	}
+
+	public void sort(Comparator<Album> comparator, boolean update)
+	{
+		albums.sort(comparator);
+		if(update) notifyItemRangeChanged(0, getItemCount());
 	}
 }

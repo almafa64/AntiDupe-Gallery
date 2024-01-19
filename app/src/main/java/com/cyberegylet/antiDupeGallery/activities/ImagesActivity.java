@@ -37,7 +37,7 @@ public class ImagesActivity extends ImageListBaseActivity
 	private static final int DELETE_SELECTED_IMAGES = 3;
 
 	private String currentFolder;
-	private final List<ImageFile> images = new ArrayList<>();
+	private final List<ImageFile> allImages = new ArrayList<>();
 
 	public ImagesActivity()
 	{
@@ -67,11 +67,9 @@ public class ImagesActivity extends ImageListBaseActivity
 		{
 			File imageFile = new File(cursor.getString(pathCol));
 			if (!imageFile.canRead() || !Objects.equals(imageFile.getParent(), path)) continue;
-			images.add(new ImageFile(imageFile));
+			allImages.add(new ImageFile(imageFile));
 		} while (cursor.moveToNext());
 		cursor.close();
-
-		images.sort(ConfigSort.getImageComparator());
 
 		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
 		findViewById(R.id.more_button).setOnClickListener(v -> {
@@ -217,8 +215,9 @@ public class ImagesActivity extends ImageListBaseActivity
 	@Override
 	protected void fileFinding()
 	{
-		List<ImageFile> imagesCopy = images.stream()
+		List<ImageFile> imagesCopy = allImages.stream()
 				.filter(image -> !image.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN))
+				.sorted(ConfigSort.getImageComparator())
 				.collect(Collectors.toList());
 
 		recycler.setAdapter(new ImagesAdapter(imagesCopy, fileManager));
@@ -229,15 +228,17 @@ public class ImagesActivity extends ImageListBaseActivity
 	{
 		String text2 = text.toLowerCase(Locale.ROOT);
 		boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
-		((ImagesAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(files -> {
+		ImagesAdapter adapter = (ImagesAdapter) Objects.requireNonNull(recycler.getAdapter());
+		adapter.filter(files -> {
 			files.clear();
-			for (ImageFile image : images)
+			for (ImageFile image : allImages)
 			{
 				if ((showHidden || !image.isHidden()) && image.getName().toLowerCase(Locale.ROOT).contains(text2))
 				{
 					files.add(image);
 				}
 			}
+			files.sort(ConfigSort.getImageComparator());
 		});
 	}
 }

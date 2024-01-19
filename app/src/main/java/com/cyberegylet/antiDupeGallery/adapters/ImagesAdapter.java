@@ -13,6 +13,7 @@ import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
+import java.util.Comparator;
 import java.util.List;
 
 public class ImagesAdapter extends BaseImageAdapter
@@ -44,10 +45,7 @@ public class ImagesAdapter extends BaseImageAdapter
 		}
 
 		@Override
-		public void reIndex()
-		{
-			image = images.get(getAdapterPosition());
-		}
+		public void reIndex() { image = images.get(getAdapterPosition()); }
 
 		public ImageFile getImage() { return image; }
 	}
@@ -69,15 +67,18 @@ public class ImagesAdapter extends BaseImageAdapter
 	}
 
 	@Override
-	public int getItemCount()
-	{
-		return images.size();
-	}
+	public int getItemCount() { return images.size(); }
 
 	@SuppressLint("NotifyDataSetChanged")
 	public void filter(FilterRun filterRun)
 	{
 		filterRun.filter(images);
 		notifyDataSetChanged();
+	}
+
+	public void sort(Comparator<ImageFile> comparator, boolean update)
+	{
+		images.sort(comparator);
+		if(update) notifyItemRangeChanged(0, getItemCount());
 	}
 }

@@ -42,7 +42,7 @@ public class AlbumActivity extends ImageListBaseActivity
 	private static final int COPY_SELECTED_ALBUMS = 2;
 	private static final int DELETE_SELECTED_ALBUMS = 3;
 
-	private AlbumAdapter.MySortedSet<Album> allAlbums;
+	private List<Album> allAlbums;
 
 	private static boolean hasBackendBeenCalled = false;
 
@@ -183,7 +183,7 @@ public class AlbumActivity extends ImageListBaseActivity
 				{
 					AlbumAdapter.ViewHolder holder = (AlbumAdapter.ViewHolder) tmp;
 					Path p = Paths.get(holder.getAlbum().getPath());
-					if (!fileManager.moveFolder(p, path)) failedAlbums.add(holder.getAlbum());
+					if (!fileManager.moveAlbum(p, path)) failedAlbums.add(holder.getAlbum());
 				}
 				break;
 			case COPY_SELECTED_ALBUMS:
@@ -192,7 +192,7 @@ public class AlbumActivity extends ImageListBaseActivity
 				{
 					AlbumAdapter.ViewHolder holder = (AlbumAdapter.ViewHolder) tmp;
 					Path p = Paths.get(holder.getAlbum().getPath());
-					if (!fileManager.copyFolder(p, path)) failedAlbums.add(holder.getAlbum());
+					if (!fileManager.copyAlbum(p, path)) failedAlbums.add(holder.getAlbum());
 				}
 				break;
 			case DELETE_SELECTED_ALBUMS:
@@ -201,7 +201,7 @@ public class AlbumActivity extends ImageListBaseActivity
 				{
 					AlbumAdapter.ViewHolder holder = (AlbumAdapter.ViewHolder) tmp;
 					Path p = Paths.get(holder.getAlbum().getPath());
-					if (!fileManager.deleteFolder(p)) failedAlbums.add(holder.getAlbum());
+					if (!fileManager.deleteAlbum(p)) failedAlbums.add(holder.getAlbum());
 				}
 				break;
 		}
@@ -223,8 +223,8 @@ public class AlbumActivity extends ImageListBaseActivity
 	protected void fileFinding()
 	{
 		Comparator<Album> comparator = ConfigSort.getAlbumComparator();
-		allAlbums = new AlbumAdapter.MySortedSet<>(comparator);
-		AlbumAdapter.MySortedSet<Album> albums = new AlbumAdapter.MySortedSet<>(comparator);
+		allAlbums = new ArrayList<>();
+		List<Album> albums = new ArrayList<>();
 
 		AlbumAdapter adapter = new AlbumAdapter(albums, fileManager);
 		recycler.setAdapter(adapter);
@@ -262,7 +262,11 @@ public class AlbumActivity extends ImageListBaseActivity
 							album = new Album(albumPath);
 							albumNames.put(albumPath, album);
 							allAlbums.add(album);
-							if (!album.isHidden() || showHidden) albums.add(album);
+							if (!album.isHidden() || showHidden)
+							{
+								albums.add(album);
+								adapter.sort(comparator, false);
+							}
 						}
 
 						long id = getID();
@@ -300,7 +304,8 @@ public class AlbumActivity extends ImageListBaseActivity
 	{
 		String text2 = text.toLowerCase(Locale.ROOT);
 		boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
-		((AlbumAdapter) Objects.requireNonNull(recycler.getAdapter())).filter(dirs -> {
+		AlbumAdapter adapter = (AlbumAdapter) Objects.requireNonNull(recycler.getAdapter());
+		adapter.filter(dirs -> {
 			dirs.clear();
 			for (Album folder : allAlbums)
 			{
@@ -309,6 +314,7 @@ public class AlbumActivity extends ImageListBaseActivity
 					dirs.add(new Album(folder, true));
 				}
 			}
+			dirs.sort(ConfigSort.getAlbumComparator());
 		});
 	}
 }
