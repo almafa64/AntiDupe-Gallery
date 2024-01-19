@@ -64,7 +64,7 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 				if (selected.size() > 0)
 				{
 					ImageView selectedImg = v.findViewById(R.id.selected_logo);
-					if (selectedImg.getVisibility() == View.INVISIBLE)
+					if (selectedImg.getVisibility() >= View.INVISIBLE)
 					{
 						selectView(this, selectedImg);
 					}
