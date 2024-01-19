@@ -235,10 +235,7 @@ public class AlbumActivity extends ImageListBaseActivity
 			private long timeStart = 0;
 
 			@Override
-			public void onPreExecute()
-			{
-				timeStart = System.currentTimeMillis();
-			}
+			public void onPreExecute() { timeStart = System.currentTimeMillis(); }
 
 			@Override
 			public void doInBackground()

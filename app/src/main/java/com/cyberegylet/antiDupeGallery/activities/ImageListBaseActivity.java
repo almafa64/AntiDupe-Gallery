@@ -26,7 +26,6 @@ public abstract class ImageListBaseActivity extends Activity
 
 	private static final String DATABASE_NAME = "data.db";
 	public static SQLiteDatabase database;
-
 	public final String tableDigests = "digests";
 
 	protected FileManager fileManager;
@@ -34,10 +33,7 @@ public abstract class ImageListBaseActivity extends Activity
 	protected final ActivityManager activityManager = new ActivityManager(this);
 	protected SearchView search;
 
-	protected ImageListBaseActivity(String tag)
-	{
-		TAG = tag;
-	}
+	protected ImageListBaseActivity(String tag) { TAG = tag; }
 
 	protected abstract boolean myOnCreate(@Nullable Bundle savedInstanceState);
 
@@ -53,7 +49,8 @@ public abstract class ImageListBaseActivity extends Activity
 				"path TEXT," +
 				"ctime INTEGER," +
 				"mtime INTEGER," +
-				"mediaCount INTEGER" +
+				"mediaCount INTEGER," +
+				"size INTEGER" +
 			")"
 		);
 		database.execSQL(
@@ -65,8 +62,8 @@ public abstract class ImageListBaseActivity extends Activity
 				"ctime INTEGER," +
 				"mtime INTEGER," +
 				"size INTEGER," +
-				"mimeType TEXT" +
-				"FOREIGN KEY (album_id) REFERENCES albums(id)" +
+				"mimeType TEXT," +
+				"FOREIGN KEY(album_id) REFERENCES albums(id)" +
 			")"
 		);
 		database.execSQL("CREATE TABLE IF NOT EXISTS digests (id INTEGER, path TEXT, digest BLOB)");
