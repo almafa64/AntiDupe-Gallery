@@ -24,9 +24,9 @@ public abstract class ImageListBaseActivity extends Activity
 {
 	public final String TAG;
 
-	private static final String DATABASE_NAME = "data.db";
+	public static final String DATABASE_NAME = "data.db";
 	public static SQLiteDatabase database;
-	public final String tableDigests = "digests";
+	public static final String tableDigests = "digests";
 
 	protected FileManager fileManager;
 	protected RecyclerView recycler;
@@ -73,7 +73,7 @@ public abstract class ImageListBaseActivity extends Activity
 	protected void onCreate(@Nullable Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		if(!myOnCreate(savedInstanceState)) return;
+		if (!myOnCreate(savedInstanceState)) return;
 		if (recycler == null) throw new RuntimeException("contentSet() wasn't called");
 
 		int span = Config.getIntProperty((this instanceof AlbumActivity) ? Config.Property.ALBUM_COLUMN_NUMBER : Config.Property.IMAGE_COLUMN_NUMBER);

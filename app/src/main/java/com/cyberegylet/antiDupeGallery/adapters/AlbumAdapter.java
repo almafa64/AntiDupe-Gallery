@@ -96,6 +96,6 @@ public class AlbumAdapter extends BaseImageAdapter
 	public void sort(Comparator<Album> comparator, boolean update)
 	{
 		albums.sort(comparator);
-		if(update) notifyItemRangeChanged(0, getItemCount());
+		if (update) notifyItemRangeChanged(0, getItemCount());
 	}
 }

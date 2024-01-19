@@ -79,6 +79,6 @@ public class ImagesAdapter extends BaseImageAdapter
 	public void sort(Comparator<ImageFile> comparator, boolean update)
 	{
 		images.sort(comparator);
-		if(update) notifyItemRangeChanged(0, getItemCount());
+		if (update) notifyItemRangeChanged(0, getItemCount());
 	}
 }

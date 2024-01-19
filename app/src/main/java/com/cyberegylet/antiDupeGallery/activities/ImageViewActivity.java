@@ -31,7 +31,7 @@ public class ImageViewActivity extends Activity implements Serializable
 		String imagePath;
 		Intent intent = getIntent();
 		//ToDo make safe
-		if(Intent.ACTION_VIEW.equals(intent.getAction())) imagePath = intent.getData().getPath();
+		if (Intent.ACTION_VIEW.equals(intent.getAction())) imagePath = intent.getData().getPath();
 		else imagePath = (String) activityManager.getParam("imagePath");
 
 		setContentView(R.layout.image_view);

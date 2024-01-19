@@ -52,8 +52,7 @@ public class ImagesActivity extends ImageListBaseActivity
 
 		String path = (String) activityManager.getParam("path");
 
-		Cursor cursor = database.query(
-				tableDigests,
+		Cursor cursor = database.query(tableDigests,
 				new String[]{ "path" },
 				"path like ?",
 				new String[]{ path + "/%" },
@@ -217,8 +216,7 @@ public class ImagesActivity extends ImageListBaseActivity
 	{
 		List<ImageFile> imagesCopy = allImages.stream()
 				.filter(image -> !image.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN))
-				.sorted(ConfigSort.getImageComparator())
-				.collect(Collectors.toList());
+				.sorted(ConfigSort.getImageComparator()).collect(Collectors.toList());
 
 		recycler.setAdapter(new ImagesAdapter(imagesCopy, fileManager));
 	}

@@ -21,6 +21,7 @@ import com.cyberegylet.antiDupeGallery.backend.Backend;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
 import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.helpers.MyAsyncTask;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
@@ -101,7 +102,16 @@ public class AlbumActivity extends ImageListBaseActivity
 				}
 				else if (id == R.id.menu_filter)
 				{
-					activityManager.switchActivity(FilterActivity.class);
+					List<String> paths = new ArrayList<>();
+					for (BaseImageAdapter.ViewHolder holder : selected)
+					{
+						Album folder = ((AlbumAdapter.ViewHolder) holder).getAlbum();
+						paths.add(folder.getPath());
+					}
+					activityManager.switchActivity(
+							FilterActivity.class,
+							new ActivityParameter("paths", paths.toArray(new String[0]))
+					);
 				}
 				else if (id == moveId)
 				{
