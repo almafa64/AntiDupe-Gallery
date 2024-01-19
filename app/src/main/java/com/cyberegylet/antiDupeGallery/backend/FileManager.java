@@ -36,7 +36,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class FileManager
 {
@@ -208,16 +207,6 @@ public class FileManager
 		cursorLoop(wrapper, sort, IMAGES_AND_VIDEOS, EXTERNAL_URI, queries);
 	}
 
-	public void allImageLoop(String sort, CursorLoopWrapper wrapper, String... queries)
-	{
-		cursorLoop(wrapper, sort, IMAGES, EXTERNAL_URI, queries);
-	}
-
-	public void allVideoLoop(String sort, CursorLoopWrapper wrapper, String... queries)
-	{
-		cursorLoop(wrapper, sort, VIDEOS, EXTERNAL_URI, queries);
-	}
-
 	public void allImageAndVideoInFolderLoop(
 			String absoluteFolder, String sort, CursorLoopWrapper wrapper, String... queries
 	)
@@ -282,8 +271,6 @@ public class FileManager
 	public String getMimeType(Uri uri) { return getMimeType(getIDFromUri(uri)); }
 
 	public static Uri stringToUri(String pathStr) { return Uri.parse("file://" + Uri.encode(pathStr, "/")); }
-
-	public static String uriToString(Uri uri) { return uri.getPath(); }
 
 	public static boolean isExternalStorageDocument(Uri uri) { return "com.android.externalstorage.documents".equals(uri.getAuthority()); }
 
@@ -363,14 +350,14 @@ public class FileManager
 		}
 	}
 
-	public boolean moveFolder(Path fromFolder, Path toFolder)
+	public boolean moveAlbum(Path fromAlbum, Path toAlbum)
 	{
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(fromFolder))
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(fromAlbum))
 		{
 			for (Path path : stream)
 			{
 				if (Files.isDirectory(path)) continue;
-				moveFile(path, toFolder);
+				moveFile(path, toAlbum);
 			}
 		}
 		catch (IOException e)
@@ -380,14 +367,14 @@ public class FileManager
 		return true;
 	}
 
-	public boolean copyFolder(Path fromFolder, Path toFolder)
+	public boolean copyAlbum(Path fromAlbum, Path toAlbum)
 	{
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(fromFolder))
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(fromAlbum))
 		{
 			for (Path path : stream)
 			{
 				if (Files.isDirectory(path)) continue;
-				copyFile(path, toFolder);
+				copyFile(path, toAlbum);
 			}
 		}
 		catch (IOException e)
@@ -397,9 +384,9 @@ public class FileManager
 		return true;
 	}
 
-	public boolean deleteFolder(Path folder)
+	public boolean deleteAlbum(Path album)
 	{
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(folder))
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(album))
 		{
 			for (Path path : stream)
 			{
@@ -417,11 +404,12 @@ public class FileManager
 	public static long getSize(File f)
 	{
 		if (!f.isDirectory()) return f.length();
-		long size = 0;
+		return -1;
+		/*long size = 0;
 		for (File file : Objects.requireNonNull(f.listFiles()))
 		{
 			size += file.length();
 		}
-		return size;
+		return size;*/
 	}
 }
