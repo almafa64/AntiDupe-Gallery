@@ -93,6 +93,12 @@ public final class Config
 		return properties.getProperty(property.name).equals("1");
 	}
 
+	public static String[] getArrayProperty(@NonNull Property property)
+	{
+		crashIfNotCalled();
+		return properties.getProperty(property.name).split(",");
+	}
+
 	public static void setStringProperty(@NonNull Property property, String value)
 	{
 		crashIfNotCalled();
@@ -109,6 +115,12 @@ public final class Config
 	{
 		crashIfNotCalled();
 		properties.setProperty(property.name, value ? "1" : "0");
+	}
+
+	public static void setArrayProperty(@NonNull Property property, String[] values)
+	{
+		crashIfNotCalled();
+		properties.setProperty(property.name, String.join(",", values));
 	}
 
 	public static void restoreDefaults()
@@ -162,6 +174,9 @@ public final class Config
 			case DO_ANIMATIONS:
 				setBooleanProperty(Property.DO_ANIMATIONS, true);
 				break;
+			case BLOCKED_PATHS:
+				setStringProperty(Property.BLOCKED_PATHS, "");
+				break;
 		}
 	}
 
@@ -187,7 +202,9 @@ public final class Config
 		 * 1. number: is_ascending<br>
 		 * 2. number: sort type (0: mod date, 1: create date, 2: size, 3: name)
 		 */
-		IMAGE_SORT("i_sort");
+		IMAGE_SORT("i_sort"),
+
+		BLOCKED_PATHS("path_block");
 
 		private final String name;
 
