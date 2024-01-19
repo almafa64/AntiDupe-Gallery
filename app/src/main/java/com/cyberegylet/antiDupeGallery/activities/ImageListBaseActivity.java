@@ -46,6 +46,30 @@ public abstract class ImageListBaseActivity extends Activity
 		search = findViewById(R.id.search_bar);
 		recycler = findViewById(R.id.items);
 		database = SQLiteDatabase.openOrCreateDatabase(getDatabasePath(DATABASE_NAME), null);
+		database.execSQL(
+			"CREATE TABLE IF NOT EXISTS albums (" +
+				"id INTEGER PRIMARY KEY," +
+				"name TEXT," +
+				"path TEXT," +
+				"ctime INTEGER," +
+				"mtime INTEGER," +
+				"mediaCount INTEGER" +
+			")"
+		);
+		database.execSQL(
+			"CREATE TABLE IF NOT EXISTS media (" +
+				"id INTEGER," +
+				"album_id INTEGER," +
+				"name TEXT," +
+				"path TEXT," +
+				"ctime INTEGER," +
+				"mtime INTEGER," +
+				"size INTEGER," +
+				"mimeType TEXT" +
+				"FOREIGN KEY (album_id) REFERENCES albums(id)" +
+			")"
+		);
+		database.execSQL("CREATE TABLE IF NOT EXISTS digests (id INTEGER, path TEXT, digest BLOB)");
 	}
 
 	@Override

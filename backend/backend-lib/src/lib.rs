@@ -24,10 +24,6 @@ async fn main(
         .connect(&format!("sqlite://{db_path}?mode=rw"))
         .await
         .unwrap();
-    sqlx::query("CREATE TABLE IF NOT EXISTS digests (id INTEGER, path TEXT, digest BLOB)")
-        .execute(&db)
-        .await
-        .unwrap();
 
     loop {
         tokio::select! {
