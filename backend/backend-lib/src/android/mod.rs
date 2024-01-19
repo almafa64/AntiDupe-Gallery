@@ -1,11 +1,10 @@
 mod exports;
+mod log;
 
 use std::panic;
 
 use jni::sys::{jint, JNI_VERSION_1_6};
 use jni::JavaVM;
-
-use crate::log;
 
 #[no_mangle]
 #[allow(non_snake_case)]

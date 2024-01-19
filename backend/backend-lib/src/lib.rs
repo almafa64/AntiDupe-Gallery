@@ -2,7 +2,7 @@
 
 mod android;
 mod digest;
-mod log;
+mod logger;
 
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -15,7 +15,6 @@ use tokio::sync::{mpsc, oneshot};
 use std::sync::Arc;
 
 async fn main(
-    mut env: JNIEnv<'_>,
     mut file_recver: mpsc::UnboundedReceiver<(i64, PathBuf)>,
     mut shutdown_recver: oneshot::Receiver<()>,
     mut file_queue_length: Arc<AtomicUsize>,
@@ -34,7 +33,7 @@ async fn main(
         tokio::select! {
             file = file_recver.recv() => {
                 if let Some((id, path)) = file {
-                    handle_file(&mut env, &db, (id, path)).await;
+                    handle_file(&db, (id, path)).await;
                     file_queue_length.fetch_sub(1, Ordering::SeqCst);
                 }
             }
@@ -46,7 +45,6 @@ async fn main(
 }
 
 async fn handle_file(
-    env: &mut JNIEnv<'_>,
     db: &Pool<Sqlite>,
     file: (i64, PathBuf),
 ) {
@@ -70,11 +68,7 @@ async fn handle_file(
                     .unwrap();
             }
             Err(err) => {
-                log::err(
-                    env,
-                    "Backend",
-                    format!("digest::digest failed: {err}"),
-                );
+                log::error!("digest::digest failed: {err}");
             }
         }
     }

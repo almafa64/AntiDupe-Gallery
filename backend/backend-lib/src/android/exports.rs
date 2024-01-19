@@ -12,10 +12,11 @@ use sqlx::sqlite::SqlitePoolOptions;
 use sqlx::Database;
 use tokio::sync::{mpsc, oneshot};
 
-use crate::log;
+use super::log;
 
 struct Context {
     main_thread: JoinHandle<()>,
+    logger_thread: JoinHandle<()>,
     main_activity: GlobalRef,
     file_sender: mpsc::UnboundedSender<(i64, PathBuf)>,
     shutdown_sender: Option<oneshot::Sender<()>>,
@@ -56,16 +57,41 @@ pub extern "C" fn init(
             .build()
             .expect("Failed to build tokio runtime");
         runtime.block_on(crate::main(
-            env,
             file_recver,
             shutdown_recver,
             file_queue_length2,
             &db_path,
         ));
     });
+    let vm2 = env.get_java_vm().expect("Failed to get JVM"); // ain't no way 😭
+    let logger_thread = thread::spawn(move || {
+        let env_guard = vm2
+            .attach_current_thread()
+            .expect("Failed to attach thread to JVM");
+        let mut env = unsafe { env_guard.unsafe_clone() };
+
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        crate::logger::Logger::init(tx);
+
+        loop {
+            let msg = rx.blocking_recv();
+            if let Some(msg) = msg {
+                use ::log::Level as L;
+                match msg.0 {
+                    L::Error => log::err(&mut env, "Backend", msg.1),
+                    L::Warn => log::warn(&mut env, "Backend", msg.1),
+                    L::Info => log::info(&mut env, "Backend", msg.1),
+                    L::Debug | L::Trace => log::debug(&mut env, "Backend", msg.1),
+                }
+            } else {
+                break;
+            }
+        }
+    });
     CONTEXT
         .set(RwLock::new(Context {
             main_thread,
+            logger_thread,
             main_activity,
             file_sender,
             shutdown_sender: Some(shutdown_sender),
