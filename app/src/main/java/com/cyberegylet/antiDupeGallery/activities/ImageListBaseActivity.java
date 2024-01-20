@@ -63,6 +63,8 @@ public abstract class ImageListBaseActivity extends Activity
 				"mtime INTEGER," +
 				"size INTEGER," +
 				"mimeType TEXT," +
+				"chash BLOB," +
+				"phash BLOB," +
 				"FOREIGN KEY(album_id) REFERENCES albums(id)" +
 			")"
 		);
