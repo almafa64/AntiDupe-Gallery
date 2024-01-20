@@ -7,10 +7,6 @@ import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
 
 public class Album
@@ -20,7 +16,6 @@ public class Album
 	private String name;
 	private File file;
 	private long modifiedDate;
-	private long creationDate;
 	private long size;
 	private long count;
 	private boolean isHidden;
@@ -31,16 +26,7 @@ public class Album
 		this.file = file;
 		this.name = file.getName();
 		this.isHidden = stringPath.contains("/.");
-		try
-		{
-			BasicFileAttributes attr = Files.readAttributes(Paths.get(stringPath), BasicFileAttributes.class);
-			modifiedDate = attr.lastModifiedTime().toMillis();
-			creationDate = attr.creationTime().toMillis();
-		}
-		catch (IOException e)
-		{
-			throw new RuntimeException();
-		}
+		this.modifiedDate = file.lastModified();
 	}
 
 	public Album(Album folder, boolean copyImages)
@@ -48,7 +34,6 @@ public class Album
 		this.name = folder.name;
 		this.file = folder.file;
 		this.modifiedDate = folder.modifiedDate;
-		this.creationDate = folder.creationDate;
 		if (copyImages)
 		{
 			indexImage = folder.indexImage;
@@ -85,8 +70,7 @@ public class Album
 	public long getCount() { return count; }
 
 	public long getModifiedDate() { return modifiedDate; }
-
-	public long getCreationDate() { return creationDate; }
+	public long getCreationDate() { return modifiedDate; }
 
 	public boolean isHidden() { return isHidden; }
 }

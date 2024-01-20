@@ -1,5 +1,6 @@
 package com.cyberegylet.antiDupeGallery.activities;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -108,8 +109,7 @@ public class AlbumActivity extends ImageListBaseActivity
 						Album folder = ((AlbumAdapter.ViewHolder) holder).getAlbum();
 						paths.add(folder.getPath());
 					}
-					activityManager.switchActivity(
-							FilterActivity.class,
+					activityManager.switchActivity(FilterActivity.class,
 							new ActivityParameter("paths", paths.toArray(new String[0]))
 					);
 				}
@@ -125,30 +125,44 @@ public class AlbumActivity extends ImageListBaseActivity
 				}
 				else if (id == deleteId)
 				{
-					onActivityResult(DELETE_SELECTED_ALBUMS, RESULT_OK, new Intent());
+					new AlertDialog.Builder(this).setTitle(R.string.popup_delete)
+							.setMessage(R.string.popup_delete_confirm).setIcon(android.R.drawable.ic_dialog_alert)
+							.setPositiveButton(android.R.string.yes,
+									(dialog, whichButton) -> onActivityResult(DELETE_SELECTED_ALBUMS,
+											RESULT_OK,
+											new Intent()
+									)
+							).setNegativeButton(android.R.string.no, null).show();
 				}
 				else if (id == infoId)
 				{
 					ViewGroup popupInfo = (ViewGroup) activityManager.makePopupWindow(R.layout.dialog_info)
 							.getContentView();
-					TextView name = popupInfo.findViewById(R.id.info_name);
-					TextView count = popupInfo.findViewById(R.id.info_count);
-					TextView path = popupInfo.findViewById(R.id.info_path);
-					TextView size = popupInfo.findViewById(R.id.info_size);
+					TextView nameField = popupInfo.findViewById(R.id.info_name);
+					TextView countField = popupInfo.findViewById(R.id.info_count);
+					TextView pathField = popupInfo.findViewById(R.id.info_path);
+					TextView sizeField = popupInfo.findViewById(R.id.info_size);
+					TextView modDateField = popupInfo.findViewById(R.id.info_mdate);
 					if (selected.size() == 1)
 					{
-						File f = ((AlbumAdapter.ViewHolder) selected.get(0)).getAlbum().getFile();
-						path.setText(f.getParent());
-						name.setText(f.getName());
+						Album album = ((AlbumAdapter.ViewHolder) selected.get(0)).getAlbum();
+						pathField.setText(album.getFile().getParent());
+						nameField.setText(album.getName());
+						modDateField.setText(Utils.msToDate(album.getModifiedDate()));
 					}
 					else
 					{
-						path.setVisibility(View.GONE);
-						popupInfo.getChildAt(4).setVisibility(View.GONE);
+						modDateField.setVisibility(View.GONE);
+						popupInfo.findViewById(R.id.info_mdate_header).setVisibility(View.GONE);
+						pathField.setVisibility(View.GONE);
+						popupInfo.findViewById(R.id.info_path_header).setVisibility(View.GONE);
 
-						((TextView) popupInfo.getChildAt(0)).setText(R.string.popup_items_selected);
-						name.setText(String.valueOf(selected.size()));
+						((TextView) popupInfo.findViewById(R.id.info_name_header)).setText(R.string.popup_items_selected);
+						nameField.setText(String.valueOf(selected.size()));
 					}
+
+					popupInfo.findViewById(R.id.info_cdate).setVisibility(View.GONE);
+					popupInfo.findViewById(R.id.info_cdate_header).setVisibility(View.GONE);
 
 					long sizeB = 0;
 					long imageCount = 0;
@@ -159,8 +173,8 @@ public class AlbumActivity extends ImageListBaseActivity
 						imageCount += folder.getCount();
 					}
 
-					size.setText(Utils.getByteStringFromSize(sizeB));
-					count.setText(String.valueOf(imageCount));
+					sizeField.setText(Utils.getByteStringFromSize(sizeB));
+					countField.setText(String.valueOf(imageCount));
 				}
 				else return false;
 				return true;

@@ -45,6 +45,7 @@
     <string name="popup_delete_file_success">Successfully deleted files</string>
     <string name="popup_info">Info</string>
     <string name="popup_items_selected">Items selected</string>
+    <string name="popup_delete_confirm">Do you really want to delete this album?</string>
 
     <!-- general -->
     <string name="settings_button">Settings</string>
@@ -57,6 +58,8 @@
     <string name="info_file_count">File count</string>
     <string name="info_path">Path</string>
     <string name="info_size">Size</string>
+    <string name="info_cdate">Created</string>
+    <string name="info_mdate">Modified</string>
 
     <!-- Filter -->
     <string name="filter_header_text">Filter</string>

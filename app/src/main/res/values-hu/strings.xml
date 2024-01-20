@@ -46,12 +46,15 @@
     <string name="popup_delete_file_success">Fájlok sikeresen törölve</string>
     <string name="popup_info">Info</string>
     <string name="popup_items_selected">Elemek kiválasztva</string>
+    <string name="popup_delete_confirm">Tényleg törölni akarod ezt az albumot?</string>
 
     <!-- info popup -->
     <string name="info_name">Név</string>
     <string name="info_file_count">Fájlok száma</string>
     <string name="info_path">Útvonal</string>
     <string name="info_size">Méret</string>
+    <string name="info_cdate">Létrehozva</string>
+    <string name="info_mdate">Módosítva</string>
 
     <!-- Filter -->
     <string name="filter_header_text">Szűrés</string>

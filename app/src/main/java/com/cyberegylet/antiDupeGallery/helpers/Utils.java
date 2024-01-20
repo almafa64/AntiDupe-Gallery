@@ -2,9 +2,16 @@ package com.cyberegylet.antiDupeGallery.helpers;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DateFormat;
+import java.util.Date;
 
 public class Utils
 {
+	public static String msToDate(long ms)
+	{
+		return DateFormat.getDateTimeInstance().format(new Date(ms));
+	}
+
 	public static String getByteStringFromSize(long size)
 	{
 		final double kb = 1024;

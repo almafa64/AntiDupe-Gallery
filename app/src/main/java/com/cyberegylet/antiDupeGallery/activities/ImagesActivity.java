@@ -1,5 +1,6 @@
 package com.cyberegylet.antiDupeGallery.activities;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -109,7 +110,14 @@ public class ImagesActivity extends ImageListBaseActivity
 				}
 				else if (id == deleteId)
 				{
-					onActivityResult(DELETE_SELECTED_IMAGES, RESULT_OK, new Intent());
+					new AlertDialog.Builder(this).setTitle(R.string.popup_delete)
+							.setMessage(R.string.popup_delete_confirm).setIcon(android.R.drawable.ic_dialog_alert)
+							.setPositiveButton(android.R.string.yes,
+									(dialog, whichButton) -> onActivityResult(DELETE_SELECTED_IMAGES,
+											RESULT_OK,
+											new Intent()
+									)
+							).setNegativeButton(android.R.string.no, null).show();
 				}
 				else if (id == infoId)
 				{
@@ -119,18 +127,26 @@ public class ImagesActivity extends ImageListBaseActivity
 					TextView countField = popupInfo.findViewById(R.id.info_count);
 					TextView pathField = popupInfo.findViewById(R.id.info_path);
 					TextView sizeField = popupInfo.findViewById(R.id.info_size);
+					TextView creDateField = popupInfo.findViewById(R.id.info_cdate);
+					TextView modDateField = popupInfo.findViewById(R.id.info_mdate);
 					if (selected.size() == 1)
 					{
-						File f = ((ImagesAdapter.ViewHolder) selected.get(0)).getImage().getFile();
-						pathField.setText(f.getParent());
-						nameField.setText(f.getName());
+						ImageFile imageFile = ((ImagesAdapter.ViewHolder) selected.get(0)).getImage();
+						modDateField.setText(Utils.msToDate(imageFile.getModifiedDate()));
+						creDateField.setText(Utils.msToDate(imageFile.getCreationDate()));
+						pathField.setText(imageFile.getFile().getParent());
+						nameField.setText(imageFile.getName());
 					}
 					else
 					{
+						creDateField.setVisibility(View.GONE);
+						popupInfo.findViewById(R.id.info_cdate_header).setVisibility(View.GONE);
+						modDateField.setVisibility(View.GONE);
+						popupInfo.findViewById(R.id.info_mdate_header).setVisibility(View.GONE);
 						pathField.setVisibility(View.GONE);
-						popupInfo.getChildAt(4).setVisibility(View.GONE);
+						popupInfo.findViewById(R.id.info_path_header).setVisibility(View.GONE);
 						nameField.setVisibility(View.GONE);
-						popupInfo.getChildAt(0).setVisibility(View.GONE);
+						popupInfo.findViewById(R.id.info_name_header).setVisibility(View.GONE);
 					}
 
 					long sizeB = 0;
