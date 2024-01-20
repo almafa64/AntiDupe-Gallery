@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -42,7 +43,7 @@ public class FilterActivity extends Activity
 
 		List<String> paths = Arrays.asList((String[]) activityManager.getParam("paths"));
 
-		if (paths.size() == 0) return;
+		//if (paths.size() == 0) return;
 
 		database = SQLiteDatabase.openOrCreateDatabase(getDatabasePath(ImageListBaseActivity.DATABASE_NAME), null);
 		LinearLayout layout = findViewById(R.id.filter_content);
@@ -53,22 +54,38 @@ public class FilterActivity extends Activity
 			@Override
 			public void doInBackground()
 			{
-				StringBuilder likes = new StringBuilder();
-				for (int i = paths.size() - 1; i >= 0; i--)
+				Cursor cursor;
+				if(paths.size() != 0)
 				{
-					likes.append("path like ?");
-					if (i != 0) likes.append(" or ");
+					StringBuilder likes = new StringBuilder();
+					for (int i = paths.size() - 1; i >= 0; i--)
+					{
+						likes.append("path like ?");
+						if (i != 0) likes.append(" or ");
+					}
+
+					cursor = database.query(
+							ImageListBaseActivity.tableDigests,
+							new String[]{ "path", "digest" },
+							likes.toString(),
+							paths.stream().map(e -> e + "/%").toArray(String[]::new),
+							null,
+							null,
+							"digest"
+					);
 				}
-
-				Cursor cursor = database.query(ImageListBaseActivity.tableDigests,
-						new String[]{ "path", "digest" },
-						likes.toString(),
-						paths.stream().map(e -> e + "/%").toArray(String[]::new),
-						null,
-						null,
-						"digest"
-				);
-
+				else
+				{
+					cursor = database.query(
+							ImageListBaseActivity.tableDigests,
+							new String[]{ "path", "digest" },
+							null,
+							null,
+							null,
+							null,
+							"digest"
+					);
+				}
 
 				List<File> gotPaths = new ArrayList<>();
 				byte[] lastDigest = new byte[0];
@@ -79,11 +96,13 @@ public class FilterActivity extends Activity
 					int pathCol = cursor.getColumnIndex("path");
 					int digestCol = cursor.getColumnIndex("digest");
 
+					boolean hasPaths = paths.size() != 0;
+
 					do
 					{
 						String path = cursor.getString(pathCol);
 						File f = new File(path);
-						if (!f.canRead() || !paths.contains(f.getParent())) continue;
+						if (!f.canRead() || (hasPaths && !paths.contains(f.getParent()))) continue;
 						byte[] digest = cursor.getBlob(digestCol);
 						if (!Arrays.equals(lastDigest, digest))
 						{
@@ -117,7 +136,9 @@ public class FilterActivity extends Activity
 			}
 
 			@Override
-			public void onPostExecute() { }
+			public void onPostExecute() {
+				runOnUiThread(() -> Toast.makeText(FilterActivity.this, "Kész a filterelés", Toast.LENGTH_SHORT).show());
+			}
 
 			@Override
 			public void onPreExecute() { }
