@@ -1,7 +1,7 @@
 #![allow(unused)]
 
 mod android;
-mod digest;
+mod hash;
 mod logger;
 
 use std::path::PathBuf;
@@ -52,19 +52,19 @@ async fn handle_file(
             .await
             .unwrap();
     if !exists {
-        match digest::digest(&path) {
+        match hash::chash(&path) {
             Ok(digest) => {
                 let path = path.as_os_str().to_str().unwrap();
                 sqlx::query("INSERT INTO digests VALUES (?, ?, ?)")
                     .bind(id)
                     .bind(path)
-                    .bind(&digest.digest[..])
+                    .bind(&digest[..])
                     .execute(db)
                     .await
                     .unwrap();
             }
             Err(err) => {
-                log::error!("digest::digest failed: {err}");
+                log::error!("chash failed: {err}");
             }
         }
     }
