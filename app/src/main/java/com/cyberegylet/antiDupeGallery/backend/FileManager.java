@@ -204,7 +204,13 @@ public class FileManager
 
 	public void allImageAndVideoLoop(String sort, CursorLoopWrapper wrapper, String... queries)
 	{
-		cursorLoop(wrapper, sort, IMAGES_AND_VIDEOS, EXTERNAL_URI, queries);
+		cursorLoop(
+				wrapper,
+				sort,
+				"(" + IMAGES_AND_VIDEOS + ") and " + MediaStore.MediaColumns.SIZE + " != 0",
+				EXTERNAL_URI,
+				queries
+		);
 	}
 
 	public void allImageAndVideoInFolderLoop(
@@ -213,7 +219,7 @@ public class FileManager
 	{
 		cursorLoop(wrapper,
 				sort,
-				PATH_FILTER_IMAGES_AND_VIDEOS,
+				"(" + PATH_FILTER_IMAGES_AND_VIDEOS + ") and " + MediaStore.MediaColumns.SIZE + " != 0",
 				new String[]{ absoluteFolder + "/%" },
 				EXTERNAL_URI,
 				queries
