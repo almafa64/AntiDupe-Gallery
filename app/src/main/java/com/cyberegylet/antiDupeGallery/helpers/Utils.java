@@ -7,10 +7,8 @@ import java.util.Date;
 
 public class Utils
 {
-	public static String msToDate(long ms)
-	{
-		return DateFormat.getDateTimeInstance().format(new Date(ms));
-	}
+	public static String sToDate(long s) { return msToDate(s * 1000); }
+	public static String msToDate(long ms) { return DateFormat.getDateTimeInstance().format(new Date(ms)); }
 
 	public static String getByteStringFromSize(long size)
 	{
