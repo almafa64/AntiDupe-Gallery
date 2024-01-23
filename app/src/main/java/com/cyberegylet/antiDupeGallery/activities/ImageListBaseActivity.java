@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.R;
+import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
@@ -23,11 +24,7 @@ import java.util.Arrays;
 public abstract class ImageListBaseActivity extends Activity
 {
 	public final String TAG;
-
-	public static final String DATABASE_NAME = "data.db";
 	public static SQLiteDatabase database;
-	public static final String tableDigests = "digests";
-
 	protected FileManager fileManager;
 	protected RecyclerView recycler;
 	protected final ActivityManager activityManager = new ActivityManager(this);
@@ -40,41 +37,15 @@ public abstract class ImageListBaseActivity extends Activity
 	protected void contentSet()
 	{
 		search = findViewById(R.id.search_bar);
-		recycler = findViewById(R.id.items);
-		database = SQLiteDatabase.openOrCreateDatabase(getDatabasePath(DATABASE_NAME), null);
-		database.execSQL(
-			"CREATE TABLE IF NOT EXISTS albums (" +
-				"id INTEGER PRIMARY KEY," +
-				"name TEXT," +
-				"path TEXT," +
-				"ctime INTEGER," +
-				"mtime INTEGER," +
-				"mediaCount INTEGER," +
-				"size INTEGER" +
-			")"
-		);
-		database.execSQL(
-			"CREATE TABLE IF NOT EXISTS media (" +
-				"id INTEGER," +
-				"album_id INTEGER," +
-				"name TEXT," +
-				"path TEXT," +
-				"ctime INTEGER," +
-				"mtime INTEGER," +
-				"size INTEGER," +
-				"mimeType TEXT," +
-				"chash BLOB," +
-				"phash BLOB," +
-				"FOREIGN KEY(album_id) REFERENCES albums(id)" +
-			")"
-		);
-		database.execSQL("CREATE TABLE IF NOT EXISTS digests (id INTEGER, path TEXT, digest BLOB)");
+		recycler = findViewById(R.id.recycler);
+		database = Cache.openCache();
 	}
 
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+		Cache.Init(this);
 		if (!myOnCreate(savedInstanceState)) return;
 		if (recycler == null) throw new RuntimeException("contentSet() wasn't called");
 
@@ -140,6 +111,7 @@ public abstract class ImageListBaseActivity extends Activity
 
 	protected abstract void fileFinding();
 
+	// dependency for rust lib
 	protected String getDbPath(String name) { return getDatabasePath(name).getAbsolutePath(); }
 
 	protected abstract void filterRecycle(String text);

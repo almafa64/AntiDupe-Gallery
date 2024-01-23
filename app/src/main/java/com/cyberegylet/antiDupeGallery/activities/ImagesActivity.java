@@ -17,6 +17,7 @@ import androidx.annotation.Nullable;
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.ImagesAdapter;
+import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
@@ -53,7 +54,8 @@ public class ImagesActivity extends ImageListBaseActivity
 
 		String path = (String) activityManager.getParam("path");
 
-		Cursor cursor = database.query(tableDigests,
+		Cursor cursor = database.query(
+				Cache.tableDigests,
 				new String[]{ "path" },
 				"path like ?",
 				new String[]{ path + "/%" },
