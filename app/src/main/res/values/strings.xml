@@ -63,6 +63,7 @@
 
     <!-- Filter -->
     <string name="filter_header_text">Filter</string>
+    <string name="filter_complete">Filtering is done</string>
 
     <!-- info -->
     <string name="email" translatable="false">something@gmail.com</string>

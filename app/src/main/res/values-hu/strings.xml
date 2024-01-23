@@ -58,6 +58,7 @@
 
     <!-- Filter -->
     <string name="filter_header_text">Szűrés</string>
+    <string name="filter_complete">Kész a szűrés</string>
 
     <!-- general -->
     <string name="settings_button">Beállítások</string>
