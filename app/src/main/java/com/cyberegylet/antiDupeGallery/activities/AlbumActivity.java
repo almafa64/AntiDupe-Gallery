@@ -244,7 +244,7 @@ public class AlbumActivity extends ImageListBaseActivity
 	}
 
 	@Override
-	protected void fileFinding()
+	protected void storageAccessGranted()
 	{
 		Comparator<Album> comparator = ConfigSort.getAlbumComparator();
 		allAlbums = new ArrayList<>();

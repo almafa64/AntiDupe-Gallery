@@ -17,7 +17,6 @@ import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAdapter.ViewHolder>
 {
@@ -40,13 +39,13 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 
 	protected void selectView(ViewHolder holder, ImageView logo)
 	{
-		logo.setVisibility(View.VISIBLE);
+		if (logo != null) logo.setVisibility(View.VISIBLE);
 		selected.add(holder);
 	}
 
 	protected void unSelectView(ViewHolder holder, ImageView logo)
 	{
-		logo.setVisibility(View.INVISIBLE);
+		if (logo != null) logo.setVisibility(View.INVISIBLE);
 		selected.remove(holder);
 	}
 
@@ -59,19 +58,15 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 			super(itemView);
 			img = itemView.findViewById(R.id.image);
 
+			if (listener == null) return;
+
 			// view = ConstraintLayout (the parent of ImageView)
 			itemView.setOnClickListener(v -> {
 				if (selected.size() > 0)
 				{
 					ImageView selectedImg = v.findViewById(R.id.selected_logo);
-					if (selectedImg.getVisibility() >= View.INVISIBLE)
-					{
-						selectView(this, selectedImg);
-					}
-					else
-					{
-						unSelectView(this, selectedImg);
-					}
+					if (selectedImg.getVisibility() >= View.INVISIBLE) selectView(this, selectedImg);
+					else unSelectView(this, selectedImg);
 				}
 				else
 				{
@@ -98,8 +93,12 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 	@Override
 	public void onAttachedToRecyclerView(@NonNull RecyclerView recycler)
 	{
+		RecyclerView.LayoutManager manager = recycler.getLayoutManager();
+		if (!(manager instanceof GridLayoutManager)) return;
+
 		BaseImageAdapter adapter = this;
-		GridLayoutManager gridLayoutManager = (GridLayoutManager) Objects.requireNonNull(recycler.getLayoutManager());
+
+		GridLayoutManager gridLayoutManager = (GridLayoutManager) manager;
 		ScaleGestureDetector gestureDetector = new ScaleGestureDetector(fileManager.context,
 				new ScaleGestureDetector.SimpleOnScaleGestureListener()
 				{

@@ -230,7 +230,7 @@ public class ImagesActivity extends ImageListBaseActivity
 	}
 
 	@Override
-	protected void fileFinding()
+	protected void storageAccessGranted()
 	{
 		List<ImageFile> imagesCopy = allImages.stream()
 				.filter(image -> !image.isHidden() || Config.getBooleanProperty(Config.Property.SHOW_HIDDEN))

@@ -66,7 +66,7 @@ public abstract class ImageListBaseActivity extends Activity
 		});
 
 		fileManager = new FileManager(this);
-		if (fileManager.hasFileAccess()) fileFinding();
+		if (fileManager.hasFileAccess()) storageAccessGranted();
 	}
 
 	@Override
@@ -100,7 +100,7 @@ public abstract class ImageListBaseActivity extends Activity
 		if (requestCode == FileManager.STORAGE_REQUEST_CODE && Arrays.stream(grantResults)
 				.allMatch(v -> v == PackageManager.PERMISSION_GRANTED))
 		{
-			fileFinding();
+			storageAccessGranted();
 		}
 		else
 		{
@@ -109,7 +109,7 @@ public abstract class ImageListBaseActivity extends Activity
 		}
 	}
 
-	protected abstract void fileFinding();
+	protected abstract void storageAccessGranted();
 
 	// dependency for rust lib
 	protected String getDbPath(String name) { return getDatabasePath(name).getAbsolutePath(); }
