@@ -38,8 +38,7 @@ public class ActivityManager
 	{
 		ViewGroup root = (ViewGroup) activity.getWindow().getDecorView();
 		ViewGroup popup = (ViewGroup) activity.getLayoutInflater().inflate(layoutId, root, false);
-		PopupWindow window = new PopupWindow(
-				popup,
+		PopupWindow window = new PopupWindow(popup,
 				ViewGroup.LayoutParams.MATCH_PARENT,
 				ViewGroup.LayoutParams.WRAP_CONTENT,
 				true
@@ -55,16 +54,33 @@ public class ActivityManager
 
 	public void switchActivity(Class<? extends Activity> newActivity, ActivityParameter... params)
 	{
-		switchActivity(activity, newActivity, params);
+		switchActivity(activity, newActivity, -1, params);
+	}
+
+	public void switchActivity(Class<? extends Activity> newActivity, int reqCode, ActivityParameter... params)
+	{
+		switchActivity(activity, newActivity, reqCode, params);
 	}
 
 	public static void switchActivity(
-			Activity activity,
-			Class<? extends Activity> newActivity,
-			ActivityParameter... params
+			Activity activity, Class<? extends Activity> newActivity, ActivityParameter... params
 	)
 	{
-		Intent intent = new Intent(activity, newActivity);
+		switchActivity(activity, newActivity, -1, params);
+	}
+
+	public static void switchActivity(
+			Activity activity, Class<? extends Activity> newActivity, int reqCode, ActivityParameter... params
+	)
+	{
+		Intent intent = putParams(new Intent(activity, newActivity), params);
+
+		if (reqCode != -1) activity.startActivityForResult(intent, reqCode);
+		else activity.startActivity(intent);
+	}
+
+	private static Intent putParams(Intent intent, ActivityParameter... params)
+	{
 		for (ActivityParameter param : params)
 		{
 			switch (param.type)
@@ -90,12 +106,17 @@ public class ActivityManager
 					break;
 			}
 		}
-		activity.startActivity(intent);
+		return intent;
 	}
 
-	public void goBack() { goBack(activity); }
+	public void goBack(ActivityParameter... params) { goBack(activity, params); }
 
-	public static void goBack(Activity activity) { activity.finish(); }
+	public static void goBack(Activity activity, ActivityParameter... params)
+	{
+		Intent i = putParams(new Intent(), params);
+		activity.setResult(Activity.RESULT_OK, i);
+		activity.finish();
+	}
 
 	public Object getParam(String name) { return getParam(activity, name); }
 
