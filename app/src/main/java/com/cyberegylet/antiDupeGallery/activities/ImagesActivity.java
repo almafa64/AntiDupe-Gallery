@@ -51,15 +51,17 @@ public class ImagesActivity extends ImageListBaseActivity
 		setContentView(R.layout.images_activity);
 		contentSet();
 
+		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
+
 		String path = (String) activityManager.getParam("path");
 
 		String sort = ConfigSort.toMediaSQLString(Config.getStringProperty(Config.Property.IMAGE_SORT));
 		try (Cursor cursor = database.rawQuery(
-				"select path from media where album_id = (select id from albums where path like ?)",
+				"select path from media where album_id = (select id from albums where path = ?)",
 				new String[]{ path }
 		))
 		{
-			cursor.moveToFirst();
+			if(!cursor.moveToFirst()) return false;
 			int pathCol = cursor.getColumnIndex("path");
 			do
 			{
@@ -69,7 +71,6 @@ public class ImagesActivity extends ImageListBaseActivity
 			} while (cursor.moveToNext());
 		}
 
-		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
 		findViewById(R.id.more_button).setOnClickListener(v -> {
 			final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
 			final List<BaseImageAdapter.ViewHolder> selected = adapter.getSelected;

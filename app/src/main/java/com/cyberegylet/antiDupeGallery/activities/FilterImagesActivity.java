@@ -246,7 +246,7 @@ public class FilterImagesActivity extends Activity
 				"path"
 		))
 		{
-			cursor.moveToFirst();
+			if(!cursor.moveToFirst()) return;
 			int pathCol = cursor.getColumnIndex("path");
 			do
 			{

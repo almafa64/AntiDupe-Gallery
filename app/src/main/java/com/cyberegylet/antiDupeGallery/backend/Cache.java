@@ -2,6 +2,7 @@ package com.cyberegylet.antiDupeGallery.backend;
 
 import android.app.Activity;
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.cyberegylet.antiDupeGallery.models.Album;
@@ -68,6 +69,12 @@ public class Cache
 
 	public static void addMedia(ImageFile imageFile, long albumId)
 	{
+		try(Cursor cursor = database.rawQuery("select count(*) from "+tableMedia+" where id = " + imageFile.getId(), null))
+		{
+			cursor.moveToFirst();
+			if(cursor.getInt(0) > 0) return;
+		}
+
 		ContentValues values = new ContentValues();
 		values.put("path", imageFile.getPath());
 		values.put("name", imageFile.getName());
@@ -84,6 +91,12 @@ public class Cache
 
 	public static void addAlbum(Album album)
 	{
+		try(Cursor cursor = database.rawQuery("select count(*) from "+tableAlbums+" where id = " + album.getId(), null))
+		{
+			cursor.moveToFirst();
+			if(cursor.getInt(0) > 0) return;
+		}
+
 		ContentValues values = new ContentValues();
 		values.put("path", album.getPath());
 		values.put("name", album.getName());
