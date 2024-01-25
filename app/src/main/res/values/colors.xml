@@ -12,6 +12,8 @@
     <color name="primary_text_color">#000</color>
     <color name="secondary_text_color">#fff</color>
 
+    <color name="album_text_bg">#B2000000</color>
+
     <color name="transparent">#00FFFFFF</color>
     <color name="adg_logo_background">#30AFCF</color>
 </resources>

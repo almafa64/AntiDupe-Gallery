@@ -15,9 +15,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@id/image"
-        android:background="#B2000000"
+        android:background="@color/album_text_bg"
         android:textAlignment="viewStart"
-        android:textColor="@color/secondary_text_color"
+        android:textColor="@color/white"
         android:textStyle="bold" />
 
     <TextView
@@ -25,10 +25,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/fileCount"
-        android:background="#B2000000"
+        android:background="@color/album_text_bg"
         android:textAlignment="viewStart"
-        android:textColor="@color/secondary_text_color"
-        android:textStyle="bold" />
+        android:textColor="@color/white"
+        android:textStyle="bold"/>
 
     <ImageView
         android:id="@+id/selected_logo"
