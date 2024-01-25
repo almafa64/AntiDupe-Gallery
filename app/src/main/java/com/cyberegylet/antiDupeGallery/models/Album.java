@@ -19,14 +19,16 @@ public class Album
 	private long size;
 	private long count;
 	private boolean isHidden;
+	private long id;
 
-	public Album(File file)
+	public Album(File file, long id)
 	{
 		String stringPath = Objects.requireNonNull(file.getPath());
 		this.file = file;
 		this.name = file.getName();
 		this.isHidden = stringPath.contains("/.");
 		this.modifiedDate = file.lastModified();
+		this.id = id;
 	}
 
 	public Album(Album folder, boolean copyImages)
@@ -34,6 +36,7 @@ public class Album
 		this.name = folder.name;
 		this.file = folder.file;
 		this.modifiedDate = folder.modifiedDate;
+		this.id = folder.id;
 		if (copyImages)
 		{
 			indexImage = folder.indexImage;
@@ -47,12 +50,12 @@ public class Album
 		}
 	}
 
-	public Album(String path) { this(new File(path)); }
+	public Album(String path, int id) { this(new File(path), id); }
 
-	public void addImage(File imageFile)
+	public void addImage(ImageFile imageFile)
 	{
-		if (count == 0) indexImage = new ImageFile(imageFile);
-		size += FileManager.getSize(imageFile);
+		if (count == 0) indexImage = imageFile;
+		size += FileManager.getSize(imageFile.getFile());
 		count++;
 	}
 
@@ -70,7 +73,10 @@ public class Album
 	public long getCount() { return count; }
 
 	public long getModifiedDate() { return modifiedDate; }
+
 	public long getCreationDate() { return modifiedDate; }
 
 	public boolean isHidden() { return isHidden; }
+
+	public long getId() { return id; }
 }

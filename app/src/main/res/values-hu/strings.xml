@@ -65,4 +65,5 @@
     <string name="more_button">Továbbiak</string>
     <string name="no_storage_permission">Nincs tárhely engedély</string>
     <string name="back_arrow_text">Vissza</string>
+    <string name="search_done">Fájl keresés kész</string>
 </resources>

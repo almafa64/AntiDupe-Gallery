@@ -52,6 +52,7 @@
     <string name="more_button">More</string>
     <string name="no_storage_permission">No storage permission</string>
     <string name="back_arrow_text">Back</string>
+    <string name="search_done">File searching is done</string>
 
     <!-- info popup -->
     <string name="info_name">Name</string>

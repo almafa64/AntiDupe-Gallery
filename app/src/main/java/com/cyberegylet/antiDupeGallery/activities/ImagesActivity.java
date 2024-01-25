@@ -17,7 +17,6 @@ import androidx.annotation.Nullable;
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.ImagesAdapter;
-import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
@@ -54,24 +53,21 @@ public class ImagesActivity extends ImageListBaseActivity
 
 		String path = (String) activityManager.getParam("path");
 
-		Cursor cursor = database.query(
-				Cache.tableDigests,
-				new String[]{ "path" },
-				"path like ?",
-				new String[]{ path + "/%" },
-				null,
-				null,
-				null
-		);
-		cursor.moveToFirst();
-		int pathCol = cursor.getColumnIndex("path");
-		do
+		String sort = ConfigSort.toMediaSQLString(Config.getStringProperty(Config.Property.IMAGE_SORT));
+		try (Cursor cursor = database.rawQuery(
+				"select path from media where album_id = (select id from albums where path like ?)",
+				new String[]{ path }
+		))
 		{
-			File imageFile = new File(cursor.getString(pathCol));
-			if (!imageFile.canRead() || !Objects.equals(imageFile.getParent(), path)) continue;
-			allImages.add(new ImageFile(imageFile));
-		} while (cursor.moveToNext());
-		cursor.close();
+			cursor.moveToFirst();
+			int pathCol = cursor.getColumnIndex("path");
+			do
+			{
+				File imageFile = new File(cursor.getString(pathCol));
+				if (!imageFile.canRead() || !Objects.equals(imageFile.getParent(), path)) continue;
+				allImages.add(new ImageFile(imageFile));
+			} while (cursor.moveToNext());
+		}
 
 		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
 		findViewById(R.id.more_button).setOnClickListener(v -> {
@@ -79,6 +75,8 @@ public class ImagesActivity extends ImageListBaseActivity
 			final List<BaseImageAdapter.ViewHolder> selected = adapter.getSelected;
 			PopupMenu popup = new PopupMenu(this, v);
 			popup.inflate(R.menu.main_popup_menu);
+			Menu menu = popup.getMenu();
+			menu.removeItem(R.id.menu_filter);
 			final int moveId;
 			final int copyId;
 			final int deleteId;
@@ -89,7 +87,6 @@ public class ImagesActivity extends ImageListBaseActivity
 				copyId = View.generateViewId();
 				deleteId = View.generateViewId();
 				infoId = View.generateViewId();
-				Menu menu = popup.getMenu();
 				menu.add(Menu.NONE, moveId, Menu.NONE, R.string.popup_move);
 				menu.add(Menu.NONE, copyId, Menu.NONE, R.string.popup_copy);
 				menu.add(Menu.NONE, deleteId, Menu.NONE, R.string.popup_delete);
@@ -114,8 +111,10 @@ public class ImagesActivity extends ImageListBaseActivity
 				{
 					new AlertDialog.Builder(this).setTitle(R.string.popup_delete)
 							.setMessage(R.string.popup_delete_confirm).setIcon(android.R.drawable.ic_dialog_alert)
-							.setPositiveButton(android.R.string.yes,
-									(dialog, whichButton) -> onActivityResult(DELETE_SELECTED_IMAGES,
+							.setPositiveButton(
+									android.R.string.yes,
+									(dialog, whichButton) -> onActivityResult(
+											DELETE_SELECTED_IMAGES,
 											RESULT_OK,
 											new Intent()
 									)

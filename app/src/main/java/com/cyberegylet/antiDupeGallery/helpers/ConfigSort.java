@@ -56,6 +56,28 @@ public class ConfigSort
 		return sort;
 	}
 
+	public static String toMediaSQLString(String configString)
+	{
+		String sort = "";
+		switch (ConfigSort.getSortType(configString))
+		{
+			case MODIFICATION_DATE:
+				sort = "mtime";
+				break;
+			case CREATION_DATE:
+				sort = "ctime";
+				break;
+			case SIZE:
+				sort = "size";
+				break;
+			case NAME:
+				sort = "name";
+				break;
+		}
+		if (!ConfigSort.isAscending(configString)) sort += " DESC";
+		return sort;
+	}
+
 	public static Comparator<Album> getAlbumComparator()
 	{
 		String sortData = Config.getStringProperty(Config.Property.ALBUM_SORT);

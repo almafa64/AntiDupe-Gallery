@@ -145,7 +145,7 @@ public final class Config
 				setStringProperty(Property.PIN_LOCK, "");
 				break;
 			case ALBUM_SORT:
-				setStringProperty(Property.ALBUM_SORT, "13");
+				setStringProperty(Property.ALBUM_SORT, "00");
 				break;
 			case IMAGE_SORT:
 				setStringProperty(Property.IMAGE_SORT, "00");

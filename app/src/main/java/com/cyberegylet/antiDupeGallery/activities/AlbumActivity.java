@@ -1,5 +1,6 @@
 package com.cyberegylet.antiDupeGallery.activities;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.AlbumAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.backend.Backend;
+import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
@@ -27,6 +29,7 @@ import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.helpers.MyAsyncTask;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
 import com.cyberegylet.antiDupeGallery.models.Album;
+import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -55,7 +58,8 @@ public class AlbumActivity extends ImageListBaseActivity
 	{
 		Config.init(this);
 
-		if (Config.getStringProperty(Config.Property.PIN_LOCK).length() != 0 && ActivityManager.getParam(this,
+		if (Config.getStringProperty(Config.Property.PIN_LOCK).length() != 0 && ActivityManager.getParam(
+				this,
 				"login"
 		) == null)
 		{
@@ -109,7 +113,8 @@ public class AlbumActivity extends ImageListBaseActivity
 						Album folder = ((AlbumAdapter.ViewHolder) holder).getAlbum();
 						paths.add(folder.getPath());
 					}
-					activityManager.switchActivity(FilterActivity.class,
+					activityManager.switchActivity(
+							FilterActivity.class,
 							new ActivityParameter("paths", paths.toArray(new String[0]))
 					);
 				}
@@ -127,8 +132,10 @@ public class AlbumActivity extends ImageListBaseActivity
 				{
 					new AlertDialog.Builder(this).setTitle(R.string.popup_delete)
 							.setMessage(R.string.popup_delete_confirm).setIcon(android.R.drawable.ic_dialog_alert)
-							.setPositiveButton(android.R.string.yes,
-									(dialog, whichButton) -> onActivityResult(DELETE_SELECTED_ALBUMS,
+							.setPositiveButton(
+									android.R.string.yes,
+									(dialog, whichButton) -> onActivityResult(
+											DELETE_SELECTED_ALBUMS,
 											RESULT_OK,
 											new Intent()
 									)
@@ -269,10 +276,12 @@ public class AlbumActivity extends ImageListBaseActivity
 				{
 					final boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
 					int timeout = 0;
+					int idCounter = 0;
 
 					@Override
 					public void run()
 					{
+						long time1 = System.currentTimeMillis();
 						String path = getPath();
 
 						File image = new File(path);
@@ -283,7 +292,9 @@ public class AlbumActivity extends ImageListBaseActivity
 						Album album = albumNames.get(albumPath);
 						if (album == null)
 						{
-							album = new Album(albumPath);
+							album = new Album(albumPath, idCounter);
+							Cache.addAlbum(album);
+							idCounter++;
 							albumNames.put(albumPath, album);
 							allAlbums.add(album);
 							if (!album.isHidden() || showHidden)
@@ -296,7 +307,11 @@ public class AlbumActivity extends ImageListBaseActivity
 						long id = getID();
 						Backend.queueFile(id, path);
 
-						album.addImage(image);
+						ImageFile imageFile = new ImageFile(image, getMime(), id);
+						album.addImage(imageFile);
+						Cache.addMedia(imageFile, album.getId());
+
+						Log.d("app", "time1: " + (System.currentTimeMillis() - time1) + "ns");
 
 						if (timeout++ == 30)
 						{
@@ -306,19 +321,25 @@ public class AlbumActivity extends ImageListBaseActivity
 					}
 				};
 				String image_sort = ConfigSort.toSQLString(Config.getStringProperty(Config.Property.IMAGE_SORT));
-				fileManager.allImageAndVideoLoop(image_sort,
+				fileManager.allImageAndVideoLoop(
+						image_sort,
 						wrapper,
 						MediaStore.MediaColumns._ID,
-						MediaStore.MediaColumns.DATA
+						MediaStore.MediaColumns.DATA,
+						MediaStore.MediaColumns.MIME_TYPE
 				);
 			}
 
+			@SuppressLint("NotifyDataSetChanged")
 			@Override
 			public void onPostExecute()
 			{
 				long time = System.currentTimeMillis() - this.timeStart;
 				Log.i(TAG, "media iteration took " + time + " ms");
-				runOnUiThread(adapter::notifyDataSetChanged);
+				runOnUiThread(() -> {
+					adapter.notifyDataSetChanged();
+					Toast.makeText(AlbumActivity.this, R.string.search_done, Toast.LENGTH_SHORT).show();
+				});
 			}
 		}.execute();
 	}
