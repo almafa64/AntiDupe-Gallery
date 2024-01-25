@@ -98,10 +98,6 @@ public class Cache
 
 	private static void delete(String table, String path)
 	{
-		database.delete(
-				table,
-				"path like ?",
-				new String[]{ path }
-		);
+		database.delete(table, "path like ?", new String[]{ path });
 	}
 }

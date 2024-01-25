@@ -281,7 +281,6 @@ public class AlbumActivity extends ImageListBaseActivity
 					@Override
 					public void run()
 					{
-						long time1 = System.currentTimeMillis();
 						String path = getPath();
 
 						File image = new File(path);
@@ -310,8 +309,6 @@ public class AlbumActivity extends ImageListBaseActivity
 						ImageFile imageFile = new ImageFile(image, getMime(), id);
 						album.addImage(imageFile);
 						Cache.addMedia(imageFile, album.getId());
-
-						Log.d("app", "time1: " + (System.currentTimeMillis() - time1) + "ns");
 
 						if (timeout++ == 30)
 						{
