@@ -17,6 +17,7 @@ import androidx.annotation.Nullable;
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.ImagesAdapter;
+import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
@@ -56,12 +57,9 @@ public class ImagesActivity extends ImageListBaseActivity
 		String path = (String) activityManager.getParam("path");
 
 		String sort = ConfigSort.toMediaSQLString(Config.getStringProperty(Config.Property.IMAGE_SORT));
-		try (Cursor cursor = database.rawQuery(
-				"select path from media where album_id = (select id from albums where path = ?)",
-				new String[]{ path }
-		))
+		try (Cursor cursor = database.rawQuery("select path from media where album_path = ?", new String[]{ path }))
 		{
-			if(!cursor.moveToFirst()) return false;
+			if (!cursor.moveToFirst()) return false;
 			int pathCol = cursor.getColumnIndex("path");
 			do
 			{
@@ -192,8 +190,17 @@ public class ImagesActivity extends ImageListBaseActivity
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					ImagesAdapter.ViewHolder holder = (ImagesAdapter.ViewHolder) tmp;
-					Path p = Paths.get(holder.getImage().getPath());
-					if (!fileManager.moveFile(p, path)) failedImages.add(holder.getImage());
+					ImageFile imageFile = holder.getImage();
+					Path p = Paths.get(imageFile.getPath());
+					if (!fileManager.moveFile(p, path))
+					{
+						failedImages.add(imageFile);
+						continue;
+					}
+					File file = path.resolve(p.getFileName()).toFile();
+					if (Objects.equals(file.getParent(), p.getParent().toString())) imageFile.setFile(file);
+					else allImages.remove(imageFile);
+					Cache.updateMedia(imageFile, p.toString());
 				}
 				break;
 			case COPY_SELECTED_IMAGES:
@@ -201,8 +208,16 @@ public class ImagesActivity extends ImageListBaseActivity
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					ImagesAdapter.ViewHolder holder = (ImagesAdapter.ViewHolder) tmp;
-					Path p = Paths.get(holder.getImage().getPath());
-					if (!fileManager.copyFile(p, path)) failedImages.add(holder.getImage());
+					ImageFile imageFile = holder.getImage();
+					Path p = Paths.get(imageFile.getPath());
+					if (!fileManager.copyFile(p, path))
+					{
+						failedImages.add(imageFile);
+						continue;
+					}
+					ImageFile newImage = new ImageFile(path.resolve(p.getFileName()).toFile());
+					Cache.addMedia(newImage, path.toString());
+					allImages.add(newImage);
 				}
 				break;
 			case DELETE_SELECTED_IMAGES:
@@ -210,12 +225,23 @@ public class ImagesActivity extends ImageListBaseActivity
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					ImagesAdapter.ViewHolder holder = (ImagesAdapter.ViewHolder) tmp;
-					Path p = Paths.get(holder.getImage().getPath());
-					if (!fileManager.deleteFile(p)) failedImages.add(holder.getImage());
+					ImageFile imageFile = holder.getImage();
+					Path p = Paths.get(imageFile.getPath());
+					if (!fileManager.deleteFile(p))
+					{
+						failedImages.add(imageFile);
+						continue;
+					}
+					Cache.deleteMedia(imageFile.getPath());
+					allImages.remove(imageFile);
 				}
 				break;
 		}
-		if (failedImages.size() == 0) Toast.makeText(this, textId, Toast.LENGTH_SHORT).show();
+		if (failedImages.size() == 0)
+		{
+			filterRecycle(search.getQuery().toString());
+			Toast.makeText(this, textId, Toast.LENGTH_SHORT).show();
+		}
 		else
 		{
 			ScrollView scroll = activityManager.makePopupWindow(R.layout.dialog_scroll).getContentView()

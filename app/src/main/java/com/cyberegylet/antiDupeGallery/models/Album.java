@@ -4,31 +4,26 @@ import androidx.annotation.NonNull;
 
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.util.Objects;
 
 public class Album
 {
 	private ImageFile indexImage;
-	@NotNull
 	private String name;
 	private File file;
 	private long modifiedDate;
 	private long size;
 	private long count;
 	private boolean isHidden;
-	private long id;
+	private final long id;
+	private static long countId = 0;
 
-	public Album(File file, long id)
+	public Album(File file)
 	{
-		String stringPath = Objects.requireNonNull(file.getPath());
-		this.file = file;
-		this.name = file.getName();
-		this.isHidden = stringPath.contains("/.");
-		this.modifiedDate = file.lastModified();
-		this.id = id;
+		setFile(file);
+		this.id = countId;
+		countId++;
 	}
 
 	public Album(Album folder, boolean copyImages)
@@ -50,7 +45,7 @@ public class Album
 		}
 	}
 
-	public Album(String path, int id) { this(new File(path), id); }
+	public Album(String path) { this(new File(path)); }
 
 	public void addImage(ImageFile imageFile)
 	{
@@ -79,4 +74,13 @@ public class Album
 	public boolean isHidden() { return isHidden; }
 
 	public long getId() { return id; }
+
+	public void setFile(File file)
+	{
+		String stringPath = Objects.requireNonNull(file.getPath());
+		this.file = file;
+		this.name = file.getName();
+		this.isHidden = stringPath.contains("/.");
+		this.modifiedDate = file.lastModified();
+	}
 }

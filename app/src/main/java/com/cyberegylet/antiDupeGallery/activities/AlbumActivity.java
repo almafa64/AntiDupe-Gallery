@@ -213,8 +213,15 @@ public class AlbumActivity extends ImageListBaseActivity
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					AlbumAdapter.ViewHolder holder = (AlbumAdapter.ViewHolder) tmp;
-					Path p = Paths.get(holder.getAlbum().getPath());
-					if (!fileManager.moveAlbum(p, path)) failedAlbums.add(holder.getAlbum());
+					Album album = holder.getAlbum();
+					Path p = Paths.get(album.getPath());
+					if (!fileManager.moveAlbum(p, path))
+					{
+						failedAlbums.add(album);
+						continue;
+					}
+					album.setFile(path.toFile());
+					Cache.updateAlbum(album, p.toString());
 				}
 				break;
 			case COPY_SELECTED_ALBUMS:
@@ -222,8 +229,16 @@ public class AlbumActivity extends ImageListBaseActivity
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					AlbumAdapter.ViewHolder holder = (AlbumAdapter.ViewHolder) tmp;
+					Album album = holder.getAlbum();
 					Path p = Paths.get(holder.getAlbum().getPath());
-					if (!fileManager.copyAlbum(p, path)) failedAlbums.add(holder.getAlbum());
+					if (!fileManager.copyAlbum(p, path))
+					{
+						failedAlbums.add(album);
+						continue;
+					}
+					Album newAlbum = new Album(path.toFile());
+					Cache.addAlbum(newAlbum);
+					allAlbums.add(newAlbum);
 				}
 				break;
 			case DELETE_SELECTED_ALBUMS:
@@ -231,12 +246,23 @@ public class AlbumActivity extends ImageListBaseActivity
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					AlbumAdapter.ViewHolder holder = (AlbumAdapter.ViewHolder) tmp;
-					Path p = Paths.get(holder.getAlbum().getPath());
-					if (!fileManager.deleteAlbum(p)) failedAlbums.add(holder.getAlbum());
+					Album album = holder.getAlbum();
+					Path p = Paths.get(album.getPath());
+					if (!fileManager.deleteAlbum(p))
+					{
+						failedAlbums.add(album);
+						continue;
+					}
+					Cache.deleteAlbum(album);
+					allAlbums.remove(album);
 				}
 				break;
 		}
-		if (failedAlbums.size() == 0) Toast.makeText(this, textId, Toast.LENGTH_SHORT).show();
+		if (failedAlbums.size() == 0)
+		{
+			filterRecycle(search.getQuery().toString());
+			Toast.makeText(this, textId, Toast.LENGTH_SHORT).show();
+		}
 		else
 		{
 			ScrollView scroll = activityManager.makePopupWindow(R.layout.dialog_scroll).getContentView()
@@ -276,7 +302,6 @@ public class AlbumActivity extends ImageListBaseActivity
 				{
 					final boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
 					int timeout = 0;
-					int idCounter = 0;
 
 					@Override
 					public void run()
@@ -291,9 +316,8 @@ public class AlbumActivity extends ImageListBaseActivity
 						Album album = albumNames.get(albumPath);
 						if (album == null)
 						{
-							album = new Album(albumPath, idCounter);
+							album = new Album(albumPath);
 							Cache.addAlbum(album);
-							idCounter++;
 							albumNames.put(albumPath, album);
 							allAlbums.add(album);
 							if (!album.isHidden() || showHidden)
@@ -308,7 +332,7 @@ public class AlbumActivity extends ImageListBaseActivity
 
 						ImageFile imageFile = new ImageFile(image, getMime(), id);
 						album.addImage(imageFile);
-						Cache.addMedia(imageFile, album.getId());
+						Cache.addMedia(imageFile, albumPath);
 
 						if (timeout++ == 30)
 						{

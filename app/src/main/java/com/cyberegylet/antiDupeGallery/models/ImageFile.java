@@ -24,23 +24,9 @@ public class ImageFile
 
 	public ImageFile(File file, String mime, long id)
 	{
-		String stringPath = file.getPath();
-		this.file = file;
-		this.name = file.getName();
-		this.isHidden = Objects.requireNonNull(name).charAt(0) == '.';
+		setFile(file);
 		this.mime = mime;
 		this.id = id;
-		try
-		{
-			BasicFileAttributes attr = Files.readAttributes(Paths.get(stringPath), BasicFileAttributes.class);
-			size = FileManager.getSize(file);
-			modifiedDate = attr.lastModifiedTime().toMillis();
-			creationDate = attr.creationTime().toMillis();
-		}
-		catch (IOException e)
-		{
-			throw new RuntimeException(e);
-		}
 	}
 
 	public File getFile() { return file; }
@@ -60,4 +46,23 @@ public class ImageFile
 	public String getMime() { return mime; }
 
 	public long getId() { return id; }
+
+	public void setFile(File file)
+	{
+		String stringPath = file.getPath();
+		this.file = file;
+		this.name = file.getName();
+		this.isHidden = Objects.requireNonNull(name).charAt(0) == '.';
+		try
+		{
+			BasicFileAttributes attr = Files.readAttributes(Paths.get(stringPath), BasicFileAttributes.class);
+			size = FileManager.getSize(file);
+			modifiedDate = attr.lastModifiedTime().toMillis();
+			creationDate = attr.creationTime().toMillis();
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException(e);
+		}
+	}
 }

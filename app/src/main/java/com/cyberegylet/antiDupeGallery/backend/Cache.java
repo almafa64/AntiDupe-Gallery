@@ -27,9 +27,9 @@ public class Cache
 		database = SQLiteDatabase.openOrCreateDatabase(activity.getDatabasePath(DATABASE_NAME), null);
 		database.execSQL(
 				"CREATE TABLE IF NOT EXISTS albums (" +
-						"id INTEGER PRIMARY KEY," +
+						//	"id INTEGER," +
 						"name TEXT," +
-						"path TEXT," +
+						"path TEXT PRIMARY KEY, " +
 						"mtime INTEGER," +
 						"mediaCount INTEGER," +
 						"size INTEGER" +
@@ -38,7 +38,7 @@ public class Cache
 		database.execSQL(
 				"CREATE TABLE IF NOT EXISTS media (" +
 						"id INTEGER PRIMARY KEY," +
-						"album_id INTEGER," +
+						"album_path TEXT," +
 						"name TEXT," +
 						"path TEXT," +
 						"ctime INTEGER," +
@@ -47,7 +47,7 @@ public class Cache
 						"mimeType TEXT," +
 						"chash BLOB," +
 						"phash BLOB," +
-						"FOREIGN KEY(album_id) REFERENCES albums(id)" +
+						"FOREIGN KEY(album_path) REFERENCES albums(path)" +
 						")"
 		);
 		database.execSQL("CREATE TABLE IF NOT EXISTS digests (id INTEGER, path TEXT, digest BLOB)");
@@ -67,12 +67,23 @@ public class Cache
 
 	public static void deleteMedia(String path) { delete(tableMedia, path); }
 
-	public static void addMedia(ImageFile imageFile, long albumId)
+	public static void updateMedia(ImageFile imageFile, String oldPath)
 	{
-		try(Cursor cursor = database.rawQuery("select count(*) from "+tableMedia+" where id = " + imageFile.getId(), null))
+		ContentValues values = new ContentValues();
+		values.put("path", imageFile.getPath());
+		values.put("album_path", imageFile.getFile().getParent());
+		database.update(tableMedia, values, "path = ?", new String[]{ oldPath });
+	}
+
+	public static void addMedia(ImageFile imageFile, String albumPath)
+	{
+		try (Cursor cursor = database.rawQuery(
+				"select count(*) from " + tableMedia + " where id = " + imageFile.getId(),
+				null
+		))
 		{
 			cursor.moveToFirst();
-			if(cursor.getInt(0) > 0) return;
+			if (cursor.getInt(0) > 0) return;
 		}
 
 		ContentValues values = new ContentValues();
@@ -82,19 +93,37 @@ public class Cache
 		values.put("mtime", imageFile.getModifiedDate());
 		values.put("size", imageFile.getSize());
 		values.put("mimeType", imageFile.getMime());
-		values.put("album_id", albumId);
+		values.put("album_path", albumPath);
 		values.put("id", imageFile.getId());
 		insert(tableMedia, values);
 	}
 
-	public static void deleteAlbum(String path) { delete(tableAlbums, path); }
+	public static void deleteAlbum(Album album)
+	{
+		database.delete(tableMedia, "album_path = " + album.getPath(), null);
+		delete(tableAlbums, album.getPath());
+	}
+
+	public static void updateAlbum(Album album, String oldPath)
+	{
+		ContentValues values = new ContentValues();
+		values.put("album_path", album.getPath());
+		database.update(tableMedia, values, "album_path = ?", new String[]{ oldPath });
+
+		ContentValues values2 = new ContentValues();
+		values2.put("path", album.getPath());
+		database.update(tableAlbums, values2, "path = ?", new String[]{ oldPath });
+	}
 
 	public static void addAlbum(Album album)
 	{
-		try(Cursor cursor = database.rawQuery("select count(*) from "+tableAlbums+" where id = " + album.getId(), null))
+		try (Cursor cursor = database.rawQuery(
+				"select count(*) from " + tableAlbums + " where path = ?",
+				new String[]{ album.getPath() }
+		))
 		{
 			cursor.moveToFirst();
-			if(cursor.getInt(0) > 0) return;
+			if (cursor.getInt(0) > 0) return;
 		}
 
 		ContentValues values = new ContentValues();
@@ -102,7 +131,7 @@ public class Cache
 		values.put("name", album.getName());
 		values.put("mtime", album.getModifiedDate());
 		values.put("size", album.getSize());
-		values.put("id", album.getId());
+		//values.put("id", album.getId());
 		values.put("mediaCount ", album.getCount());
 		insert(tableAlbums, values);
 	}
