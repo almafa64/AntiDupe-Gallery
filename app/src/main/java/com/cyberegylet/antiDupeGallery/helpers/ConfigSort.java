@@ -85,10 +85,8 @@ public class ConfigSort
 		switch (ConfigSort.getSortType(sortData))
 		{
 			case MODIFICATION_DATE:
-				comparator = Comparator.comparing(Album::getModifiedDate);
-				break;
 			case CREATION_DATE:
-				comparator = Comparator.comparing(Album::getCreationDate);
+				comparator = Comparator.comparing(Album::getModifiedDate);
 				break;
 			case SIZE:
 				comparator = Comparator.comparing(Album::getSize);

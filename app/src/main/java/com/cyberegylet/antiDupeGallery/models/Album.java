@@ -1,28 +1,19 @@
 package com.cyberegylet.antiDupeGallery.models;
 
-import androidx.annotation.NonNull;
-
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 
 import java.io.File;
 import java.util.Objects;
 
-public class Album
+public class Album extends FileEntry
 {
 	private ImageFile indexImage;
-	private String name;
-	private File file;
-	private long modifiedDate;
-	private long size;
 	private long count;
-	private boolean isHidden;
-	private final long id;
 	private static long countId = 0;
 
 	public Album(File file)
 	{
-		setFile(file);
-		this.id = countId;
+		super(file, countId);
 		countId++;
 	}
 
@@ -56,24 +47,7 @@ public class Album
 
 	public ImageFile getIndexImage() { return indexImage; }
 
-	@NonNull
-	public String getName() { return name; }
-
-	public File getFile() { return file; }
-
-	public String getPath() { return file.getPath(); }
-
-	public long getSize() { return size; }
-
 	public long getCount() { return count; }
-
-	public long getModifiedDate() { return modifiedDate; }
-
-	public long getCreationDate() { return modifiedDate; }
-
-	public boolean isHidden() { return isHidden; }
-
-	public long getId() { return id; }
 
 	public void setFile(File file)
 	{

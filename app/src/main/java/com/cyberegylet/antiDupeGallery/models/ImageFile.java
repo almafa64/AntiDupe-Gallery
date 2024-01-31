@@ -9,43 +9,22 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
 
-public class ImageFile
+public class ImageFile extends FileEntry
 {
-	private File file;
-	private String name;
-	private long size;
-	private long modifiedDate;
 	private long creationDate;
-	private boolean isHidden;
-	private String mime;
-	private long id;
+	private final String mime;
 
 	public ImageFile(File file) { this(file, "*/*", -1); }
 
 	public ImageFile(File file, String mime, long id)
 	{
-		setFile(file);
+		super(file, id);
 		this.mime = mime;
-		this.id = id;
 	}
-
-	public File getFile() { return file; }
-
-	public String getPath() { return file.getPath(); }
-
-	public String getName() { return name; }
-
-	public long getSize() { return size; }
-
-	public long getModifiedDate() { return modifiedDate; }
 
 	public long getCreationDate() { return creationDate; }
 
-	public boolean isHidden() { return isHidden; }
-
 	public String getMime() { return mime; }
-
-	public long getId() { return id; }
 
 	public void setFile(File file)
 	{
