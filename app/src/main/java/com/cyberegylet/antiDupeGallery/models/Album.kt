@@ -1,60 +1,56 @@
-package com.cyberegylet.antiDupeGallery.models;
+package com.cyberegylet.antiDupeGallery.models
 
-import com.cyberegylet.antiDupeGallery.backend.FileManager;
+import com.cyberegylet.antiDupeGallery.backend.FileManager
+import java.io.File
 
-import java.io.File;
-import java.util.Objects;
-
-public class Album extends FileEntry
+class Album : FileEntry
 {
-	private ImageFile indexImage;
-	private long count;
-	private static long countId = 0;
+	var indexImage: ImageFile? = null
+		private set
+	var count: Long = 0
+		private set
 
-	public Album(File file)
+	constructor(file: File) : super(file, countId)
 	{
-		super(file, countId);
-		countId++;
+		countId++
 	}
 
-	public Album(Album folder, boolean copyImages)
+	constructor(folder: Album, copyImages: Boolean)
 	{
-		this.name = folder.name;
-		this.file = folder.file;
-		this.modifiedDate = folder.modifiedDate;
-		this.id = folder.id;
+		name = folder.name
+		file = folder.file
+		modifiedDate = folder.modifiedDate
+		id = folder.id
 		if (copyImages)
 		{
-			indexImage = folder.indexImage;
-			this.size = folder.size;
-			this.count = folder.count;
+			indexImage = folder.indexImage
+			size = folder.size
+			count = folder.count
 		}
 		else
 		{
-			this.size = 0;
-			this.count = 0;
+			size = 0
+			count = 0
 		}
 	}
 
-	public Album(String path) { this(new File(path)); }
+	constructor(path: String) : this(File(path))
 
-	public void addImage(ImageFile imageFile)
+	fun addImage(imageFile: ImageFile)
 	{
-		if (count == 0) indexImage = imageFile;
-		size += FileManager.getSize(imageFile.getFile());
-		count++;
+		if (count == 0L) indexImage = imageFile
+		size += FileManager.getSize(imageFile.file)
+		count++
 	}
 
-	public ImageFile getIndexImage() { return indexImage; }
-
-	public long getCount() { return count; }
-
-	public void setFile(File file)
+	override fun mySetFile(file: File)
 	{
-		String stringPath = Objects.requireNonNull(file.getPath());
-		this.file = file;
-		this.name = file.getName();
-		this.isHidden = stringPath.contains("/.");
-		this.modifiedDate = file.lastModified();
+		super.mySetFile(file)
+		modifiedDate = file.lastModified()
+	}
+
+	companion object
+	{
+		private var countId: Long = 0
 	}
 }

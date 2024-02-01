@@ -1,39 +1,41 @@
-package com.cyberegylet.antiDupeGallery.models;
+package com.cyberegylet.antiDupeGallery.models
 
-import java.io.File;
+import java.io.File
 
-public abstract class FileEntry
+abstract class FileEntry
 {
-	protected File file;
-	protected String name;
-	protected long size;
-	protected long modifiedDate;
-	protected boolean isHidden;
-	protected long id;
+	var file: File? = null
+		set(value)
+		{
+			field = value
+			mySetFile(value!!)
+		}
+	lateinit var name: String
+		protected set
+	var size: Long = 0
+		protected set
+	var modifiedDate: Long = 0
+		protected set
+	var isHidden = false
+		protected set
+	var id: Long = 0
+		protected set
 
-	public FileEntry(File file) { this(file, -1); }
-
-	public FileEntry(File file, long id)
+	@JvmOverloads
+	constructor(file: File, id: Long = -1)
 	{
-		setFile(file);
-		this.id = id;
+		this.file = file
+		this.id = id
 	}
 
-	protected FileEntry() { }
+	protected constructor()
 
-	public File getFile() { return file; }
+	val path: String
+		get() = file!!.path
 
-	public String getPath() { return file.getPath(); }
-
-	public String getName() { return name; }
-
-	public long getSize() { return size; }
-
-	public long getModifiedDate() { return modifiedDate; }
-
-	public boolean isHidden() { return isHidden; }
-
-	public long getId() { return id; }
-
-	public abstract void setFile(File file);
+	open fun mySetFile(file: File)
+	{
+		name = file.name
+		isHidden = file.path.contains("/.")
+	}
 }

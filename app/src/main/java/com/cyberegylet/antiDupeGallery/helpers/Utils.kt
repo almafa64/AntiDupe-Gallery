@@ -1,27 +1,35 @@
-package com.cyberegylet.antiDupeGallery.helpers;
+package com.cyberegylet.antiDupeGallery.helpers
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.DateFormat;
-import java.util.Date;
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.text.DateFormat
+import java.util.Date
 
-public class Utils
+object Utils
 {
-	public static String sToDate(long s) { return msToDate(s * 1000); }
-	public static String msToDate(long ms) { return DateFormat.getDateTimeInstance().format(new Date(ms)); }
+	@JvmStatic
+	fun sToDate(s: Long): String = msToDate(s * 1000)
 
-	public static String getByteStringFromSize(long size)
+	@JvmStatic
+	fun msToDate(ms: Long): String = DateFormat.getDateTimeInstance().format(Date(ms))
+
+	@JvmStatic
+	fun getByteStringFromSize(size: Long): String
 	{
-		final double kb = 1024;
-		if (size >= kb * kb * kb * kb) return doubleString(size / (kb * kb * kb * kb)) + " TB";
-		else if (size >= kb * kb * kb) return doubleString(size / (kb * kb * kb)) + " GB";
-		else if (size >= kb * kb) return doubleString(size / (kb * kb)) + " MB";
-		else if (size >= kb) return doubleString(size / kb) + " KB";
-		return doubleString((double) size) + " B";
+		val kb = 1024.0
+		return when
+		{
+			size >= kb * kb * kb * kb -> doubleString(size / (kb * kb * kb * kb)) + " TB"
+			size >= kb * kb * kb -> doubleString(size / (kb * kb * kb)) + " GB"
+			size >= kb * kb -> doubleString(size / (kb * kb)) + " MB"
+			size >= kb -> doubleString(size / kb) + " KB"
+			else -> doubleString(size.toDouble()) + " B"
+		}
 	}
 
-	private static String doubleString(double d)
+	@JvmStatic
+	private fun doubleString(d: Double): String
 	{
-		return BigDecimal.valueOf(d).setScale(2, RoundingMode.HALF_UP).toPlainString() + "";
+		return BigDecimal.valueOf(d).setScale(2, RoundingMode.HALF_UP).toPlainString() + ""
 	}
 }

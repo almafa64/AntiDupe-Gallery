@@ -1,19 +1,17 @@
-package com.cyberegylet.antiDupeGallery.helpers;
+package com.cyberegylet.antiDupeGallery.helpers
 
-public abstract class MyAsyncTask
+abstract class MyAsyncTask
 {
-	public void execute()
+	fun execute()
 	{
-		new Thread(() -> {
-			onPreExecute();
-			doInBackground();
-			onPostExecute();
-		}).start();
+		Thread {
+			onPreExecute()
+			doInBackground()
+			onPostExecute()
+		}.start()
 	}
 
-	public abstract void doInBackground();
-
-	public abstract void onPostExecute();
-
-	public abstract void onPreExecute();
+	abstract fun doInBackground()
+	abstract fun onPostExecute()
+	abstract fun onPreExecute()
 }
