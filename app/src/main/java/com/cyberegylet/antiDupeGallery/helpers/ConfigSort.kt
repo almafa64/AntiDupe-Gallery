@@ -1,128 +1,85 @@
-package com.cyberegylet.antiDupeGallery.helpers;
+package com.cyberegylet.antiDupeGallery.helpers
 
-import android.provider.MediaStore;
+import android.provider.MediaStore
+import com.cyberegylet.antiDupeGallery.backend.Config
+import com.cyberegylet.antiDupeGallery.models.Album
+import com.cyberegylet.antiDupeGallery.models.ImageFile
 
-import com.cyberegylet.antiDupeGallery.backend.Config;
-import com.cyberegylet.antiDupeGallery.models.Album;
-import com.cyberegylet.antiDupeGallery.models.ImageFile;
-
-import java.util.Comparator;
-import java.util.Locale;
-
-public class ConfigSort
+object ConfigSort
 {
-	public enum SortType
+	@JvmStatic
+	fun toConfigString(isAscending: Boolean, sortType: SortType): String = isAscending.toString() + sortType.ordinal
+
+	@JvmStatic
+	fun getSortType(configString: String): SortType = SortType.values()[configString[1].toString().toInt()]
+
+	@JvmStatic
+	fun isAscending(configString: String): Boolean = configString[0] == '1'
+
+	@JvmStatic
+	fun toSQLString(configString: String): String
+	{
+		var sort = when (getSortType(configString))
+		{
+			SortType.MODIFICATION_DATE -> MediaStore.MediaColumns.DATE_MODIFIED
+			SortType.CREATION_DATE -> MediaStore.MediaColumns.DATE_TAKEN
+			SortType.SIZE -> MediaStore.MediaColumns.SIZE
+			SortType.NAME -> MediaStore.MediaColumns.DISPLAY_NAME
+		}
+		if (!isAscending(configString)) sort += " DESC"
+		return sort
+	}
+
+	@JvmStatic
+	fun toMediaSQLString(configString: String): String
+	{
+		var sort = when (getSortType(configString))
+		{
+			SortType.MODIFICATION_DATE -> "mtime"
+			SortType.CREATION_DATE -> "ctime"
+			SortType.SIZE -> "size"
+			SortType.NAME -> "name"
+		}
+		if (!isAscending(configString)) sort += " DESC"
+		return sort
+	}
+
+	@JvmStatic
+	val albumComparator: Comparator<Album>
+		get()
+		{
+			val sortData = Config.getStringProperty(Config.Property.ALBUM_SORT)
+			var comparator = when (getSortType(sortData))
+			{
+				SortType.MODIFICATION_DATE, SortType.CREATION_DATE -> Comparator.comparing(Album::modifiedDate)
+				SortType.SIZE -> Comparator.comparing(Album::size)
+				SortType.NAME -> Comparator.comparing { f: Album -> f.name.lowercase() }
+			}
+			if (!isAscending(sortData)) comparator = comparator.reversed()
+			return comparator
+		}
+
+	@JvmStatic
+	val imageComparator: Comparator<ImageFile>
+		get()
+		{
+			val sortData = Config.getStringProperty(Config.Property.IMAGE_SORT)
+			var comparator = when (getSortType(sortData))
+			{
+				SortType.MODIFICATION_DATE -> Comparator.comparing(ImageFile::modifiedDate)
+				SortType.CREATION_DATE -> Comparator.comparing(ImageFile::creationDate)
+				SortType.SIZE -> Comparator.comparing(ImageFile::size)
+				SortType.NAME -> Comparator.comparing { f: ImageFile -> f.name.lowercase() }
+			}
+			if (!isAscending(sortData)) comparator = comparator.reversed()
+			return comparator
+		}
+
+	enum class SortType
 	{
 		MODIFICATION_DATE,
 		CREATION_DATE,
 		SIZE,
 		NAME
-	}
-
-	public static String toConfigString(boolean isAscending, SortType sortType)
-	{
-		return String.valueOf(isAscending) + sortType.ordinal();
-	}
-
-	public static SortType getSortType(String configString)
-	{
-		return SortType.values()[Integer.parseInt(String.valueOf(configString.charAt(1)))];
-	}
-
-	public static boolean isAscending(String configString)
-	{
-		return configString.charAt(0) == '1';
-	}
-
-	public static String toSQLString(String configString)
-	{
-		String sort = "";
-		switch (ConfigSort.getSortType(configString))
-		{
-			case MODIFICATION_DATE:
-				sort = MediaStore.MediaColumns.DATE_MODIFIED;
-				break;
-			case CREATION_DATE:
-				sort = MediaStore.MediaColumns.DATE_TAKEN;
-				break;
-			case SIZE:
-				sort = MediaStore.MediaColumns.SIZE;
-				break;
-			case NAME:
-				sort = MediaStore.MediaColumns.DISPLAY_NAME;
-				break;
-		}
-		if (!ConfigSort.isAscending(configString)) sort += " DESC";
-		return sort;
-	}
-
-	public static String toMediaSQLString(String configString)
-	{
-		String sort = "";
-		switch (ConfigSort.getSortType(configString))
-		{
-			case MODIFICATION_DATE:
-				sort = "mtime";
-				break;
-			case CREATION_DATE:
-				sort = "ctime";
-				break;
-			case SIZE:
-				sort = "size";
-				break;
-			case NAME:
-				sort = "name";
-				break;
-		}
-		if (!ConfigSort.isAscending(configString)) sort += " DESC";
-		return sort;
-	}
-
-	public static Comparator<Album> getAlbumComparator()
-	{
-		String sortData = Config.getStringProperty(Config.Property.ALBUM_SORT);
-		Comparator<Album> comparator;
-		switch (ConfigSort.getSortType(sortData))
-		{
-			case MODIFICATION_DATE:
-			case CREATION_DATE:
-				comparator = Comparator.comparing(Album::getModifiedDate);
-				break;
-			case SIZE:
-				comparator = Comparator.comparing(Album::getSize);
-				break;
-			case NAME:
-				comparator = Comparator.comparing(f -> f.getName().toLowerCase(Locale.ROOT));
-				break;
-			default:
-				throw new RuntimeException("Bad folder sorting");
-		}
-		if (!ConfigSort.isAscending(sortData)) comparator = comparator.reversed();
-		return comparator;
-	}
-
-	public static Comparator<ImageFile> getImageComparator()
-	{
-		String sortData = Config.getStringProperty(Config.Property.IMAGE_SORT);
-		Comparator<ImageFile> comparator;
-		switch (ConfigSort.getSortType(sortData))
-		{
-			case MODIFICATION_DATE:
-				comparator = Comparator.comparing(ImageFile::getModifiedDate);
-				break;
-			case CREATION_DATE:
-				comparator = Comparator.comparing(ImageFile::getCreationDate);
-				break;
-			case SIZE:
-				comparator = Comparator.comparing(ImageFile::getSize);
-				break;
-			case NAME:
-				comparator = Comparator.comparing(f -> f.getName().toLowerCase(Locale.ROOT));
-				break;
-			default:
-				throw new RuntimeException("Bad folder sorting");
-		}
-		if (!ConfigSort.isAscending(sortData)) comparator = comparator.reversed();
-		return comparator;
 	}
 }

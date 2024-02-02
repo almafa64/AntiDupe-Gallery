@@ -56,7 +56,7 @@ public class FilterImagesActivity extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.images_activity);
 
-		database = Cache.openCache();
+		database = Cache.getCache();
 		recycler = findViewById(R.id.recycler);
 		activityManager = new ActivityManager(this);
 		fileManager = new FileManager(this);
