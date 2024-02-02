@@ -49,7 +49,7 @@ public class FilterActivity extends Activity
 		));
 		recycler.setAdapter(adapter);
 
-		database = Cache.openCache();
+		database = Cache.getCache();
 
 		new MyAsyncTask()
 		{

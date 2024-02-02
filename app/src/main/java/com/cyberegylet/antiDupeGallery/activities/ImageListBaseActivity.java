@@ -38,14 +38,14 @@ public abstract class ImageListBaseActivity extends Activity
 	{
 		search = findViewById(R.id.search_bar);
 		recycler = findViewById(R.id.recycler);
-		database = Cache.openCache();
+		database = Cache.getCache();
 	}
 
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		Cache.Init(this);
+		Cache.init(this);
 		if (!myOnCreate(savedInstanceState)) return;
 		if (recycler == null) throw new RuntimeException("contentSet() wasn't called");
 
