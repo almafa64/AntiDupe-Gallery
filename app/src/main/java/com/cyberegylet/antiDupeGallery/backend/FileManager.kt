@@ -41,11 +41,11 @@ class FileManager(@JvmField val activity: Activity)
 	object Mimes
 	{
 		@JvmField
-		val MIME_VIDEOS = arrayOf("video/quicktime", "video/mpeg", "video/mp4", "video/3gpp", "video/webm", "video/avi")
+		val MIME_VIDEOS = arrayOf("video/mpeg", "video/mp4", "video/webm", "video/3gpp", "video/avi", "video/quicktime")
 
 		@JvmField
 		val MIME_IMAGES =
-			arrayOf("image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/ico", "image/svg")
+			arrayOf("image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/svg", "image/ico")
 
 		@JvmStatic
 		fun isImage(mimeString: String): Boolean = listOf(*MIME_IMAGES).contains(mimeString)
