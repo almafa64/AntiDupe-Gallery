@@ -1,412 +1,429 @@
-package com.cyberegylet.antiDupeGallery.backend;
+package com.cyberegylet.antiDupeGallery.backend
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.Build;
-import android.provider.MediaStore;
-import android.widget.ImageView;
-import android.widget.Toast;
+import android.Manifest
+import android.app.Activity
+import android.content.ContentResolver
+import android.content.Context
+import android.content.pm.PackageManager
+import android.database.Cursor
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import android.widget.ImageView
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.bumptech.glide.Glide
+import com.bumptech.glide.Priority
+import com.bumptech.glide.load.DecodeFormat
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.bitmap.Downsampler
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.bumptech.glide.request.RequestOptions
+import com.cyberegylet.antiDupeGallery.R
+import com.cyberegylet.antiDupeGallery.backend.Config.getBooleanProperty
+import java.io.File
+import java.io.IOException
+import java.nio.file.AccessDeniedException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.Priority;
-import com.bumptech.glide.load.DecodeFormat;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.bitmap.Downsampler;
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
-import com.bumptech.glide.request.RequestOptions;
-import com.cyberegylet.antiDupeGallery.R;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.AccessDeniedException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-public class FileManager
+class FileManager(@JvmField val activity: Activity)
 {
-	public static final int STORAGE_REQUEST_CODE = 1;
-	public static final Uri EXTERNAL_URI = MediaStore.Files.getContentUri("external");
-	public static final String IMAGES = MediaStore.MediaColumns.MIME_TYPE + " like 'image/%'";
-	public static final String VIDEOS = MediaStore.MediaColumns.MIME_TYPE + " like 'video/%'";
-	public static final String IMAGES_AND_VIDEOS = IMAGES + " or " + VIDEOS;
-	public static final String PATH_FILTER_IMAGES_AND_VIDEOS = "(" + IMAGES_AND_VIDEOS + ") and " + MediaStore.MediaColumns.DATA + " like ?";
+	@JvmField
+	val context: Context = activity.applicationContext
+	private val contentResolver: ContentResolver = activity.contentResolver
+	private var hasFileAccess = false
 
-	public final Context context;
-	public final Activity activity;
-	private final ContentResolver contentResolver;
-
-	private boolean hasFileAccess = false;
-
-	public static class Mimes
+	object Mimes
 	{
-		public static final String[] MIME_VIDEOS = new String[]{ "video/quicktime", "video/mpeg", "video/mp4",
-				"video/3gpp", "video/webm", "video/avi" };
-		public static final String[] MIME_IMAGES = new String[]{ "image/jpeg", "image/png", "image/gif", "image/webp",
-				"image/bmp", "image/ico", "image/svg" };
+		@JvmField
+		val MIME_VIDEOS = arrayOf("video/quicktime", "video/mpeg", "video/mp4", "video/3gpp", "video/webm", "video/avi")
 
-		public enum Type
+		@JvmField
+		val MIME_IMAGES =
+			arrayOf("image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/ico", "image/svg")
+
+		@JvmStatic
+		fun isImage(mimeString: String): Boolean = listOf(*MIME_IMAGES).contains(mimeString)
+
+		@JvmStatic
+		fun isVideo(mimeString: String): Boolean = listOf(*MIME_VIDEOS).contains(mimeString)
+
+		@JvmStatic
+		fun isMedia(mimeString: String): Boolean = isImage(mimeString) || isVideo(mimeString)
+
+		enum class Type
 		{
 			MIME_NONE,
 			MIME_IMAGE,
-			MIME_VIDEO,
+			MIME_VIDEO
 		}
-
-		public static boolean isImage(String mime_string) { return Arrays.asList(MIME_IMAGES).contains(mime_string); }
-
-		public static boolean isVideo(String mime_string) { return Arrays.asList(MIME_VIDEOS).contains(mime_string); }
-
-		public static boolean isMedia(String mime_string) { return isImage(mime_string) || isVideo(mime_string); }
 	}
 
-	public FileManager(Activity activity)
+	init
 	{
-		this.activity = activity;
-		context = activity.getApplicationContext();
-		contentResolver = activity.getContentResolver();
-
-		boolean hasRead;
-		boolean hasWrite = true;
-
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+		val hasWrite = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P)
 		{
-			hasRead = (ContextCompat.checkSelfPermission(activity,
-					Manifest.permission.READ_MEDIA_IMAGES
-			) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(activity,
-					Manifest.permission.READ_MEDIA_VIDEO
-			) == PackageManager.PERMISSION_GRANTED);
+			ContextCompat.checkSelfPermission(
+				activity,
+				Manifest.permission.WRITE_EXTERNAL_STORAGE
+			) == PackageManager.PERMISSION_GRANTED
 		}
 		else
 		{
-			hasRead = ContextCompat.checkSelfPermission(activity,
-					android.Manifest.permission.READ_EXTERNAL_STORAGE
-			) == PackageManager.PERMISSION_GRANTED;
+			true
 		}
 
-		if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P)
+		val hasRead: Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
 		{
-			hasWrite = ContextCompat.checkSelfPermission(activity,
-					Manifest.permission.WRITE_EXTERNAL_STORAGE
-			) == PackageManager.PERMISSION_GRANTED;
+			ContextCompat.checkSelfPermission(
+				activity,
+				Manifest.permission.READ_MEDIA_IMAGES
+			) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+				activity,
+				Manifest.permission.READ_MEDIA_VIDEO
+			) == PackageManager.PERMISSION_GRANTED
 		}
-
-		if (hasRead && hasWrite) hasFileAccess = true;
 		else
 		{
-			List<String> permissions = new ArrayList<>();
-			if (!hasWrite) permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+			ContextCompat.checkSelfPermission(
+				activity,
+				Manifest.permission.READ_EXTERNAL_STORAGE
+			) == PackageManager.PERMISSION_GRANTED
+		}
+
+		if (hasRead && hasWrite) hasFileAccess = true
+		else
+		{
+			val permissions: MutableList<String> = ArrayList()
+			if (!hasWrite) permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 			if (!hasRead)
 			{
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
 				{
-					permissions.add(Manifest.permission.READ_MEDIA_IMAGES);
-					permissions.add(Manifest.permission.READ_MEDIA_VIDEO);
+					permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
+					permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
 				}
-				else permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+				else permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
 			}
-			ActivityCompat.requestPermissions(activity, permissions.toArray(new String[0]), STORAGE_REQUEST_CODE);
+			ActivityCompat.requestPermissions(activity, permissions.toTypedArray(), STORAGE_REQUEST_CODE)
 		}
 	}
 
-	public boolean hasFileAccess() { return hasFileAccess; }
+	fun hasFileAccess(): Boolean = hasFileAccess
 
-	public abstract static class CursorLoopWrapper
+	abstract class CursorLoopWrapper
 	{
-		private int id_col, path_col, mime_col;
-		private Cursor cursor;
-
-		private void init(Cursor cursor)
+		private var idCol = 0
+		private var pathCol = 0
+		private var mimeCol = 0
+		private lateinit var cursor: Cursor
+		fun init(cursor: Cursor)
 		{
-			this.cursor = cursor;
-			id_col = cursor.getColumnIndex(MediaStore.MediaColumns._ID);
-			path_col = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
-			mime_col = cursor.getColumnIndex(MediaStore.MediaColumns.MIME_TYPE);
+			this.cursor = cursor
+			idCol = cursor.getColumnIndex(MediaStore.MediaColumns._ID)
+			pathCol = cursor.getColumnIndex(MediaStore.MediaColumns.DATA)
+			mimeCol = cursor.getColumnIndex(MediaStore.MediaColumns.MIME_TYPE)
 		}
 
-		public long getID() { return cursor.getLong(id_col); }
+		val id: Long
+			get() = cursor.getLong(idCol)
+		val path: String
+			get() = cursor.getString(pathCol)
+		val mime: String
+			get() = cursor.getString(mimeCol)
 
-		public String getPath() { return cursor.getString(path_col); }
-
-		public String getMime() { return cursor.getString(mime_col); }
-
-		public abstract void run();
-
-		public void stop() { cursor.moveToLast(); }
+		abstract fun run()
+		fun stop() = cursor.moveToLast()
 	}
 
-	public void cursorLoop(
-			CursorLoopWrapper wrapper,
-			int cursorStart,
-			String sort,
-			String selection,
-			String[] args,
-			Uri uri,
-			String... queries
+	fun cursorLoop(
+		wrapper: CursorLoopWrapper,
+		cursorStart: Int,
+		sort: String?,
+		selection: String?,
+		args: Array<String>?,
+		uri: Uri,
+		vararg queries: String
 	)
 	{
-		try (Cursor cursor = contentResolver.query(uri, queries, selection, args, sort))
-		{
-			assert cursor != null;
-			wrapper.init(cursor);
-
-			if (!cursor.moveToPosition(cursorStart)) return;
-
+		contentResolver.query(uri, queries, selection, args, sort).use { cursor ->
+			wrapper.init(cursor!!)
+			if (!cursor.moveToPosition(cursorStart)) return
 			do
 			{
-				wrapper.run();
-			} while (cursor.moveToNext());
+				wrapper.run()
+			} while (cursor.moveToNext())
 		}
 	}
 
-	public void cursorLoop(CursorLoopWrapper wrapper, String sort, Uri uri, String... queries)
+	fun cursorLoop(wrapper: CursorLoopWrapper, sort: String?, uri: Uri, vararg queries: String)
 	{
-		cursorLoop(wrapper, 0, sort, null, null, uri, queries);
+		cursorLoop(wrapper, 0, sort, null, null, uri, *queries)
 	}
 
-	public void cursorLoop(CursorLoopWrapper wrapper, String sort, String selection, Uri uri, String... queries)
+	fun cursorLoop(wrapper: CursorLoopWrapper, sort: String?, selection: String?, uri: Uri, vararg queries: String)
 	{
-		cursorLoop(wrapper, 0, sort, selection, null, uri, queries);
+		cursorLoop(wrapper, 0, sort, selection, null, uri, *queries)
 	}
 
-	public void cursorLoop(CursorLoopWrapper wrapper, String selection, String[] args, Uri uri, String... queries)
-	{
-		cursorLoop(wrapper, 0, null, selection, args, uri, queries);
-	}
-
-	public void cursorLoop(
-			CursorLoopWrapper wrapper, String sort, String selection, String[] args, Uri uri, String... queries
+	fun cursorLoop(
+		wrapper: CursorLoopWrapper,
+		selection: String?,
+		args: Array<String>?,
+		uri: Uri,
+		vararg queries: String
 	)
 	{
-		cursorLoop(wrapper, 0, sort, selection, args, uri, queries);
+		cursorLoop(wrapper, 0, null, selection, args, uri, *queries)
 	}
 
-	public void cursorLoop(CursorLoopWrapper wrapper, Uri uri, String... queries)
-	{
-		cursorLoop(wrapper, null, uri, queries);
-	}
-
-	public void allImageAndVideoLoop(String sort, CursorLoopWrapper wrapper, String... queries)
-	{
-		cursorLoop(wrapper, sort, IMAGES_AND_VIDEOS, EXTERNAL_URI, queries);
-	}
-
-	public void allImageAndVideoInFolderLoop(
-			String absoluteFolder, String sort, CursorLoopWrapper wrapper, String... queries
+	fun cursorLoop(
+		wrapper: CursorLoopWrapper,
+		sort: String?,
+		selection: String?,
+		args: Array<String>?,
+		uri: Uri,
+		vararg queries: String
 	)
 	{
-		cursorLoop(wrapper,
-				sort,
-				PATH_FILTER_IMAGES_AND_VIDEOS,
-				new String[]{ absoluteFolder + "/%" },
-				EXTERNAL_URI,
-				queries
-		);
+		cursorLoop(wrapper, 0, sort, selection, args, uri, *queries)
 	}
 
-	public Uri getUriFromID(int id)
+	fun cursorLoop(wrapper: CursorLoopWrapper, uri: Uri, vararg queries: String)
 	{
-		try (Cursor cursor = contentResolver.query(MediaStore.Files.getContentUri("external", id),
-				new String[]{ MediaStore.MediaColumns.DATA },
-				null,
-				null,
-				null
-		))
-		{
-			assert cursor != null;
-			int path_ind = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
-			cursor.moveToFirst();
-			return Uri.parse("file://" + cursor.getString(path_ind));
+		cursorLoop(wrapper, null, uri, *queries)
+	}
+
+	fun allImageAndVideoLoop(sort: String?, wrapper: CursorLoopWrapper, vararg queries: String)
+	{
+		cursorLoop(wrapper, sort, IMAGES_AND_VIDEOS, EXTERNAL_URI, *queries)
+	}
+
+	fun allImageAndVideoInFolderLoop(
+		absoluteFolder: String, sort: String?, wrapper: CursorLoopWrapper, vararg queries: String
+	)
+	{
+		cursorLoop(
+			wrapper,
+			sort,
+			PATH_FILTER_IMAGES_AND_VIDEOS, arrayOf("$absoluteFolder/%"),
+			EXTERNAL_URI,
+			*queries
+		)
+	}
+
+	fun getUriFromID(id: Int): Uri
+	{
+		contentResolver.query(
+			MediaStore.Files.getContentUri("external", id.toLong()), arrayOf(MediaStore.MediaColumns.DATA),
+			null,
+			null,
+			null
+		).use { cursor ->
+			val pathInd = cursor!!.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA)
+			cursor.moveToFirst()
+			return Uri.parse("file://" + cursor.getString(pathInd))
 		}
 	}
 
-	public int getIDFromUri(Uri path)
+	fun getIDFromUri(path: Uri): Int
 	{
-		try (Cursor cursor = contentResolver.query(EXTERNAL_URI,
-				new String[]{ MediaStore.MediaColumns._ID },
-				MediaStore.MediaColumns.DATA + "=?",
-				new String[]{ path.getPath() },
-				null
-		))
-		{
-			assert cursor != null;
-			int id_ind = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID);
-			cursor.moveToFirst();
-			return cursor.getInt(id_ind);
+		contentResolver.query(
+			EXTERNAL_URI, arrayOf(MediaStore.MediaColumns._ID),
+			MediaStore.MediaColumns.DATA + "=?", arrayOf(path.path),
+			null
+		).use { cursor ->
+			val idInd = cursor!!.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
+			cursor.moveToFirst()
+			return cursor.getInt(idInd)
 		}
 	}
 
-	public String getMimeType(int id)
+	fun getMimeType(id: Int): String
 	{
-		try (Cursor cursor = contentResolver.query(MediaStore.Files.getContentUri("external", id),
-				new String[]{ MediaStore.MediaColumns.MIME_TYPE },
-				null,
-				null,
-				null
-		))
-		{
-			assert cursor != null;
-			int mime_ind = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE);
-			cursor.moveToFirst();
-			return cursor.getString(mime_ind);
+		contentResolver.query(
+			MediaStore.Files.getContentUri("external", id.toLong()), arrayOf(MediaStore.MediaColumns.MIME_TYPE),
+			null,
+			null,
+			null
+		).use { cursor ->
+			val mimeInd = cursor!!.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE)
+			cursor.moveToFirst()
+			return cursor.getString(mimeInd)
 		}
 	}
 
-	public String getMimeType(Uri uri) { return getMimeType(getIDFromUri(uri)); }
-
-	public static Uri stringToUri(String pathStr) { return Uri.parse("file://" + Uri.encode(pathStr, "/")); }
-
-	public static boolean isExternalStorageDocument(Uri uri) { return "com.android.externalstorage.documents".equals(uri.getAuthority()); }
-
-	public static boolean isDownloadsDocument(Uri uri) { return "com.android.providers.downloads.documents".equals(uri.getAuthority()); }
-
-	public static boolean isMediaDocument(Uri uri) { return "com.android.providers.media.documents".equals(uri.getAuthority()); }
-
-	public static boolean isGooglePhotosUri(Uri uri) { return "com.google.android.apps.photos.content".equals(uri.getAuthority()); }
-
-	public void thumbnailIntoImageView(ImageView imageView, String path)
+	fun getMimeType(uri: Uri): String
 	{
-		RequestOptions options = new RequestOptions().priority(Priority.LOW)
-				.diskCacheStrategy(DiskCacheStrategy.RESOURCE).format(DecodeFormat.PREFER_ARGB_8888)
-				.set(Downsampler.ALLOW_HARDWARE_CONFIG, true).centerCrop();
+		return getMimeType(getIDFromUri(uri))
+	}
 
-		boolean playGIF = Config.getBooleanProperty(Config.Property.ANIMATE_GIF);
-		if (!playGIF) options = options.dontAnimate().decode(Bitmap.class);
-		else options = options.decode(Drawable.class);
+	fun thumbnailIntoImageView(imageView: ImageView?, path: String?)
+	{
+		var options = RequestOptions().priority(Priority.LOW)
+			.diskCacheStrategy(DiskCacheStrategy.RESOURCE).format(DecodeFormat.PREFER_ARGB_8888)
+			.set(Downsampler.ALLOW_HARDWARE_CONFIG, true).centerCrop()
+
+		val playGIF = getBooleanProperty(Config.Property.ANIMATE_GIF)
+		options = if (!playGIF) options.dontAnimate().decode(Bitmap::class.java)
+		else options.decode(Drawable::class.java)
 
 		Glide.with(context).load(path).apply(options).transition(DrawableTransitionOptions.withCrossFade())
-				.into(imageView);
+			.into(imageView!!)
 	}
 
-	public boolean moveFile(Path fromFile, Path toFolder)
+	fun moveFile(fromFile: Path, toFolder: Path): Boolean
 	{
-		try
+		return try
 		{
-			Files.createDirectories(toFolder);
-			Files.move(fromFile, toFolder.resolve(fromFile.getFileName()), StandardCopyOption.REPLACE_EXISTING);
-			return true;
+			Files.createDirectories(toFolder)
+			Files.move(fromFile, toFolder.resolve(fromFile.fileName), StandardCopyOption.REPLACE_EXISTING)
+			true
 		}
-		catch (AccessDeniedException e)
+		catch (e: AccessDeniedException)
 		{
-			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show();
-			return false;
+			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show()
+			false
 		}
-		catch (IOException e)
+		catch (e: IOException)
 		{
-			return false;
-		}
-	}
-
-	public boolean copyFile(Path fromFile, Path toFolder)
-	{
-		try
-		{
-			Files.createDirectories(toFolder);
-			Files.copy(fromFile, toFolder.resolve(fromFile.getFileName()), StandardCopyOption.REPLACE_EXISTING);
-			return true;
-		}
-		catch (AccessDeniedException e)
-		{
-			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show();
-			return false;
-		}
-		catch (IOException e)
-		{
-			return false;
+			false
 		}
 	}
 
-	public boolean deleteFile(Path file)
+	fun copyFile(fromFile: Path, toFolder: Path): Boolean
 	{
-		try
+		return try
 		{
-			Files.deleteIfExists(file);
-			return true;
+			Files.createDirectories(toFolder)
+			Files.copy(fromFile, toFolder.resolve(fromFile.fileName), StandardCopyOption.REPLACE_EXISTING)
+			true
 		}
-		catch (AccessDeniedException e)
+		catch (e: AccessDeniedException)
 		{
-			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show();
-			return false;
+			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show()
+			false
 		}
-		catch (IOException e)
+		catch (e: IOException)
 		{
-			return false;
+			false
 		}
 	}
 
-	public boolean moveAlbum(Path fromAlbum, Path toAlbum)
+	fun deleteFile(file: Path?): Boolean
 	{
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(fromAlbum))
+		return try
 		{
-			for (Path path : stream)
-			{
-				if (Files.isDirectory(path)) continue;
-				moveFile(path, toAlbum);
+			Files.deleteIfExists(file)
+			true
+		}
+		catch (e: AccessDeniedException)
+		{
+			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show()
+			false
+		}
+		catch (e: IOException)
+		{
+			false
+		}
+	}
+
+	fun moveAlbum(fromAlbum: Path?, toAlbum: Path): Boolean
+	{
+		return try
+		{
+			Files.newDirectoryStream(fromAlbum).use { stream ->
+				for (path in stream)
+				{
+					if (Files.isDirectory(path)) continue
+					moveFile(path, toAlbum)
+				}
 			}
+			true
 		}
-		catch (IOException e)
+		catch (e: IOException)
 		{
-			return false;
+			false
 		}
-		return true;
 	}
 
-	public boolean copyAlbum(Path fromAlbum, Path toAlbum)
+	fun copyAlbum(fromAlbum: Path?, toAlbum: Path): Boolean
 	{
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(fromAlbum))
+		return try
 		{
-			for (Path path : stream)
-			{
-				if (Files.isDirectory(path)) continue;
-				copyFile(path, toAlbum);
+			Files.newDirectoryStream(fromAlbum).use { stream ->
+				for (path in stream)
+				{
+					if (Files.isDirectory(path)) continue
+					copyFile(path, toAlbum)
+				}
 			}
+			true
 		}
-		catch (IOException e)
+		catch (e: IOException)
 		{
-			return false;
+			false
 		}
-		return true;
 	}
 
-	public boolean deleteAlbum(Path album)
+	fun deleteAlbum(album: Path?): Boolean
 	{
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(album))
+		return try
 		{
-			for (Path path : stream)
-			{
-				if (Files.isDirectory(path)) continue;
-				deleteFile(path);
+			Files.newDirectoryStream(album).use { stream ->
+				for (path in stream)
+				{
+					if (Files.isDirectory(path)) continue
+					deleteFile(path)
+				}
 			}
+			true
 		}
-		catch (IOException e)
+		catch (e: IOException)
 		{
-			return false;
+			false
 		}
-		return true;
 	}
 
-	public static long getSize(File f)
+	companion object
 	{
-		if (!f.isDirectory()) return f.length();
-		return -1;
-		/*long size = 0;
+		const val STORAGE_REQUEST_CODE = 1
+		val EXTERNAL_URI: Uri = MediaStore.Files.getContentUri("external")
+		const val IMAGES = MediaStore.MediaColumns.MIME_TYPE + " like 'image/%'"
+		const val VIDEOS = MediaStore.MediaColumns.MIME_TYPE + " like 'video/%'"
+		const val IMAGES_AND_VIDEOS = "$IMAGES or $VIDEOS"
+		const val PATH_FILTER_IMAGES_AND_VIDEOS = "($IMAGES_AND_VIDEOS) and ${MediaStore.MediaColumns.DATA} like ?"
+
+		@JvmStatic
+		fun stringToUri(pathStr: String?): Uri = Uri.parse("file://" + Uri.encode(pathStr, "/"))
+
+		@JvmStatic
+		fun isExternalStorageDocument(uri: Uri): Boolean = "com.android.externalstorage.documents" == uri.authority
+
+		@JvmStatic
+		fun isDownloadsDocument(uri: Uri): Boolean = "com.android.providers.downloads.documents" == uri.authority
+
+		@JvmStatic
+		fun isMediaDocument(uri: Uri): Boolean = "com.android.providers.media.documents" == uri.authority
+
+		@JvmStatic
+		fun isGooglePhotosUri(uri: Uri): Boolean = "com.google.android.apps.photos.content" == uri.authority
+
+		@JvmStatic
+		fun getSize(f: File): Long
+		{
+			return if (!f.isDirectory) f.length() else -1
+			/*long size = 0;
 		for (File file : Objects.requireNonNull(f.listFiles()))
 		{
 			size += file.length();
 		}
 		return size;*/
+		}
 	}
 }

@@ -4,12 +4,15 @@ import java.io.File
 
 abstract class FileEntry
 {
-	var file: File? = null
+	private var _file: File? = null
+	var file: File
+		get() = _file!!
 		set(value)
 		{
-			field = value
-			mySetFile(value!!)
+			_file = value
+			mySetFile()
 		}
+
 	lateinit var name: String
 		protected set
 	var size: Long = 0
@@ -31,9 +34,9 @@ abstract class FileEntry
 	protected constructor()
 
 	val path: String
-		get() = file!!.path
+		get() = file.path
 
-	open fun mySetFile(file: File)
+	protected open fun mySetFile()
 	{
 		name = file.name
 		isHidden = file.path.contains("/.")

@@ -12,9 +12,9 @@ class ImageFile @JvmOverloads constructor(file: File, val mime: String = "*/*", 
 	var creationDate: Long = 0
 		private set
 
-	override fun mySetFile(file: File)
+	override fun mySetFile()
 	{
-		super.mySetFile(file)
+		super.mySetFile()
 		try
 		{
 			val attr = Files.readAttributes(Paths.get(file.path), BasicFileAttributes::class.java)

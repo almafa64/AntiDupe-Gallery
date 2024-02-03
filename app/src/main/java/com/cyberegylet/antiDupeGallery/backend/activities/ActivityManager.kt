@@ -1,145 +1,129 @@
-package com.cyberegylet.antiDupeGallery.backend.activities;
+package com.cyberegylet.antiDupeGallery.backend.activities
 
-import android.app.Activity;
-import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Parcelable;
-import android.view.Gravity;
-import android.view.ViewGroup;
-import android.widget.PopupWindow;
+import android.app.Activity
+import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
+import android.net.Uri
+import android.os.Parcelable
+import android.view.Gravity
+import android.view.ViewGroup
+import android.widget.PopupWindow
 
-import androidx.annotation.NonNull;
-
-import java.util.ArrayList;
-
-public class ActivityManager
+class ActivityManager(val activity: Activity)
 {
-	public final Activity activity;
+	@JvmOverloads
+	fun makePopupWindow(
+		layoutId: Int,
+		listener: PopupWindow.OnDismissListener? = null
+	): PopupWindow = makePopupWindow(activity, layoutId, listener)
 
-	public ActivityManager(Activity activity) { this.activity = activity; }
-
-	public PopupWindow makePopupWindow(int layoutId) { return makePopupWindow(activity, layoutId, null); }
-
-	public PopupWindow makePopupWindow(int layoutId, PopupWindow.OnDismissListener listener)
+	fun switchActivity(newActivity: Class<out Activity>, vararg params: ActivityParameter<*>)
 	{
-		return makePopupWindow(activity, layoutId, listener);
+		switchActivity(activity, newActivity, -1, *params)
 	}
 
-	public static PopupWindow makePopupWindow(Activity activity, int layoutId)
+	fun switchActivity(newActivity: Class<out Activity>, reqCode: Int, vararg params: ActivityParameter<*>)
 	{
-		return makePopupWindow(activity, layoutId, null);
+		switchActivity(activity, newActivity, reqCode, *params)
 	}
 
-	public static PopupWindow makePopupWindow(Activity activity, int layoutId, PopupWindow.OnDismissListener listener)
+	fun goBack(vararg params: ActivityParameter<*>) = goBack(activity, *params)
+
+	fun getParam(name: String): Any? = getParam(activity, name)
+
+	fun <T : Parcelable> getListParam(name: String): ArrayList<T>? = getListParam(activity, name)
+
+	companion object
 	{
-		ViewGroup root = (ViewGroup) activity.getWindow().getDecorView();
-		ViewGroup popup = (ViewGroup) activity.getLayoutInflater().inflate(layoutId, root, false);
-		PopupWindow window = new PopupWindow(popup,
+		@JvmStatic
+		@JvmOverloads
+		fun makePopupWindow(
+			activity: Activity,
+			layoutId: Int,
+			listener: PopupWindow.OnDismissListener? = null
+		): PopupWindow
+		{
+			val root = activity.window.decorView as ViewGroup
+			val popup = activity.layoutInflater.inflate(layoutId, root, false) as ViewGroup
+			val window = PopupWindow(
+				popup,
 				ViewGroup.LayoutParams.MATCH_PARENT,
 				ViewGroup.LayoutParams.WRAP_CONTENT,
 				true
-		);
-		ActivityManager.applyDim(root, 0.5f);
-		window.showAtLocation(root, Gravity.CENTER, 0, 0);
-		window.setOnDismissListener(() -> {
-			if (listener != null) listener.onDismiss();
-			ActivityManager.clearDim(root);
-		});
-		return window;
-	}
-
-	public void switchActivity(Class<? extends Activity> newActivity, ActivityParameter... params)
-	{
-		switchActivity(activity, newActivity, -1, params);
-	}
-
-	public void switchActivity(Class<? extends Activity> newActivity, int reqCode, ActivityParameter... params)
-	{
-		switchActivity(activity, newActivity, reqCode, params);
-	}
-
-	public static void switchActivity(
-			Activity activity, Class<? extends Activity> newActivity, ActivityParameter... params
-	)
-	{
-		switchActivity(activity, newActivity, -1, params);
-	}
-
-	public static void switchActivity(
-			Activity activity, Class<? extends Activity> newActivity, int reqCode, ActivityParameter... params
-	)
-	{
-		Intent intent = putParams(new Intent(activity, newActivity), params);
-
-		if (reqCode != -1) activity.startActivityForResult(intent, reqCode);
-		else activity.startActivity(intent);
-	}
-
-	private static Intent putParams(Intent intent, ActivityParameter... params)
-	{
-		for (ActivityParameter param : params)
-		{
-			switch (param.type)
-			{
-				case INT:
-					intent.putExtra(param.name, (Integer) param.data);
-					break;
-				case STRING:
-					intent.putExtra(param.name, (String) param.data);
-					break;
-				case STRING_ARR:
-					intent.putExtra(param.name, (String[]) param.data);
-					break;
-				case BOOL:
-					intent.putExtra(param.name, (Boolean) param.data);
-					break;
-				case URI:
-					intent.putExtra(param.name, (Uri) param.data);
-					break;
-				case PARCELABLE:
-					//noinspection unchecked
-					intent.putParcelableArrayListExtra(param.name, (ArrayList<? extends Parcelable>) param.data);
-					break;
+			)
+			applyDim(root, 0.5f)
+			window.showAtLocation(root, Gravity.CENTER, 0, 0)
+			window.setOnDismissListener {
+				listener?.onDismiss()
+				clearDim(root)
 			}
+			return window
 		}
-		return intent;
+
+		@JvmStatic
+		fun switchActivity(
+			activity: Activity, newActivity: Class<out Activity>, vararg params: ActivityParameter<*>
+		)
+		{
+			switchActivity(activity, newActivity, -1, *params)
+		}
+
+		@JvmStatic
+		fun switchActivity(
+			activity: Activity, newActivity: Class<out Activity>, reqCode: Int, vararg params: ActivityParameter<*>
+		)
+		{
+			val intent = putParams(Intent(activity, newActivity), *params)
+			if (reqCode != -1) activity.startActivityForResult(intent, reqCode) else activity.startActivity(intent)
+		}
+
+		private fun putParams(intent: Intent, vararg params: ActivityParameter<*>): Intent
+		{
+			for (param in params)
+			{
+				when (param.type)
+				{
+					ActivityParameter.Type.INT -> intent.putExtra(param.name, param.data as Int)
+					ActivityParameter.Type.STRING -> intent.putExtra(param.name, param.data as String)
+					ActivityParameter.Type.STRING_ARR -> intent.putExtra(param.name, param.data as Array<String>)
+					ActivityParameter.Type.BOOL -> intent.putExtra(param.name, param.data as Boolean)
+					ActivityParameter.Type.URI -> intent.putExtra(param.name, param.data as Uri)
+					ActivityParameter.Type.PARCELABLE -> intent.putParcelableArrayListExtra(
+						param.name,
+						param.data as ArrayList<out Parcelable>
+					)
+				}
+			}
+			return intent
+		}
+
+		@JvmStatic
+		fun goBack(activity: Activity, vararg params: ActivityParameter<*>)
+		{
+			val i = putParams(Intent(), *params)
+			activity.setResult(Activity.RESULT_OK, i)
+			activity.finish()
+		}
+
+		@JvmStatic
+		fun getParam(activity: Activity, name: String): Any? = activity.intent.extras?.get(name)
+
+		@JvmStatic
+		fun <T : Parcelable> getListParam(activity: Activity, name: String): ArrayList<T>? =
+			activity.intent.getParcelableArrayListExtra(name)
+
+		@JvmStatic
+		fun applyDim(parent: ViewGroup, dimAmount: Float)
+		{
+			val dim: Drawable = ColorDrawable(Color.BLACK)
+			dim.setBounds(0, 0, parent.width, parent.height)
+			dim.alpha = (255 * dimAmount).toInt()
+			parent.overlay.add(dim)
+		}
+
+		@JvmStatic
+		fun clearDim(parent: ViewGroup) = parent.overlay.clear()
 	}
-
-	public void goBack(ActivityParameter... params) { goBack(activity, params); }
-
-	public static void goBack(Activity activity, ActivityParameter... params)
-	{
-		Intent i = putParams(new Intent(), params);
-		activity.setResult(Activity.RESULT_OK, i);
-		activity.finish();
-	}
-
-	public Object getParam(String name) { return getParam(activity, name); }
-
-	public static Object getParam(Activity activity, String name)
-	{
-		Bundle b = activity.getIntent().getExtras();
-		return b == null ? null : b.get(name);
-	}
-
-	public <T extends Parcelable> ArrayList<T> getListParam(String name) { return getListParam(activity, name); }
-
-	public static <T extends Parcelable> ArrayList<T> getListParam(Activity activity, String name)
-	{
-		return activity.getIntent().getParcelableArrayListExtra(name);
-	}
-
-	public static void applyDim(@NonNull ViewGroup parent, float dimAmount)
-	{
-		Drawable dim = new ColorDrawable(Color.BLACK);
-		dim.setBounds(0, 0, parent.getWidth(), parent.getHeight());
-		dim.setAlpha((int) (255 * dimAmount));
-		parent.getOverlay().add(dim);
-	}
-
-	public static void clearDim(@NonNull ViewGroup parent) { parent.getOverlay().clear(); }
 }

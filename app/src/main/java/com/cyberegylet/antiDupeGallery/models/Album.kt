@@ -43,9 +43,9 @@ class Album : FileEntry
 		count++
 	}
 
-	override fun mySetFile(file: File)
+	override fun mySetFile()
 	{
-		super.mySetFile(file)
+		super.mySetFile()
 		modifiedDate = file.lastModified()
 	}
 

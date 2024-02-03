@@ -85,7 +85,7 @@ public class SettingsActivity extends Activity
 						else
 						{
 							text.setText(R.string.pin_enter_pin);
-							Toast.makeText(activityManager.activity, R.string.pin_didnt_match, Toast.LENGTH_SHORT)
+							Toast.makeText(activityManager.getActivity(), R.string.pin_didnt_match, Toast.LENGTH_SHORT)
 									.show();
 						}
 					}

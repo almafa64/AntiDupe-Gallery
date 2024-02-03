@@ -115,7 +115,7 @@ public class AlbumActivity extends ImageListBaseActivity
 					}
 					activityManager.switchActivity(
 							FilterActivity.class,
-							new ActivityParameter("paths", paths.toArray(new String[0]))
+							new ActivityParameter<>("paths", paths.toArray(new String[0]))
 					);
 				}
 				else if (id == moveId)
@@ -330,7 +330,7 @@ public class AlbumActivity extends ImageListBaseActivity
 							}
 						}
 
-						long id = getID();
+						long id = getId();
 						Backend.queueFile(id, path);
 
 						ImageFile imageFile = new ImageFile(image, getMime(), id);

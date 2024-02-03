@@ -1,45 +1,23 @@
-package com.cyberegylet.antiDupeGallery.backend.activities;
+package com.cyberegylet.antiDupeGallery.backend.activities
 
-import android.net.Uri;
-import android.os.Parcelable;
+import android.net.Uri
 
-import java.util.ArrayList;
-
-public final class ActivityParameter
+class ActivityParameter<T : Any?> private constructor(val name: String, val data: Any, val type: Type)
 {
-	public final String name;
-	public final Object data;
-	public final Type type;
-
-	public enum Type
+	enum class Type
 	{
 		INT,
 		STRING,
 		STRING_ARR,
 		BOOL,
 		URI,
-		PARCELABLE,
+		PARCELABLE
 	}
 
-	private ActivityParameter(String name, Object data, Type type)
-	{
-		this.name = name;
-		this.data = data;
-		this.type = type;
-	}
-
-	public ActivityParameter(String name, boolean data) { this(name, data, Type.BOOL); }
-
-	public ActivityParameter(String name, int data) { this(name, data, Type.INT); }
-
-	public ActivityParameter(String name, String data) { this(name, data, Type.STRING); }
-
-	public ActivityParameter(String name, String[] data) { this(name, data, Type.STRING_ARR); }
-
-	public ActivityParameter(String name, Uri data) { this(name, data, Type.URI); }
-
-	public <T extends Parcelable> ActivityParameter(String name, ArrayList<T> data)
-	{
-		this(name, data, Type.PARCELABLE);
-	}
+	constructor(name: String, data: Boolean) : this(name, data, Type.BOOL)
+	constructor(name: String, data: Int) : this(name, data, Type.INT)
+	constructor(name: String, data: String) : this(name, data, Type.STRING)
+	constructor(name: String, data: Array<String>) : this(name, data, Type.STRING_ARR)
+	constructor(name: String, data: Uri) : this(name, data, Type.URI)
+	constructor(name: String, data: ArrayList<T>) : this(name, data, Type.PARCELABLE)
 }
