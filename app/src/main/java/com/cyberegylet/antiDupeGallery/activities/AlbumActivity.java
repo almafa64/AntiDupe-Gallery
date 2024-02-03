@@ -115,7 +115,7 @@ public class AlbumActivity extends ImageListBaseActivity
 					}
 					activityManager.switchActivity(
 							FilterActivity.class,
-							new ActivityParameter("paths", paths.toArray(new String[0]))
+							new ActivityParameter<>("paths", paths.toArray(new String[0]))
 					);
 				}
 				else if (id == moveId)
@@ -208,7 +208,8 @@ public class AlbumActivity extends ImageListBaseActivity
 		int textId = 0;
 		switch (requestCode)
 		{
-			case MOVE_SELECTED_ALBUMS:
+			case MOVE_SELECTED_ALBUMS ->
+			{
 				textId = R.string.popup_move_folder_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
@@ -223,8 +224,9 @@ public class AlbumActivity extends ImageListBaseActivity
 					album.setFile(path.toFile());
 					Cache.updateAlbum(album, p.toString());
 				}
-				break;
-			case COPY_SELECTED_ALBUMS:
+			}
+			case COPY_SELECTED_ALBUMS ->
+			{
 				textId = R.string.popup_copy_folder_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
@@ -240,8 +242,9 @@ public class AlbumActivity extends ImageListBaseActivity
 					Cache.addAlbum(newAlbum);
 					allAlbums.add(newAlbum);
 				}
-				break;
-			case DELETE_SELECTED_ALBUMS:
+			}
+			case DELETE_SELECTED_ALBUMS ->
+			{
 				textId = R.string.popup_delete_folder_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
@@ -256,7 +259,7 @@ public class AlbumActivity extends ImageListBaseActivity
 					Cache.deleteAlbum(album);
 					allAlbums.remove(album);
 				}
-				break;
+			}
 		}
 		if (failedAlbums.size() == 0)
 		{
@@ -327,7 +330,7 @@ public class AlbumActivity extends ImageListBaseActivity
 							}
 						}
 
-						long id = getID();
+						long id = getId();
 						Backend.queueFile(id, path);
 
 						ImageFile imageFile = new ImageFile(image, getMime(), id);

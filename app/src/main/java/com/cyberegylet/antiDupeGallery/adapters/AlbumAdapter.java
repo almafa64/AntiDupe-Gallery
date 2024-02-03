@@ -45,7 +45,7 @@ public class AlbumAdapter extends BaseImageAdapter
 			super(itemView, pos -> ActivityManager.switchActivity(
 					fileManager.activity,
 					ImagesActivity.class,
-					new ActivityParameter("path", albums.get(pos).getPath())
+					new ActivityParameter<>("path", albums.get(pos).getPath())
 			));
 			nameField = itemView.findViewById(R.id.folderName);
 			countField = itemView.findViewById(R.id.fileCount);

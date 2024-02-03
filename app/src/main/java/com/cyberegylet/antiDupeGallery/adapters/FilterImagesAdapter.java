@@ -35,7 +35,6 @@ public class FilterImagesAdapter extends BaseImageAdapter
 		public ViewHolder(View itemView)
 		{
 			super(itemView, null);
-			img = itemView.findViewById(R.id.image);
 
 			pathField = itemView.findViewById(R.id.filter_path);
 			checkBox = itemView.findViewById(R.id.filter_check);
@@ -52,7 +51,7 @@ public class FilterImagesAdapter extends BaseImageAdapter
 					ActivityManager.switchActivity(
 							fileManager.activity,
 							ImageViewActivity.class,
-							new ActivityParameter("imagePath", images.get(getAdapterPosition()).getPath())
+							new ActivityParameter<>("imagePath", images.get(getAdapterPosition()).getPath())
 					);
 				}
 			});

@@ -3,6 +3,7 @@ package com.cyberegylet.antiDupeGallery.adapters;
 import android.annotation.SuppressLint;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 
@@ -34,14 +35,17 @@ public class ImagesAdapter extends BaseImageAdapter
 	public class ViewHolder extends BaseImageAdapter.ViewHolder
 	{
 		private ImageFile image;
+		public final ImageView videoLogo;
 
 		public ViewHolder(View itemView)
 		{
 			super(itemView, pos -> ActivityManager.switchActivity(
 					fileManager.activity,
 					ImageViewActivity.class,
-					new ActivityParameter("imagePath", images.get(pos).getPath())
+					new ActivityParameter<>("imagePath", images.get(pos).getPath())
 			));
+
+			videoLogo = itemView.findViewById(R.id.is_video_logo);
 		}
 
 		@Override
@@ -64,6 +68,11 @@ public class ImagesAdapter extends BaseImageAdapter
 		ImageFile imageFile = images.get(position);
 		fileManager.thumbnailIntoImageView(holder.img, imageFile.getPath());
 		holder.reIndex();
+
+		if(imageFile.getMimeEnum() == FileManager.Mimes.Type.MIME_VIDEO)
+		{
+			((ViewHolder) holder).videoLogo.setVisibility(View.VISIBLE);
+		}
 	}
 
 	@Override

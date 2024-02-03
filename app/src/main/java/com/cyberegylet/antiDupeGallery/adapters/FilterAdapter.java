@@ -37,7 +37,7 @@ public class FilterAdapter extends BaseImageAdapter
 			super(itemView, pos -> ActivityManager.switchActivity(
 					fileManager.activity,
 					FilterImagesActivity.class,
-					new ActivityParameter("digestHex", albums.get(pos).getDigestHex())
+					new ActivityParameter<>("digestHex", albums.get(pos).getDigestHex())
 			));
 			nameField = itemView.findViewById(R.id.folderName);
 			countField = itemView.findViewById(R.id.fileCount);

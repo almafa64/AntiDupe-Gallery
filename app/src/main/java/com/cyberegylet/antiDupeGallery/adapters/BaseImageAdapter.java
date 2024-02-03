@@ -51,7 +51,7 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 
 	public abstract class ViewHolder extends RecyclerView.ViewHolder
 	{
-		public ImageView img;
+		public final ImageView img;
 
 		public ViewHolder(View itemView, OnItemClickListener listener)
 		{
@@ -94,11 +94,10 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 	public void onAttachedToRecyclerView(@NonNull RecyclerView recycler)
 	{
 		RecyclerView.LayoutManager manager = recycler.getLayoutManager();
-		if (!(manager instanceof GridLayoutManager)) return;
+		if (!(manager instanceof GridLayoutManager gridLayoutManager)) return;
 
 		BaseImageAdapter adapter = this;
 
-		GridLayoutManager gridLayoutManager = (GridLayoutManager) manager;
 		ScaleGestureDetector gestureDetector = new ScaleGestureDetector(fileManager.context,
 				new ScaleGestureDetector.SimpleOnScaleGestureListener()
 				{

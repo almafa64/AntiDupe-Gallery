@@ -56,7 +56,7 @@ public class FilterImagesActivity extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.images_activity);
 
-		database = Cache.openCache();
+		database = Cache.getCache();
 		recycler = findViewById(R.id.recycler);
 		activityManager = new ActivityManager(this);
 		fileManager = new FileManager(this);
@@ -101,8 +101,10 @@ public class FilterImagesActivity extends Activity
 				{
 					new AlertDialog.Builder(this).setTitle(R.string.popup_delete)
 							.setMessage(R.string.popup_delete_confirm).setIcon(android.R.drawable.ic_dialog_alert)
-							.setPositiveButton(android.R.string.yes,
-									(dialog, whichButton) -> onActivityResult(DELETE_SELECTED_IMAGES,
+							.setPositiveButton(
+									android.R.string.yes,
+									(dialog, whichButton) -> onActivityResult(
+											DELETE_SELECTED_IMAGES,
 											RESULT_OK,
 											new Intent()
 									)
@@ -191,7 +193,8 @@ public class FilterImagesActivity extends Activity
 		int textId = 0;
 		switch (requestCode)
 		{
-			case MOVE_SELECTED_IMAGES:
+			case MOVE_SELECTED_IMAGES ->
+			{
 				textId = R.string.popup_move_file_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
@@ -199,8 +202,9 @@ public class FilterImagesActivity extends Activity
 					Path p = Paths.get(holder.getImage().getPath());
 					if (!fileManager.moveFile(p, path)) failedImages.add(holder.getImage());
 				}
-				break;
-			case COPY_SELECTED_IMAGES:
+			}
+			case COPY_SELECTED_IMAGES ->
+			{
 				textId = R.string.popup_copy_file_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
@@ -208,8 +212,9 @@ public class FilterImagesActivity extends Activity
 					Path p = Paths.get(holder.getImage().getPath());
 					if (!fileManager.copyFile(p, path)) failedImages.add(holder.getImage());
 				}
-				break;
-			case DELETE_SELECTED_IMAGES:
+			}
+			case DELETE_SELECTED_IMAGES ->
+			{
 				textId = R.string.popup_delete_file_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
@@ -217,7 +222,7 @@ public class FilterImagesActivity extends Activity
 					Path p = Paths.get(holder.getImage().getPath());
 					if (!fileManager.deleteFile(p)) failedImages.add(holder.getImage());
 				}
-				break;
+			}
 		}
 		if (failedImages.size() == 0) Toast.makeText(this, textId, Toast.LENGTH_SHORT).show();
 		else
@@ -237,17 +242,18 @@ public class FilterImagesActivity extends Activity
 	{
 		String digestHex = (String) activityManager.getParam("digestHex");
 
-		try (Cursor cursor = database.query(Cache.tableDigests,
-				new String[]{ "path" },
-				"hex(digest) like ?",
+		try (Cursor cursor = database.query(
+				Cache.Tables.DIGESTS,
+				new String[]{ Cache.Digests.PATH },
+				"hex(" + Cache.Digests.DIGEST + ") like ?",
 				new String[]{ digestHex },
 				null,
 				null,
-				"path"
+				Cache.Digests.PATH
 		))
 		{
-			if(!cursor.moveToFirst()) return;
-			int pathCol = cursor.getColumnIndex("path");
+			if (!cursor.moveToFirst()) return;
+			int pathCol = cursor.getColumnIndexOrThrow(Cache.Digests.PATH);
 			do
 			{
 				File imageFile = new File(cursor.getString(pathCol));
