@@ -40,7 +40,7 @@ public class ImagesAdapter extends BaseImageAdapter
 			super(itemView, pos -> ActivityManager.switchActivity(
 					fileManager.activity,
 					ImageViewActivity.class,
-					new ActivityParameter("imagePath", images.get(pos).getPath())
+					new ActivityParameter<>("imagePath", images.get(pos).getPath())
 			));
 		}
 

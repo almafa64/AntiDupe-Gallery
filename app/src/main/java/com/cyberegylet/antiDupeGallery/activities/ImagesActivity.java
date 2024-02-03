@@ -57,15 +57,24 @@ public class ImagesActivity extends ImageListBaseActivity
 		String path = (String) activityManager.getParam("path");
 
 		String sort = ConfigSort.toMediaSQLString(Config.getStringProperty(Config.Property.IMAGE_SORT));
-		try (Cursor cursor = database.rawQuery("select path from media where album_path = ?", new String[]{ path }))
+		try (Cursor cursor = database.query(
+				Cache.Tables.MEDIA,
+				new String[]{ Cache.Media.PATH, Cache.Media.MIME_TYPE },
+				Cache.Media.ALBUM_PATH + " = ?",
+				new String[]{ path },
+				null,
+				null,
+				null
+		))
 		{
 			if (!cursor.moveToFirst()) return false;
-			int pathCol = cursor.getColumnIndex("path");
+			int pathCol = cursor.getColumnIndexOrThrow(Cache.Media.PATH);
+			int mimeCol = cursor.getColumnIndexOrThrow(Cache.Media.MIME_TYPE);
 			do
 			{
 				File imageFile = new File(cursor.getString(pathCol));
-				if (!imageFile.canRead() || !Objects.equals(imageFile.getParent(), path)) continue;
-				allImages.add(new ImageFile(imageFile));
+				if (!imageFile.canRead()) continue;
+				allImages.add(new ImageFile(imageFile, cursor.getString(mimeCol)));
 			} while (cursor.moveToNext());
 		}
 
@@ -185,7 +194,8 @@ public class ImagesActivity extends ImageListBaseActivity
 		int textId = 0;
 		switch (requestCode)
 		{
-			case MOVE_SELECTED_IMAGES:
+			case MOVE_SELECTED_IMAGES ->
+			{
 				textId = R.string.popup_move_file_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
@@ -202,8 +212,9 @@ public class ImagesActivity extends ImageListBaseActivity
 					else allImages.remove(imageFile);
 					Cache.updateMedia(imageFile, p.toString());
 				}
-				break;
-			case COPY_SELECTED_IMAGES:
+			}
+			case COPY_SELECTED_IMAGES ->
+			{
 				textId = R.string.popup_copy_file_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
@@ -219,8 +230,9 @@ public class ImagesActivity extends ImageListBaseActivity
 					Cache.addMedia(newImage, path.toString());
 					allImages.add(newImage);
 				}
-				break;
-			case DELETE_SELECTED_IMAGES:
+			}
+			case DELETE_SELECTED_IMAGES ->
+			{
 				textId = R.string.popup_delete_file_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
@@ -235,7 +247,7 @@ public class ImagesActivity extends ImageListBaseActivity
 					Cache.deleteMedia(imageFile.getPath());
 					allImages.remove(imageFile);
 				}
-				break;
+			}
 		}
 		if (failedImages.size() == 0)
 		{

@@ -40,7 +40,7 @@ public class PinActivity extends Activity
 				{
 					ActivityManager.switchActivity(PinActivity.this,
 							AlbumActivity.class,
-							new ActivityParameter("login", true)
+							new ActivityParameter<>("login", true)
 					);
 				}
 			}

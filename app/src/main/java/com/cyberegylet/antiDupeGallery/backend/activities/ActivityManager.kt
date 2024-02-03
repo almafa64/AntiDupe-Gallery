@@ -11,7 +11,7 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.PopupWindow
 
-class ActivityManager(val activity: Activity)
+class ActivityManager(@JvmField val activity: Activity)
 {
 	@JvmOverloads
 	fun makePopupWindow(
