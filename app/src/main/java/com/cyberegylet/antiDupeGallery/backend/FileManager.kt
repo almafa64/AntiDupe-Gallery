@@ -1,7 +1,6 @@
 package com.cyberegylet.antiDupeGallery.backend
 
 import android.Manifest
-import android.app.Activity
 import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
@@ -13,7 +12,7 @@ import android.os.Build
 import android.provider.MediaStore
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
+import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.Priority
@@ -24,6 +23,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
 import com.cyberegylet.antiDupeGallery.R
 import com.cyberegylet.antiDupeGallery.backend.Config.getBooleanProperty
+import com.cyberegylet.antiDupeGallery.helpers.PermissionManager
 import java.io.File
 import java.io.IOException
 import java.nio.file.AccessDeniedException
@@ -31,12 +31,11 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
-class FileManager(@JvmField val activity: Activity)
+class FileManager(@JvmField val activity: ComponentActivity)
 {
 	@JvmField
 	val context: Context = activity.applicationContext
 	private val contentResolver: ContentResolver = activity.contentResolver
-	private var hasFileAccess = false
 
 	object Mimes
 	{
@@ -64,7 +63,7 @@ class FileManager(@JvmField val activity: Activity)
 		}
 	}
 
-	init
+	fun requestStoragePermissions(requestCallback: ((Boolean) -> Unit)?)
 	{
 		val hasWrite = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P)
 		{
@@ -73,10 +72,7 @@ class FileManager(@JvmField val activity: Activity)
 				Manifest.permission.WRITE_EXTERNAL_STORAGE
 			) == PackageManager.PERMISSION_GRANTED
 		}
-		else
-		{
-			true
-		}
+		else true
 
 		val hasRead: Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
 		{
@@ -96,10 +92,10 @@ class FileManager(@JvmField val activity: Activity)
 			) == PackageManager.PERMISSION_GRANTED
 		}
 
-		if (hasRead && hasWrite) hasFileAccess = true
+		if (hasRead && hasWrite) requestCallback?.invoke(true)
 		else
 		{
-			val permissions: MutableList<String> = ArrayList()
+			val permissions: ArrayList<String> = ArrayList()
 			if (!hasWrite) permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 			if (!hasRead)
 			{
@@ -110,11 +106,12 @@ class FileManager(@JvmField val activity: Activity)
 				}
 				else permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
 			}
-			ActivityCompat.requestPermissions(activity, permissions.toTypedArray(), STORAGE_REQUEST_CODE)
+
+			PermissionManager(activity).requestPermissions(*permissions.toTypedArray()) {
+				requestCallback?.invoke(it.isEmpty())
+			}
 		}
 	}
-
-	fun hasFileAccess(): Boolean = hasFileAccess
 
 	abstract class CursorLoopWrapper
 	{

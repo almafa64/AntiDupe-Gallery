@@ -1,12 +1,12 @@
 package com.cyberegylet.antiDupeGallery.activities;
 
-import android.app.Activity;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class FilterActivity extends Activity
+public class FilterActivity extends AppCompatActivity
 {
 	private static final String TAG = "FilterActivity";
 

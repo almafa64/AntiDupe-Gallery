@@ -1,15 +1,13 @@
 package com.cyberegylet.antiDupeGallery.activities;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.widget.SearchView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,9 +17,9 @@ import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
 import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
 
-import java.util.Arrays;
+import kotlin.Unit;
 
-public abstract class ImageListBaseActivity extends Activity
+public abstract class ImageListBaseActivity extends AppCompatActivity
 {
 	public final String TAG;
 	public static SQLiteDatabase database;
@@ -66,7 +64,15 @@ public abstract class ImageListBaseActivity extends Activity
 		});
 
 		fileManager = new FileManager(this);
-		if (fileManager.hasFileAccess()) storageAccessGranted();
+		fileManager.requestStoragePermissions(b -> {
+			if (b) storageAccessGranted();
+			else
+			{
+				Toast.makeText(this, getString(R.string.no_storage_permission), Toast.LENGTH_SHORT).show();
+				finishAndRemoveTask();
+			}
+			return Unit.INSTANCE;
+		});
 	}
 
 	@Override
@@ -93,21 +99,6 @@ public abstract class ImageListBaseActivity extends Activity
 
 	@Override
 	protected abstract void onActivityResult(int requestCode, int resultCode, Intent data);
-
-	@Override
-	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
-	{
-		if (requestCode == FileManager.STORAGE_REQUEST_CODE && Arrays.stream(grantResults)
-				.allMatch(v -> v == PackageManager.PERMISSION_GRANTED))
-		{
-			storageAccessGranted();
-		}
-		else
-		{
-			Toast.makeText(this, getString(R.string.no_storage_permission), Toast.LENGTH_SHORT).show();
-			finishAndRemoveTask();
-		}
-	}
 
 	protected abstract void storageAccessGranted();
 

@@ -1,9 +1,7 @@
 package com.cyberegylet.antiDupeGallery.activities;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -15,8 +13,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -25,19 +23,20 @@ import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.FilterImagesAdapter;
 import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
-import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class FilterImagesActivity extends Activity
+import kotlin.Unit;
+
+public class FilterImagesActivity extends AppCompatActivity
 {
 	private static final String TAG = "FilterImagesActivity";
 	private static final int MOVE_SELECTED_IMAGES = 1;
@@ -59,7 +58,6 @@ public class FilterImagesActivity extends Activity
 		database = Cache.getCache();
 		recycler = findViewById(R.id.recycler);
 		activityManager = new ActivityManager(this);
-		fileManager = new FileManager(this);
 
 		recycler.setLayoutManager(new LinearLayoutManager(this));
 
@@ -159,27 +157,21 @@ public class FilterImagesActivity extends Activity
 		});
 
 		fileManager = new FileManager(this);
-		if (fileManager.hasFileAccess()) storageAccessGranted();
-	}
-
-	@Override
-	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
-	{
-		if (requestCode == FileManager.STORAGE_REQUEST_CODE && Arrays.stream(grantResults)
-				.allMatch(v -> v == PackageManager.PERMISSION_GRANTED))
-		{
-			storageAccessGranted();
-		}
-		else
-		{
-			Toast.makeText(this, getString(R.string.no_storage_permission), Toast.LENGTH_SHORT).show();
-			finishAndRemoveTask();
-		}
+		fileManager.requestStoragePermissions(b -> {
+			if (b) storageAccessGranted();
+			else
+			{
+				Toast.makeText(this, getString(R.string.no_storage_permission), Toast.LENGTH_SHORT).show();
+				finishAndRemoveTask();
+			}
+			return Unit.INSTANCE;
+		});
 	}
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
+		super.onActivityResult(requestCode, resultCode, data);
 		if (resultCode != RESULT_OK || data == null) return;
 		final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
 		final List<BaseImageAdapter.ViewHolder> selected = adapter.getSelected;
