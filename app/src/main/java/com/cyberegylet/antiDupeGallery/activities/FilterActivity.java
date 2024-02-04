@@ -15,7 +15,7 @@ import com.cyberegylet.antiDupeGallery.adapters.FilterAdapter;
 import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.helpers.MyAsyncTask;
 import com.cyberegylet.antiDupeGallery.models.FilteredAlbum;
 

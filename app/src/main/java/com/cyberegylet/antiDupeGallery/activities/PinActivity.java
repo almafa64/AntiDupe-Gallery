@@ -10,8 +10,8 @@ import androidx.annotation.Nullable;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.backend.Config;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityParameter;
 
 public class PinActivity extends Activity
 {
