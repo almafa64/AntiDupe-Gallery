@@ -100,7 +100,27 @@ object Cache
 		val values = ContentValues()
 		values.put(Media.PATH, imageFile.path)
 		values.put(Media.ALBUM_PATH, imageFile.file.parent)
+		values.put(Media.SIZE, imageFile.size)
+		values.put(Media.MIME_TYPE, imageFile.mime)
+		values.put(Media.MODIFICATION_TIME, imageFile.modifiedDate)
 		cache.update(Tables.MEDIA, values, "${Media.PATH} = ?", arrayOf(oldPath))
+	}
+
+	@JvmStatic
+	fun checkIfOutDated(imageFile: ImageFile): Boolean
+	{
+		cache.rawQuery(
+			"select ${Media.MODIFICATION_TIME} from ${Tables.MEDIA} where ${Media.ID} = ${imageFile.id}", null
+		).use { cursor ->
+			if (!cursor.moveToFirst()) return false
+			return cursor.getLong(0) != imageFile.modifiedDate
+		}
+	}
+
+	@JvmStatic
+	fun updateOutDated(imageFile: ImageFile)
+	{
+		if (checkIfOutDated(imageFile)) updateMedia(imageFile, imageFile.path)
 	}
 
 	@JvmStatic
