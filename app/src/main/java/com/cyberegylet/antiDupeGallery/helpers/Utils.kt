@@ -42,8 +42,16 @@ object Utils
 		}
 	}
 
-	private fun doubleString(d: Double): String
+	/**
+	 * Converts Double to String rounded to precision
+	 * @param d double value
+	 * @param precision can be negative and positive
+	 * @return rounded Double converted to String
+	 */
+	@JvmStatic
+	@JvmOverloads
+	fun doubleString(d: Double, precision: Int = 2): String
 	{
-		return BigDecimal.valueOf(d).setScale(2, RoundingMode.HALF_UP).toPlainString()
+		return BigDecimal.valueOf(d).setScale(precision, RoundingMode.HALF_UP).toPlainString()
 	}
 }
