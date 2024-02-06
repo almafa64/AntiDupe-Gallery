@@ -107,9 +107,9 @@ class FileManager(@JvmField val activity: ComponentActivity)
 				else permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
 			}
 
-			PermissionManager(activity).requestPermissions(*permissions.toTypedArray()) {
+			PermissionManager(activity).requestPermissions({
 				requestCallback?.invoke(it.isEmpty())
-			}
+			}, *permissions.toTypedArray())
 		}
 	}
 

@@ -21,6 +21,7 @@ import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
+import com.cyberegylet.antiDupeGallery.models.Album;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.io.File;
@@ -227,7 +228,7 @@ public class ImagesActivity extends ImageListBaseActivity
 						continue;
 					}
 					ImageFile newImage = new ImageFile(path.resolve(p.getFileName()).toFile());
-					Cache.addMedia(newImage, path.toString());
+					Cache.addMedia(newImage, new Album(path.toString()));
 					allImages.add(newImage);
 				}
 			}
@@ -244,7 +245,7 @@ public class ImagesActivity extends ImageListBaseActivity
 						failedImages.add(imageFile);
 						continue;
 					}
-					Cache.deleteMedia(imageFile.getPath());
+					Cache.deleteMedia(imageFile);
 					allImages.remove(imageFile);
 				}
 			}

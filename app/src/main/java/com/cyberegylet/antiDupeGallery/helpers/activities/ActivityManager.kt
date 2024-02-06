@@ -13,30 +13,54 @@ import android.widget.PopupWindow
 
 class ActivityManager(@JvmField val activity: Activity)
 {
+	/**
+	 * Makes a custom popup dialog
+	 * @param layoutId the id of the layout from R.layout for the dialog
+	 * @param listener listener to catch dismiss event
+	 */
 	@JvmOverloads
 	fun makePopupWindow(
 		layoutId: Int,
 		listener: PopupWindow.OnDismissListener? = null
 	): PopupWindow = makePopupWindow(activity, layoutId, listener)
 
-	fun switchActivity(newActivity: Class<out Activity>, vararg params: ActivityParameter<*>)
-	{
-		switchActivity(activity, newActivity, -1, *params)
-	}
-
-	fun switchActivity(newActivity: Class<out Activity>, reqCode: Int, vararg params: ActivityParameter<*>)
+	/**
+	 * @param newActivity the activity to switch to
+	 * @param params ActivityParams to pass to newActivity
+	 * @param reqCode the code to pass to onActivityResult, if -1 then it won't be called. Default is -1.
+	 */
+	@JvmOverloads
+	fun switchActivity(newActivity: Class<out Activity>, reqCode: Int = -1, vararg params: ActivityParameter<*>)
 	{
 		switchActivity(activity, newActivity, reqCode, *params)
 	}
 
+	/**
+	 * Closes this Activity and returns back to parent Activity (which called switchActivity()).
+	 * @param params ActivityParameters to pass back to parent Activity
+	 */
 	fun goBack(vararg params: ActivityParameter<*>) = goBack(activity, *params)
 
+	/**
+	 * Gets data from passed ActivityParameter.
+	 * @param name name of the ActivityParameter
+	 */
 	fun getParam(name: String): Any? = getParam(activity, name)
 
+	/**
+	 * Gets list type data from passed ActivityParameter.
+	 * @param name name of the ActivityParameter
+	 */
 	fun <T : Parcelable> getListParam(name: String): ArrayList<T>? = getListParam(activity, name)
 
 	companion object
 	{
+		/**
+		 * Makes a custom popup dialog
+		 * @param activity calling Activity
+		 * @param layoutId the id of the layout from R.layout for the dialog
+		 * @param listener listener to catch dismiss event
+		 */
 		@JvmStatic
 		@JvmOverloads
 		fun makePopupWindow(
@@ -62,17 +86,16 @@ class ActivityManager(@JvmField val activity: Activity)
 			return window
 		}
 
+		/**
+		 * @param activity calling Activity
+		 * @param newActivity the activity to switch to
+		 * @param params ActivityParams to pass to newActivity
+		 * @param reqCode the code to pass to onActivityResult, if -1 then it won't be called. Default is -1.
+		 */
 		@JvmStatic
+		@JvmOverloads
 		fun switchActivity(
-			activity: Activity, newActivity: Class<out Activity>, vararg params: ActivityParameter<*>
-		)
-		{
-			switchActivity(activity, newActivity, -1, *params)
-		}
-
-		@JvmStatic
-		fun switchActivity(
-			activity: Activity, newActivity: Class<out Activity>, reqCode: Int, vararg params: ActivityParameter<*>
+			activity: Activity, newActivity: Class<out Activity>, reqCode: Int = -1, vararg params: ActivityParameter<*>
 		)
 		{
 			val intent = putParams(Intent(activity, newActivity), *params)
@@ -99,6 +122,12 @@ class ActivityManager(@JvmField val activity: Activity)
 			return intent
 		}
 
+		/**
+		 * Closes this Activity and returns back to parent Activity (which called switchActivity()).
+		 * @param activity calling Activity
+		 * @param activity calling Activity
+		 * @param params ActivityParameters to pass back to parent Activity
+		 */
 		@JvmStatic
 		fun goBack(activity: Activity, vararg params: ActivityParameter<*>)
 		{
@@ -107,13 +136,28 @@ class ActivityManager(@JvmField val activity: Activity)
 			activity.finish()
 		}
 
+		/**
+		 * Gets data from passed ActivityParameter.
+		 * @param activity calling Activity
+		 * @param name name of the ActivityParameter
+		 */
 		@JvmStatic
 		fun getParam(activity: Activity, name: String): Any? = activity.intent.extras?.get(name)
 
+		/**
+		 * Gets list type data from passed ActivityParameter.
+		 * @param activity calling Activity
+		 * @param name name of the ActivityParameter
+		 */
 		@JvmStatic
 		fun <T : Parcelable> getListParam(activity: Activity, name: String): ArrayList<T>? =
 			activity.intent.getParcelableArrayListExtra(name)
 
+		/**
+		 * Applies a dim effect to a ViewGroup
+		 * @param parent the ViewGroup where dim will be applied
+		 * @param dimAmount a float from 0 to 1
+		 */
 		@JvmStatic
 		fun applyDim(parent: ViewGroup, dimAmount: Float)
 		{
@@ -123,6 +167,10 @@ class ActivityManager(@JvmField val activity: Activity)
 			parent.overlay.add(dim)
 		}
 
+		/**
+		 * Clears a dim effect from a ViewGroup
+		 * @param parent the ViewGroup where dim will be cleared
+		 */
 		@JvmStatic
 		fun clearDim(parent: ViewGroup) = parent.overlay.clear()
 	}

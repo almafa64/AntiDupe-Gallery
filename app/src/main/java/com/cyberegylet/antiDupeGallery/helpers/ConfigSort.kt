@@ -1,21 +1,37 @@
 package com.cyberegylet.antiDupeGallery.helpers
 
 import android.provider.MediaStore
+import com.cyberegylet.antiDupeGallery.backend.Cache
 import com.cyberegylet.antiDupeGallery.backend.Config
 import com.cyberegylet.antiDupeGallery.models.Album
 import com.cyberegylet.antiDupeGallery.models.ImageFile
 
 object ConfigSort
 {
+	/**
+	 * Converts isAscending and SortType into String that can be saved in Config.
+	 * @return configString
+	 */
 	@JvmStatic
 	fun toConfigString(isAscending: Boolean, sortType: SortType): String = isAscending.toString() + sortType.ordinal
 
+	/**
+	 * @param configString sorting Property from Config
+	 */
 	@JvmStatic
 	fun getSortType(configString: String): SortType = SortType.values()[configString[1].toString().toInt()]
 
+	/**
+	 * @param configString sorting Property from Config
+	 */
 	@JvmStatic
 	fun isAscending(configString: String): Boolean = configString[0] == '1'
 
+	/**
+	 * Turns configString into SQL sort by field for MediaStore
+	 * @param configString sorting Property from Config
+	 * @return MediaStore sql sort by compatible String
+	 */
 	@JvmStatic
 	fun toSQLString(configString: String): String
 	{
@@ -30,20 +46,28 @@ object ConfigSort
 		return sort
 	}
 
+	/**
+	 * Turns configString into SQL sort by field for Cache
+	 * @param configString sorting Property from Config
+	 * @return Cache sql sort by compatible String
+	 */
 	@JvmStatic
 	fun toMediaSQLString(configString: String): String
 	{
 		var sort = when (getSortType(configString))
 		{
-			SortType.MODIFICATION_DATE -> "mtime"
-			SortType.CREATION_DATE -> "ctime"
-			SortType.SIZE -> "size"
-			SortType.NAME -> "name"
+			SortType.MODIFICATION_DATE -> Cache.Media.MODIFICATION_TIME
+			SortType.CREATION_DATE -> Cache.Media.CREATION_TIME
+			SortType.SIZE -> Cache.Media.SIZE
+			SortType.NAME -> Cache.Media.NAME
 		}
 		if (!isAscending(configString)) sort += " DESC"
 		return sort
 	}
 
+	/**
+	 * Gets Album Comparator from Config
+	 */
 	@JvmStatic
 	val albumComparator: Comparator<Album>
 		get()
@@ -59,6 +83,9 @@ object ConfigSort
 			return comparator
 		}
 
+	/**
+	 * Gets Image Comparator from Config
+	 */
 	@JvmStatic
 	val imageComparator: Comparator<ImageFile>
 		get()

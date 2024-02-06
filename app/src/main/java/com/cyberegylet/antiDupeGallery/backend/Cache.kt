@@ -88,12 +88,24 @@ object Cache
 		)
 	}
 
+	/**
+	 * @param name the name of the database
+	 * @param activity calling activity instance
+	 * @return absolute path of database
+	 */
 	@JvmStatic
-	fun getDbPath(name: String?, activity: Activity): String = activity.getDatabasePath(name).absolutePath
+	fun getDbPath(name: String, activity: Activity): String = activity.getDatabasePath(name).absolutePath
 
+	/**
+	 * @param imageFile the imageFile to delete
+	 */
 	@JvmStatic
-	fun deleteMedia(path: String) = delete(Tables.MEDIA, path)
+	fun deleteMedia(imageFile: ImageFile) = delete(Tables.MEDIA, imageFile.path)
 
+	/**
+	 * @param imageFile the imageFile containing new data
+	 * @param oldPath the path that is in the cache
+	 */
 	@JvmStatic
 	fun updateMedia(imageFile: ImageFile, oldPath: String)
 	{
@@ -106,6 +118,10 @@ object Cache
 		cache.update(Tables.MEDIA, values, "${Media.PATH} = ?", arrayOf(oldPath))
 	}
 
+	/**
+	 * @param imageFile the imageFile to check
+	 * @return true if stored imageFile is out of date, false otherwise
+	 */
 	@JvmStatic
 	fun checkIfOutDated(imageFile: ImageFile): Boolean
 	{
@@ -117,14 +133,21 @@ object Cache
 		}
 	}
 
+	/**
+	 * @param imageFile the imageFile to check and update
+	 */
 	@JvmStatic
 	fun updateOutDated(imageFile: ImageFile)
 	{
 		if (checkIfOutDated(imageFile)) updateMedia(imageFile, imageFile.path)
 	}
 
+	/**
+	 * @param imageFile the imageFile to add to database
+	 * @param album containing the imageFile
+	 */
 	@JvmStatic
-	fun addMedia(imageFile: ImageFile, albumPath: String?)
+	fun addMedia(imageFile: ImageFile, album: Album)
 	{
 		cache.rawQuery(
 			"select count(*) from ${Tables.MEDIA} where ${Media.ID} = ${imageFile.id}",
@@ -140,11 +163,14 @@ object Cache
 		values.put(Media.MODIFICATION_TIME, imageFile.modifiedDate)
 		values.put(Media.SIZE, imageFile.size)
 		values.put(Media.MIME_TYPE, imageFile.mime)
-		values.put(Media.ALBUM_PATH, albumPath)
+		values.put(Media.ALBUM_PATH, album.path)
 		values.put(Media.ID, imageFile.id)
 		insert(Tables.MEDIA, values)
 	}
 
+	/**
+	 * @param album the album to delete
+	 */
 	@JvmStatic
 	fun deleteAlbum(album: Album)
 	{
@@ -152,6 +178,10 @@ object Cache
 		delete(Tables.ALBUMS, album.path)
 	}
 
+	/**
+	 * @param album the album with new values
+	 * @param oldPath the path that is in the cache
+	 */
 	@JvmStatic
 	fun updateAlbum(album: Album, oldPath: String)
 	{
@@ -163,6 +193,9 @@ object Cache
 		cache.update(Tables.ALBUMS, values2, "${Albums.PATH} = ?", arrayOf(oldPath))
 	}
 
+	/**
+	 * @param album the album to add to cache
+	 */
 	@JvmStatic
 	fun addAlbum(album: Album)
 	{

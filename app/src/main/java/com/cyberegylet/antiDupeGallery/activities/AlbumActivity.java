@@ -335,7 +335,7 @@ public class AlbumActivity extends ImageListBaseActivity
 
 						ImageFile imageFile = new ImageFile(image, getMime(), id);
 						album.addImage(imageFile);
-						Cache.addMedia(imageFile, albumPath);
+						Cache.addMedia(imageFile, album);
 
 						if (timeout++ == 30)
 						{

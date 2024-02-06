@@ -154,6 +154,7 @@ object Config
 		PIN_LOCK("pin_lock"),
 		USE_BIN("bin"),
 		DO_ANIMATIONS("do_anims"),
+		BLOCKED_PATHS("path_block"),
 
 		/**
 		 * 1. number: is_ascending<br></br>
@@ -165,8 +166,7 @@ object Config
 		 * 1. number: is_ascending<br></br>
 		 * 2. number: sort type (0: mod date, 1: create date, 2: size, 3: name)
 		 */
-		IMAGE_SORT("i_sort"),
-		BLOCKED_PATHS("path_block");
+		IMAGE_SORT("i_sort");
 
 		override fun toString(): String = propertyName
 	}
