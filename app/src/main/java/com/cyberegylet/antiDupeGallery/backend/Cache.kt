@@ -44,9 +44,9 @@ object Cache
 
 	object Digests
 	{
-		const val ID = Media.NAME
+		const val ID = Media.ID
 		const val PATH = Media.PATH
-		const val DIGEST = Media.C_HASH
+		const val DIGEST = "digest"
 	}
 
 	@JvmStatic
