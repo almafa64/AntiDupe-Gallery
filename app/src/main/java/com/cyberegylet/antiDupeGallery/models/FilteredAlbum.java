@@ -1,32 +1,32 @@
 package com.cyberegylet.antiDupeGallery.models;
 
-import androidx.annotation.NonNull;
-
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 
 public class FilteredAlbum
 {
-	private final ImageFile indexImage;
-	@NotNull
-	private final String name;
-	private final long size;
-	private final long count;
-	private final String digestHex;
+	private ImageFile indexImage;
 
-	public FilteredAlbum(File indexFile, @NonNull String name, int count, String digestHex)
+	private String name;
+	private long size;
+	private long count;
+	private String digestHex;
+
+	public FilteredAlbum(File indexFile, String name, int count, String digestHex)
 	{
-		indexImage = new ImageFile(indexFile);
+		setData(indexFile, name, count, digestHex);
+	}
+
+	public void setData(File indexFile, String name, int count, String digestHex)
+	{
+		this.indexImage = new ImageFile(indexFile);
 		this.name = name;
 		this.count = count;
-		this.size = 0;
+		this.size = 0; //ToDo calculate size
 		this.digestHex = digestHex;
 	}
 
 	public ImageFile getIndexImage() { return indexImage; }
 
-	@NonNull
 	public String getName() { return name; }
 
 	public long getSize() { return size; }

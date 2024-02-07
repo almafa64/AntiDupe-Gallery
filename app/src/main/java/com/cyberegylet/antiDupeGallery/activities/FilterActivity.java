@@ -12,11 +12,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.FilterAdapter;
+import com.cyberegylet.antiDupeGallery.backend.Backend;
 import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
-import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.helpers.MyAsyncTask;
+import com.cyberegylet.antiDupeGallery.helpers.Utils;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.models.FilteredAlbum;
 
 import java.io.File;
@@ -53,7 +55,7 @@ public class FilterActivity extends AppCompatActivity
 
 		database = Cache.getCache();
 
-		new MyAsyncTask()
+		MyAsyncTask show = new MyAsyncTask()
 		{
 			@Override
 			public void doInBackground()
@@ -83,16 +85,89 @@ public class FilterActivity extends AppCompatActivity
 						File f = new File(path);
 						if (!f.canRead() || (hasPaths && !paths.contains(f.getParent()))) continue;
 
-						count++;
-						albums.add(new FilteredAlbum(
-								f,
-								String.valueOf(count),
-								cursor.getInt(countCol),
-								cursor.getString(digestCol)
-						));
+						String hex = cursor.getString(digestCol);
+
+						FilteredAlbum a = albums.stream().filter(album -> album.getDigestHex().equals(hex)).findAny()
+								.orElse(null);
+
+						if (a != null)
+						{
+							a.setData(f, String.valueOf(count), cursor.getInt(countCol), hex);
+						}
+						else
+						{
+							count++;
+							albums.add(new FilteredAlbum(f, String.valueOf(count), cursor.getInt(countCol), hex));
+						}
 						runOnUiThread(adapter::notifyDataSetChanged);
 
 					} while (cursor.moveToNext());
+				}
+			}
+
+			@Override
+			public void onPostExecute() { }
+
+			@Override
+			public void onPreExecute() { }
+		};
+
+		new MyAsyncTask()
+		{
+			long maxFiles;
+
+			@Override
+			public void onPreExecute()
+			{
+				try (Cursor cursor = database.query(
+						Cache.Tables.MEDIA,
+						new String[]{ Cache.Media.PATH, Cache.Media.ID },
+						null,
+						null,
+						null,
+						null,
+						null
+				))
+				{
+					if (!cursor.moveToFirst())
+					{
+						stop();
+						return;
+					}
+
+					int pathCol = cursor.getColumnIndexOrThrow(Cache.Media.PATH);
+					int idCol = cursor.getColumnIndexOrThrow(Cache.Media.ID);
+					maxFiles = cursor.getCount();
+
+					int count = 0;
+
+					do
+					{
+						Backend.queueFile(cursor.getLong(idCol), cursor.getString(pathCol));
+						count++;
+					} while (cursor.moveToNext());
+				}
+			}
+
+			@Override
+			public void doInBackground()
+			{
+				long old = Backend.getQueuedFileProgress();
+				while (true)
+				{
+					long files = Backend.getQueuedFileProgress();
+					if (files == 0) break;
+					if (old - files > 30)
+					{
+						old = files;
+						double percentage = 100 - (double) files / maxFiles * 100;
+						runOnUiThread(() -> Toast.makeText(
+								FilterActivity.this,
+								Utils.doubleString(percentage, 2) + "%",
+								Toast.LENGTH_SHORT
+						).show());
+						if (!show.running()) show.execute();
+					}
 				}
 			}
 
@@ -101,10 +176,16 @@ public class FilterActivity extends AppCompatActivity
 			{
 				runOnUiThread(() -> Toast.makeText(FilterActivity.this, R.string.filter_complete, Toast.LENGTH_SHORT)
 						.show());
+				try
+				{
+					Objects.requireNonNull(show.getThread()).join();
+				}
+				catch (InterruptedException e)
+				{
+					throw new RuntimeException(e);
+				}
+				show.execute();
 			}
-
-			@Override
-			public void onPreExecute() { }
 		}.execute();
 	}
 }

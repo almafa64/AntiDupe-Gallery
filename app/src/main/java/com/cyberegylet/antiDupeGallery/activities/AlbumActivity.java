@@ -331,7 +331,7 @@ public class AlbumActivity extends ImageListBaseActivity
 						}
 
 						long id = getId();
-						Backend.queueFile(id, path);
+						//Backend.queueFile(id, path);
 
 						ImageFile imageFile = new ImageFile(image, getMime(), id);
 						album.addImage(imageFile);
