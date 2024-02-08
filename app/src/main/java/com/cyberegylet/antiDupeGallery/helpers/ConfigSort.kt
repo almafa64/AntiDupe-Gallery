@@ -19,7 +19,7 @@ object ConfigSort
 	 * @param configString sorting Property from Config
 	 */
 	@JvmStatic
-	fun getSortType(configString: String): SortType = SortType.values()[configString[1].toString().toInt()]
+	fun getSortType(configString: String): SortType = SortType.entries[configString[1].toString().toInt()]
 
 	/**
 	 * @param configString sorting Property from Config

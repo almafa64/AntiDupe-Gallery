@@ -26,10 +26,10 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 	}
 
 	protected final FileManager fileManager;
-	protected List<ViewHolder> selected = new ArrayList<>();
-	public List<ViewHolder> getSelected = Collections.unmodifiableList(selected);
+	protected final List<ViewHolder> selected = new ArrayList<>();
+	public final List<ViewHolder> getSelected = Collections.unmodifiableList(selected);
 
-	protected LayoutInflater layoutInflater;
+	protected final LayoutInflater layoutInflater;
 
 	public BaseImageAdapter(FileManager fileManager)
 	{

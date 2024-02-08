@@ -214,7 +214,13 @@ object Cache
 		insert(Tables.ALBUMS, values)
 	}
 
-	private fun insert(table: String, values: ContentValues) = cache.insert(table, null, values)
+	private fun insert(table: String, values: ContentValues)
+	{
+		cache.insert(table, null, values)
+	}
 
-	private fun delete(table: String, path: String) = cache.delete(table, "${Media.PATH} like ?", arrayOf(path))
+	private fun delete(table: String, path: String)
+	{
+		cache.delete(table, "${Media.PATH} like ?", arrayOf(path))
+	}
 }

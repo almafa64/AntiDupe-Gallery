@@ -33,7 +33,7 @@ object Config
 			Files.newBufferedReader(filePath).use { reader ->
 				properties.load(reader)
 				val toRemove: MutableList<Any> = ArrayList()
-				val props = Property.values()
+				val props = Property.entries.toTypedArray()
 				val e = properties.propertyNames()
 				while (e.hasMoreElements())
 				{
@@ -115,7 +115,7 @@ object Config
 	fun restoreDefaults()
 	{
 		properties.clear()
-		for (p in Property.values())
+		for (p in Property.entries)
 		{
 			restoreDefault(p)
 		}

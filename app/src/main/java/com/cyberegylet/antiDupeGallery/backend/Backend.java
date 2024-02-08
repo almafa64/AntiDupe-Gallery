@@ -11,7 +11,7 @@ public class Backend
 
 	public static final class Digest
 	{
-		public byte[] digest;
+		public final byte[] digest;
 
 		private Digest(byte[] digest)
 		{
