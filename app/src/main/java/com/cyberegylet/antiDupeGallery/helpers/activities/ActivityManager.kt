@@ -10,6 +10,9 @@ import android.os.Parcelable
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.PopupWindow
+import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
+import com.cyberegylet.antiDupeGallery.helpers.Extender.getObject
 
 class ActivityManager(@JvmField val activity: Activity)
 {
@@ -25,14 +28,19 @@ class ActivityManager(@JvmField val activity: Activity)
 	): PopupWindow = makePopupWindow(activity, layoutId, listener)
 
 	/**
+	 * (activity at least be ComponentActivity for callback)
 	 * @param newActivity the activity to switch to
 	 * @param params ActivityParams to pass to newActivity
-	 * @param reqCode the code to pass to onActivityResult, if -1 then it won't be called. Default is -1.
+	 * @param callback callback to run on result
 	 */
 	@JvmOverloads
-	fun switchActivity(newActivity: Class<out Activity>, reqCode: Int = -1, vararg params: ActivityParameter<*>)
+	fun switchActivity(
+		newActivity: Class<out Activity>,
+		callback: MyActivityResultCallback? = null,
+		vararg params: ActivityParameter<*>
+	)
 	{
-		switchActivity(activity, newActivity, reqCode, *params)
+		switchActivity(activity, newActivity, callback, *params)
 	}
 
 	/**
@@ -87,21 +95,35 @@ class ActivityManager(@JvmField val activity: Activity)
 		}
 
 		/**
-		 * @param activity calling Activity
+		 * @param activity calling Activity (at least ComponentActivity for callback)
 		 * @param newActivity the activity to switch to
 		 * @param params ActivityParams to pass to newActivity
-		 * @param reqCode the code to pass to onActivityResult, if -1 then it won't be called. Default is -1.
+		 * @param callback callback to run on result
 		 */
 		@JvmStatic
 		@JvmOverloads
 		fun switchActivity(
-			activity: Activity, newActivity: Class<out Activity>, reqCode: Int = -1, vararg params: ActivityParameter<*>
+			activity: Activity,
+			newActivity: Class<out Activity>,
+			callback: MyActivityResultCallback? = null,
+			vararg params: ActivityParameter<*>
 		)
 		{
 			val intent = putParams(Intent(activity, newActivity), *params)
-			if (reqCode != -1) activity.startActivityForResult(intent, reqCode) else activity.startActivity(intent)
+			if (callback != null)
+			{
+				if (activity is ComponentActivity)
+				{
+					activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+						callback(it.data, it.resultCode)
+					}.launch(intent)
+				}
+				else throw RuntimeException("callback wasn't null, use AppCompatActivity instead of Activity!")
+			}
+			else activity.startActivity(intent)
 		}
 
+		@Suppress("UNCHECKED_CAST")
 		private fun putParams(intent: Intent, vararg params: ActivityParameter<*>): Intent
 		{
 			for (param in params)
@@ -142,7 +164,7 @@ class ActivityManager(@JvmField val activity: Activity)
 		 * @param name name of the ActivityParameter
 		 */
 		@JvmStatic
-		fun getParam(activity: Activity, name: String): Any? = activity.intent.extras?.get(name)
+		fun getParam(activity: Activity, name: String): Any? = activity.intent.extras?.getObject(name)
 
 		/**
 		 * Gets list type data from passed ActivityParameter.
@@ -175,3 +197,9 @@ class ActivityManager(@JvmField val activity: Activity)
 		fun clearDim(parent: ViewGroup) = parent.overlay.clear()
 	}
 }
+
+/**
+ * param 1 the data of the result<br/>
+ * param 2 the result code of the result
+ */
+typealias MyActivityResultCallback = ((data: Intent?, resultCode: Int) -> Unit)

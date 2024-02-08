@@ -1,5 +1,7 @@
 package com.cyberegylet.antiDupeGallery.helpers
 
+import android.os.Build
+import android.os.Bundle
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DateFormat
@@ -53,5 +55,20 @@ object Utils
 	fun doubleString(d: Double, precision: Int = 2): String
 	{
 		return BigDecimal.valueOf(d).setScale(precision, RoundingMode.HALF_UP).toPlainString()
+	}
+}
+
+object Extender{
+	/**
+	 * Replacement for deprecated Bundle.get(key)
+	 */
+	fun Bundle.getObject(key: String): Any?
+	{
+		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) getParcelable(key, Object::class.java)
+		else
+		{
+			@Suppress("DEPRECATION")
+			get(key)
+		}
 	}
 }

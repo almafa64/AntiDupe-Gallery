@@ -133,13 +133,13 @@ public class AlbumActivity extends ImageListBaseActivity
 					new AlertDialog.Builder(this).setTitle(R.string.popup_delete)
 							.setMessage(R.string.popup_delete_confirm).setIcon(android.R.drawable.ic_dialog_alert)
 							.setPositiveButton(
-									android.R.string.yes,
+									android.R.string.ok,
 									(dialog, whichButton) -> onActivityResult(
 											DELETE_SELECTED_ALBUMS,
 											RESULT_OK,
 											new Intent()
 									)
-							).setNegativeButton(android.R.string.no, null).show();
+							).setNegativeButton(android.R.string.cancel, null).show();
 				}
 				else if (id == infoId)
 				{
