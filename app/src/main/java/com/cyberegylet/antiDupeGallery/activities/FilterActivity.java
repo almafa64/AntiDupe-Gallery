@@ -92,7 +92,7 @@ public class FilterActivity extends AppCompatActivity
 
 						if (a != null)
 						{
-							a.setData(f, String.valueOf(count), cursor.getInt(countCol), hex);
+							a.setData(null, null, cursor.getInt(countCol), null);
 						}
 						else
 						{
