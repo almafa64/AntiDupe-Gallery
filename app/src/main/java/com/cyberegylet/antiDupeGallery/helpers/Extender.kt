@@ -3,7 +3,8 @@ package com.cyberegylet.antiDupeGallery.helpers
 import android.os.Build
 import android.os.Bundle
 
-object Extender{
+object Extender
+{
 	/**
 	 * Replacement for deprecated Bundle.get(key)
 	 */

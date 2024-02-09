@@ -98,7 +98,8 @@ public abstract class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAda
 
 		BaseImageAdapter adapter = this;
 
-		ScaleGestureDetector gestureDetector = new ScaleGestureDetector(fileManager.context,
+		ScaleGestureDetector gestureDetector = new ScaleGestureDetector(
+				fileManager.context,
 				new ScaleGestureDetector.SimpleOnScaleGestureListener()
 				{
 					@Override

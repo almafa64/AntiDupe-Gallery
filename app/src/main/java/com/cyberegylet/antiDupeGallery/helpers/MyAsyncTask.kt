@@ -10,8 +10,8 @@ abstract class MyAsyncTask
 	{
 		thread = Thread {
 			onPreExecute()
-			if(!shouldStop) doInBackground()
-			if(!shouldStop) onPostExecute()
+			if (!shouldStop) doInBackground()
+			if (!shouldStop) onPostExecute()
 		}
 		thread?.start()
 	}
