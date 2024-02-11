@@ -42,6 +42,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import kotlin.Unit;
+
 public class AlbumActivity extends ImageListBaseActivity
 {
 	private static final int MOVE_SELECTED_ALBUMS = 1;
@@ -122,12 +124,20 @@ public class AlbumActivity extends ImageListBaseActivity
 				else if (id == moveId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					startActivityForResult(intent, MOVE_SELECTED_ALBUMS);
+					//startActivityForResult(intent, MOVE_SELECTED_ALBUMS);
+					activityManager.switchActivity(intent, (data, resultCode) -> {
+						onActivityResult(MOVE_SELECTED_ALBUMS, resultCode, data);
+						return Unit.INSTANCE;
+					});
 				}
 				else if (id == copyId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					startActivityForResult(intent, COPY_SELECTED_ALBUMS);
+					//startActivityForResult(intent, COPY_SELECTED_ALBUMS);
+					activityManager.switchActivity(intent, (data, resultCode) -> {
+						onActivityResult(COPY_SELECTED_ALBUMS, resultCode, data);
+						return Unit.INSTANCE;
+					});
 				}
 				else if (id == deleteId)
 				{
@@ -203,6 +213,7 @@ public class AlbumActivity extends ImageListBaseActivity
 		Path path = null;
 		if (requestCode != DELETE_SELECTED_ALBUMS)
 		{
+			// ToDo fix this, its very hacky
 			path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]);
 		}
 		List<Album> failedAlbums = new ArrayList<>();
@@ -290,7 +301,6 @@ public class AlbumActivity extends ImageListBaseActivity
 		AlbumAdapter adapter = new AlbumAdapter(albums, fileManager);
 		recycler.setAdapter(adapter);
 
-		// ToDo remove deleted files
 		new MyAsyncTask()
 		{
 			private long timeStart = 0;

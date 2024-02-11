@@ -24,7 +24,7 @@ class ActivityManager(@JvmField val activity: Activity)
 	@JvmOverloads
 	fun makePopupWindow(
 		layoutId: Int,
-		listener: PopupWindow.OnDismissListener? = null
+		listener: PopupWindow.OnDismissListener? = null,
 	): PopupWindow = makePopupWindow(activity, layoutId, listener)
 
 	/**
@@ -37,10 +37,24 @@ class ActivityManager(@JvmField val activity: Activity)
 	fun switchActivity(
 		newActivity: Class<out Activity>,
 		callback: MyActivityResultCallback? = null,
-		vararg params: ActivityParameter<*>
+		vararg params: ActivityParameter<*>,
 	)
 	{
 		switchActivity(activity, newActivity, callback, *params)
+	}
+
+	/**
+	 * (activity at least be ComponentActivity for callback)
+	 * @param intent the intent to start
+	 * @param callback callback to run on result
+	 */
+	@JvmOverloads
+	fun switchActivity(
+		intent: Intent,
+		callback: MyActivityResultCallback? = null,
+	)
+	{
+		Companion.switchActivity(activity, intent, callback)
 	}
 
 	/**
@@ -74,7 +88,7 @@ class ActivityManager(@JvmField val activity: Activity)
 		fun makePopupWindow(
 			activity: Activity,
 			layoutId: Int,
-			listener: PopupWindow.OnDismissListener? = null
+			listener: PopupWindow.OnDismissListener? = null,
 		): PopupWindow
 		{
 			val root = activity.window.decorView as ViewGroup
@@ -106,10 +120,26 @@ class ActivityManager(@JvmField val activity: Activity)
 			activity: Activity,
 			newActivity: Class<out Activity>,
 			callback: MyActivityResultCallback? = null,
-			vararg params: ActivityParameter<*>
+			vararg params: ActivityParameter<*>,
 		)
 		{
 			val intent = putParams(Intent(activity, newActivity), *params)
+			switchActivity(activity, intent, callback)
+		}
+
+		/**
+		 * @param activity calling Activity (at least ComponentActivity for callback)
+		 * @param intent the intent to start
+		 * @param callback callback to run on result
+		 */
+		@JvmStatic
+		@JvmOverloads
+		fun switchActivity(
+			activity: Activity,
+			intent: Intent,
+			callback: MyActivityResultCallback? = null,
+		)
+		{
 			if (callback != null)
 			{
 				if (activity is ComponentActivity)

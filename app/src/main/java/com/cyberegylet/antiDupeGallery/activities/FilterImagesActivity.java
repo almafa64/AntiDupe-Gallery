@@ -88,12 +88,20 @@ public class FilterImagesActivity extends AppCompatActivity
 				if (id == moveId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					startActivityForResult(intent, MOVE_SELECTED_IMAGES);
+					//startActivityForResult(intent, MOVE_SELECTED_IMAGES);
+					activityManager.switchActivity(intent, (data, resultCode) -> {
+						onActivityResult(MOVE_SELECTED_IMAGES, resultCode, data);
+						return Unit.INSTANCE;
+					});
 				}
 				else if (id == copyId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					startActivityForResult(intent, COPY_SELECTED_IMAGES);
+					//startActivityForResult(intent, COPY_SELECTED_IMAGES);
+					activityManager.switchActivity(intent, (data, resultCode) -> {
+						onActivityResult(COPY_SELECTED_IMAGES, resultCode, data);
+						return Unit.INSTANCE;
+					});
 				}
 				else if (id == deleteId)
 				{
