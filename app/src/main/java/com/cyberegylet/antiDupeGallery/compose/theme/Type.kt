@@ -1,4 +1,4 @@
-package com.cyberegylet.antiDupeGallery.activities.ui.theme
+package com.cyberegylet.antiDupeGallery.compose.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

@@ -52,7 +52,7 @@
         </activity>
 
         <activity android:name=".activities.ImagesActivity" />
-        <activity android:name=".activities.AboutActivity" />
+        <activity android:name=".compose.AboutActivity" />
         <activity android:name=".activities.FilterActivity" />
         <activity android:name=".activities.FilterImagesActivity" />
         <activity android:name=".activities.SettingsActivity" />
