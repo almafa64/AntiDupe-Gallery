@@ -38,7 +38,7 @@ class Album : FileEntry
 
 	fun addImage(imageFile: ImageFile)
 	{
-		if (count == 0L) indexImage = imageFile
+		if ((indexImage?.modifiedDate ?: 0) < imageFile.modifiedDate) indexImage = imageFile
 		size += FileManager.getSize(imageFile.file)
 		count++
 	}
