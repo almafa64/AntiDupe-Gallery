@@ -12,6 +12,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.Nullable;
 
 import com.cyberegylet.antiDupeGallery.R;
@@ -34,13 +35,19 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import kotlin.Unit;
-
 public class ImagesActivity extends ImageListBaseActivity
 {
-	private static final int MOVE_SELECTED_IMAGES = 1;
-	private static final int COPY_SELECTED_IMAGES = 2;
-	private static final int DELETE_SELECTED_IMAGES = 3;
+	private final ActivityResultLauncher<Intent> moveLauncher = activityManager.registerLauncher(o -> myOnActivityResult(
+			MOVE_SELECTED,
+			o.getResultCode(),
+			o.getData()
+	));
+
+	private final ActivityResultLauncher<Intent> copyLauncher = activityManager.registerLauncher(o -> myOnActivityResult(
+			COPY_SELECTED,
+			o.getResultCode(),
+			o.getData()
+	));
 
 	private String currentFolder;
 	private final List<ImageFile> allImages = new ArrayList<>();
@@ -112,20 +119,12 @@ public class ImagesActivity extends ImageListBaseActivity
 				else if (id == moveId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					//startActivityForResult(intent, MOVE_SELECTED_IMAGES);
-					activityManager.switchActivity(intent, (data, resultCode) -> {
-						onActivityResult(MOVE_SELECTED_IMAGES, resultCode, data);
-						return Unit.INSTANCE;
-					});
+					activityManager.launchIntent(intent, moveLauncher);
 				}
 				else if (id == copyId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					//startActivityForResult(intent, COPY_SELECTED_IMAGES);
-					activityManager.switchActivity(intent, (data, resultCode) -> {
-						onActivityResult(COPY_SELECTED_IMAGES, resultCode, data);
-						return Unit.INSTANCE;
-					});
+					activityManager.launchIntent(intent, copyLauncher);
 				}
 				else if (id == deleteId)
 				{
@@ -133,8 +132,8 @@ public class ImagesActivity extends ImageListBaseActivity
 							.setMessage(R.string.popup_delete_confirm).setIcon(android.R.drawable.ic_dialog_alert)
 							.setPositiveButton(
 									android.R.string.yes,
-									(dialog, whichButton) -> onActivityResult(
-											DELETE_SELECTED_IMAGES,
+									(dialog, whichButton) -> myOnActivityResult(
+											DELETE_SELECTED,
 											RESULT_OK,
 											new Intent()
 									)
@@ -191,14 +190,14 @@ public class ImagesActivity extends ImageListBaseActivity
 	}
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	protected void myOnActivityResult(int requestCode, int resultCode, Intent data)
 	{
 		if (resultCode != RESULT_OK || data == null) return;
 		final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
 		final List<BaseImageAdapter.ViewHolder> selected = adapter.getSelected;
 		// ToDo fix this, its very hacky
 		Path path = null;
-		if (requestCode != DELETE_SELECTED_IMAGES)
+		if (requestCode != DELETE_SELECTED)
 		{
 			path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]);
 		}
@@ -206,7 +205,7 @@ public class ImagesActivity extends ImageListBaseActivity
 		int textId = 0;
 		switch (requestCode)
 		{
-			case MOVE_SELECTED_IMAGES ->
+			case MOVE_SELECTED ->
 			{
 				textId = R.string.popup_move_file_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
@@ -225,7 +224,7 @@ public class ImagesActivity extends ImageListBaseActivity
 					Cache.updateMedia(imageFile, p.toString());
 				}
 			}
-			case COPY_SELECTED_IMAGES ->
+			case COPY_SELECTED ->
 			{
 				textId = R.string.popup_copy_file_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
@@ -243,7 +242,7 @@ public class ImagesActivity extends ImageListBaseActivity
 					allImages.add(newImage);
 				}
 			}
-			case DELETE_SELECTED_IMAGES ->
+			case DELETE_SELECTED ->
 			{
 				textId = R.string.popup_delete_file_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)

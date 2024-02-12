@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.widget.SearchView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -21,12 +22,28 @@ import kotlin.Unit;
 
 public abstract class ImageListBaseActivity extends AppCompatActivity
 {
+	protected static final int MOVE_SELECTED = 1;
+	protected static final int COPY_SELECTED = 2;
+	protected static final int DELETE_SELECTED = 3;
+
 	public final String TAG;
 	public static SQLiteDatabase database;
 	protected FileManager fileManager;
 	protected RecyclerView recycler;
 	protected final ActivityManager activityManager = new ActivityManager(this);
 	protected SearchView search;
+
+	protected final ActivityResultLauncher<Intent> moveLauncher = activityManager.registerLauncher(o -> myOnActivityResult(
+			MOVE_SELECTED,
+			o.getResultCode(),
+			o.getData()
+	));
+
+	protected final ActivityResultLauncher<Intent> copyLauncher = activityManager.registerLauncher(o -> myOnActivityResult(
+			COPY_SELECTED,
+			o.getResultCode(),
+			o.getData()
+	));
 
 	protected ImageListBaseActivity(String tag) { TAG = tag; }
 
@@ -97,8 +114,7 @@ public abstract class ImageListBaseActivity extends AppCompatActivity
 		filterRecycle(search.getQuery().toString());
 	}
 
-	@Override
-	protected abstract void onActivityResult(int requestCode, int resultCode, Intent data);
+	protected abstract void myOnActivityResult(int requestCode, int resultCode, Intent data);
 
 	protected abstract void storageAccessGranted();
 

@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
@@ -13,8 +14,10 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -23,6 +26,7 @@ import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.FilterImagesAdapter;
 import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
+import com.cyberegylet.antiDupeGallery.helpers.RealPathUtil;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
 import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
@@ -43,10 +47,23 @@ public class FilterImagesActivity extends AppCompatActivity
 	private static final int COPY_SELECTED_IMAGES = 2;
 	private static final int DELETE_SELECTED_IMAGES = 3;
 
+	private final ActivityManager activityManager = new ActivityManager(this);
+
+	private final ActivityResultLauncher<Intent> moveLauncher = activityManager.registerLauncher(o -> myOnActivityResult(
+			MOVE_SELECTED_IMAGES,
+			o.getResultCode(),
+			o.getData()
+	));
+
+	private final ActivityResultLauncher<Intent> copyLauncher = activityManager.registerLauncher(o -> myOnActivityResult(
+			COPY_SELECTED_IMAGES,
+			o.getResultCode(),
+			o.getData()
+	));
+
 	private final List<ImageFile> allImages = new ArrayList<>();
 	private SQLiteDatabase database;
 	private RecyclerView recycler;
-	private ActivityManager activityManager;
 	private FileManager fileManager;
 
 	@Override
@@ -57,7 +74,6 @@ public class FilterImagesActivity extends AppCompatActivity
 
 		database = Cache.getCache();
 		recycler = findViewById(R.id.recycler);
-		activityManager = new ActivityManager(this);
 
 		recycler.setLayoutManager(new LinearLayoutManager(this));
 
@@ -89,19 +105,13 @@ public class FilterImagesActivity extends AppCompatActivity
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
 					//startActivityForResult(intent, MOVE_SELECTED_IMAGES);
-					activityManager.switchActivity(intent, (data, resultCode) -> {
-						onActivityResult(MOVE_SELECTED_IMAGES, resultCode, data);
-						return Unit.INSTANCE;
-					});
+					activityManager.launchIntent(intent, moveLauncher);
 				}
 				else if (id == copyId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
 					//startActivityForResult(intent, COPY_SELECTED_IMAGES);
-					activityManager.switchActivity(intent, (data, resultCode) -> {
-						onActivityResult(COPY_SELECTED_IMAGES, resultCode, data);
-						return Unit.INSTANCE;
-					});
+					activityManager.launchIntent(intent, copyLauncher);
 				}
 				else if (id == deleteId)
 				{
@@ -109,7 +119,7 @@ public class FilterImagesActivity extends AppCompatActivity
 							.setMessage(R.string.popup_delete_confirm).setIcon(android.R.drawable.ic_dialog_alert)
 							.setPositiveButton(
 									android.R.string.yes,
-									(dialog, whichButton) -> onActivityResult(
+									(dialog, whichButton) -> myOnActivityResult(
 											DELETE_SELECTED_IMAGES,
 											RESULT_OK,
 											new Intent()
@@ -176,10 +186,9 @@ public class FilterImagesActivity extends AppCompatActivity
 		});
 	}
 
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+
+	protected void myOnActivityResult(int requestCode, int resultCode, Intent data)
 	{
-		super.onActivityResult(requestCode, resultCode, data);
 		if (resultCode != RESULT_OK || data == null) return;
 		final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
 		final List<BaseImageAdapter.ViewHolder> selected = adapter.getSelected;

@@ -11,7 +11,11 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.PopupWindow
 import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultCallback
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.Lifecycle
 import com.cyberegylet.antiDupeGallery.helpers.Extender.getObject
 
 class ActivityManager(@JvmField val activity: Activity)
@@ -28,33 +32,38 @@ class ActivityManager(@JvmField val activity: Activity)
 	): PopupWindow = makePopupWindow(activity, layoutId, listener)
 
 	/**
-	 * (activity at least be ComponentActivity for callback)
+	 * @param callback callback to run on result
+	 * @return launcher which can be passed to launchIntent. Null if activity is not at least ComponentActivity or its called after initialization
+	 */
+	fun registerLauncher(callback: ActivityResultCallback<ActivityResult>): ActivityResultLauncher<Intent>? =
+		Companion.registerLauncher(activity as ComponentActivity, callback)
+
+	/**
 	 * @param newActivity the activity to switch to
 	 * @param params ActivityParams to pass to newActivity
-	 * @param callback callback to run on result
+	 * @param launcher launcher to run with intent
 	 */
 	@JvmOverloads
 	fun switchActivity(
 		newActivity: Class<out Activity>,
-		callback: MyActivityResultCallback? = null,
+		launcher: ActivityResultLauncher<Intent>? = null,
 		vararg params: ActivityParameter<*>,
 	)
 	{
-		switchActivity(activity, newActivity, callback, *params)
+		Companion.switchActivity(activity, newActivity, launcher, *params)
 	}
 
 	/**
-	 * (activity at least be ComponentActivity for callback)
 	 * @param intent the intent to start
-	 * @param callback callback to run on result
+	 * @param launcher launcher to run with intent
 	 */
 	@JvmOverloads
-	fun switchActivity(
+	fun launchIntent(
 		intent: Intent,
-		callback: MyActivityResultCallback? = null,
+		launcher: ActivityResultLauncher<Intent>? = null,
 	)
 	{
-		Companion.switchActivity(activity, intent, callback)
+		launchIntent(activity, intent, launcher)
 	}
 
 	/**
@@ -109,46 +118,56 @@ class ActivityManager(@JvmField val activity: Activity)
 		}
 
 		/**
-		 * @param activity calling Activity (at least ComponentActivity for callback)
+		 * @param activity calling ComponentActivity
+		 * @param callback callback to run on result
+		 * @return launcher which can be passed to launchIntent. Null if called after initialization
+		 */
+		@JvmStatic
+		fun registerLauncher(
+			activity: ComponentActivity,
+			callback: ActivityResultCallback<ActivityResult>,
+		): ActivityResultLauncher<Intent>?
+		{
+			if (activity.lifecycle.currentState != Lifecycle.State.INITIALIZED) return null
+			return activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult(), callback)
+		}
+
+		/**
+		 * @param activity calling Activity (at least ComponentActivity for launcher support)
 		 * @param newActivity the activity to switch to
 		 * @param params ActivityParams to pass to newActivity
-		 * @param callback callback to run on result
+		 * @param launcher launcher to run with intent
 		 */
 		@JvmStatic
 		@JvmOverloads
 		fun switchActivity(
 			activity: Activity,
 			newActivity: Class<out Activity>,
-			callback: MyActivityResultCallback? = null,
+			launcher: ActivityResultLauncher<Intent>? = null,
 			vararg params: ActivityParameter<*>,
 		)
 		{
 			val intent = putParams(Intent(activity, newActivity), *params)
-			switchActivity(activity, intent, callback)
+			launchIntent(activity, intent, launcher)
 		}
 
 		/**
-		 * @param activity calling Activity (at least ComponentActivity for callback)
+		 * @param activity calling Activity (at least ComponentActivity for launcher support)
 		 * @param intent the intent to start
-		 * @param callback callback to run on result
+		 * @param launcher launcher to run with intent
 		 */
 		@JvmStatic
 		@JvmOverloads
-		fun switchActivity(
+		fun launchIntent(
 			activity: Activity,
 			intent: Intent,
-			callback: MyActivityResultCallback? = null,
+			launcher: ActivityResultLauncher<Intent>? = null,
 		)
 		{
-			if (callback != null)
+			if (launcher != null)
 			{
-				if (activity is ComponentActivity)
-				{
-					activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-						callback(it.data, it.resultCode)
-					}.launch(intent)
-				}
-				else throw RuntimeException("callback wasn't null, use AppCompatActivity instead of Activity!")
+				if (activity is ComponentActivity) launcher.launch(intent)
+				else throw RuntimeException("launcher was not null, use ComponentActivity!")
 			}
 			else activity.startActivity(intent)
 		}

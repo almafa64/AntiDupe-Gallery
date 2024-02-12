@@ -42,14 +42,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-import kotlin.Unit;
-
 public class AlbumActivity extends ImageListBaseActivity
 {
-	private static final int MOVE_SELECTED_ALBUMS = 1;
-	private static final int COPY_SELECTED_ALBUMS = 2;
-	private static final int DELETE_SELECTED_ALBUMS = 3;
-
 	private List<Album> allAlbums;
 
 	private static boolean hasBackendBeenCalled = false;
@@ -124,20 +118,12 @@ public class AlbumActivity extends ImageListBaseActivity
 				else if (id == moveId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					//startActivityForResult(intent, MOVE_SELECTED_ALBUMS);
-					activityManager.switchActivity(intent, (data, resultCode) -> {
-						onActivityResult(MOVE_SELECTED_ALBUMS, resultCode, data);
-						return Unit.INSTANCE;
-					});
+					activityManager.launchIntent(intent, moveLauncher);
 				}
 				else if (id == copyId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					//startActivityForResult(intent, COPY_SELECTED_ALBUMS);
-					activityManager.switchActivity(intent, (data, resultCode) -> {
-						onActivityResult(COPY_SELECTED_ALBUMS, resultCode, data);
-						return Unit.INSTANCE;
-					});
+					activityManager.launchIntent(intent, copyLauncher);
 				}
 				else if (id == deleteId)
 				{
@@ -145,8 +131,8 @@ public class AlbumActivity extends ImageListBaseActivity
 							.setMessage(R.string.popup_delete_confirm).setIcon(android.R.drawable.ic_dialog_alert)
 							.setPositiveButton(
 									android.R.string.ok,
-									(dialog, whichButton) -> onActivityResult(
-											DELETE_SELECTED_ALBUMS,
+									(dialog, whichButton) -> myOnActivityResult(
+											DELETE_SELECTED,
 											RESULT_OK,
 											new Intent()
 									)
@@ -203,7 +189,7 @@ public class AlbumActivity extends ImageListBaseActivity
 	}
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	protected void myOnActivityResult(int requestCode, int resultCode, Intent data)
 	{
 		if (resultCode != RESULT_OK || data == null) return;
 		final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
@@ -211,7 +197,7 @@ public class AlbumActivity extends ImageListBaseActivity
 		// ToDo test on sd card
 		Log.d("app", String.valueOf(data));
 		Path path = null;
-		if (requestCode != DELETE_SELECTED_ALBUMS)
+		if (requestCode != DELETE_SELECTED)
 		{
 			// ToDo fix this, its very hacky
 			path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]);
@@ -220,7 +206,7 @@ public class AlbumActivity extends ImageListBaseActivity
 		int textId = 0;
 		switch (requestCode)
 		{
-			case MOVE_SELECTED_ALBUMS ->
+			case MOVE_SELECTED ->
 			{
 				textId = R.string.popup_move_folder_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
@@ -237,7 +223,7 @@ public class AlbumActivity extends ImageListBaseActivity
 					Cache.updateAlbum(album, p.toString());
 				}
 			}
-			case COPY_SELECTED_ALBUMS ->
+			case COPY_SELECTED ->
 			{
 				textId = R.string.popup_copy_folder_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
@@ -255,7 +241,7 @@ public class AlbumActivity extends ImageListBaseActivity
 					allAlbums.add(newAlbum);
 				}
 			}
-			case DELETE_SELECTED_ALBUMS ->
+			case DELETE_SELECTED ->
 			{
 				textId = R.string.popup_delete_folder_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
@@ -291,6 +277,7 @@ public class AlbumActivity extends ImageListBaseActivity
 		}
 	}
 
+	// ToDo remove deleted files from db
 	@Override
 	protected void storageAccessGranted()
 	{
