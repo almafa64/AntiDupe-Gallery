@@ -174,7 +174,7 @@ object Cache
 	@JvmStatic
 	fun deleteAlbum(album: Album)
 	{
-		cache.delete(Tables.MEDIA, "${Media.ALBUM_PATH} = " + album.path, null)
+		cache.delete(Tables.MEDIA, "${Media.ALBUM_PATH} = ?", arrayOf(album.path))
 		delete(Tables.ALBUMS, album.path)
 	}
 
