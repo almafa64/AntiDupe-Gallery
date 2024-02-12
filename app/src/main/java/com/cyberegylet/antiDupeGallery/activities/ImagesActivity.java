@@ -3,6 +3,7 @@ package com.cyberegylet.antiDupeGallery.activities;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
@@ -14,6 +15,7 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.Nullable;
+import androidx.documentfile.provider.DocumentFile;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
@@ -22,6 +24,7 @@ import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.compose.AboutActivity;
 import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
+import com.cyberegylet.antiDupeGallery.helpers.RealPathUtil;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
 import com.cyberegylet.antiDupeGallery.models.Album;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
@@ -199,7 +202,26 @@ public class ImagesActivity extends ImageListBaseActivity
 		Path path = null;
 		if (requestCode != DELETE_SELECTED)
 		{
-			path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]);
+			Uri uri = data.getData();
+			String dataPath = Objects.requireNonNull(uri).getPath();
+			String[] parts = Objects.requireNonNull(dataPath).split(":");
+
+			DocumentFile docFile = DocumentFile.fromTreeUri(this, uri);
+
+			//Log.d("app", Objects.requireNonNull(DocumentFile.fromTreeUri(this, uri).getUri().toString()));
+
+			// raw -> parts[1]
+			// primary -> /storage/emulated/0/ + parts[1]
+			//path = Paths.get("/storage/emulated/0/" + parts[1]);
+			if (uri.toString().startsWith("content://com.android.providers.downloads.documents/tree/raw"))
+			{
+				path = Paths.get(parts[1]);
+			}
+			else if (dataPath.startsWith("/tree/primary:"))
+			{
+				path = Paths.get("/storage/emulated/0/" + parts[1]);
+			}
+			else path = Paths.get(RealPathUtil.getRealPath(this, Objects.requireNonNull(docFile).getUri()));
 		}
 		List<ImageFile> failedImages = new ArrayList<>();
 		int textId = 0;

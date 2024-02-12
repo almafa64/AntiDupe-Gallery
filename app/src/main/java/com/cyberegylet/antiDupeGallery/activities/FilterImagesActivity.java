@@ -196,7 +196,26 @@ public class FilterImagesActivity extends AppCompatActivity
 		Path path = null;
 		if (requestCode != DELETE_SELECTED_IMAGES)
 		{
-			path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]);
+			Uri uri = data.getData();
+			String dataPath = Objects.requireNonNull(uri).getPath();
+			String[] parts = Objects.requireNonNull(dataPath).split(":");
+
+			DocumentFile docFile = DocumentFile.fromTreeUri(this, uri);
+
+			//Log.d("app", Objects.requireNonNull(DocumentFile.fromTreeUri(this, uri).getUri().toString()));
+
+			// raw -> parts[1]
+			// primary -> /storage/emulated/0/ + parts[1]
+			//path = Paths.get("/storage/emulated/0/" + parts[1]);
+			if (uri.toString().startsWith("content://com.android.providers.downloads.documents/tree/raw"))
+			{
+				path = Paths.get(parts[1]);
+			}
+			else if (dataPath.startsWith("/tree/primary:"))
+			{
+				path = Paths.get("/storage/emulated/0/" + parts[1]);
+			}
+			else path = Paths.get(RealPathUtil.getRealPath(this, Objects.requireNonNull(docFile).getUri()));
 		}
 		List<ImageFile> failedImages = new ArrayList<>();
 		int textId = 0;

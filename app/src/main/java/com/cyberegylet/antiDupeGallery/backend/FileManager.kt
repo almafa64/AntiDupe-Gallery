@@ -145,7 +145,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		selection: String?,
 		args: Array<String>?,
 		uri: Uri,
-		vararg queries: String
+		vararg queries: String,
 	)
 	{
 		contentResolver.query(uri, queries, selection, args, sort).use { cursor ->
@@ -173,7 +173,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		selection: String?,
 		args: Array<String>?,
 		uri: Uri,
-		vararg queries: String
+		vararg queries: String,
 	)
 	{
 		cursorLoop(wrapper, 0, null, selection, args, uri, *queries)
@@ -185,7 +185,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		selection: String?,
 		args: Array<String>?,
 		uri: Uri,
-		vararg queries: String
+		vararg queries: String,
 	)
 	{
 		cursorLoop(wrapper, 0, sort, selection, args, uri, *queries)
@@ -202,7 +202,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 	}
 
 	fun allImageAndVideoInFolderLoop(
-		absoluteFolder: String, sort: String?, wrapper: CursorLoopWrapper, vararg queries: String
+		absoluteFolder: String, sort: String?, wrapper: CursorLoopWrapper, vararg queries: String,
 	)
 	{
 		cursorLoop(
@@ -389,7 +389,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 
 	companion object
 	{
-		const val STORAGE_REQUEST_CODE = 1
+		@JvmStatic
 		val EXTERNAL_URI: Uri = MediaStore.Files.getContentUri("external")
 		const val IMAGES = MediaStore.MediaColumns.MIME_TYPE + " like 'image/%'"
 		const val VIDEOS = MediaStore.MediaColumns.MIME_TYPE + " like 'video/%'"
@@ -404,6 +404,10 @@ class FileManager(@JvmField val activity: ComponentActivity)
 
 		@JvmStatic
 		fun isDownloadsDocument(uri: Uri): Boolean = "com.android.providers.downloads.documents" == uri.authority
+
+		@JvmStatic
+		fun isRawDownloadsDocument(uri: Uri): Boolean =
+			uri.toString().contains("com.android.providers.downloads.documents/document/raw")
 
 		@JvmStatic
 		fun isMediaDocument(uri: Uri): Boolean = "com.android.providers.media.documents" == uri.authority
