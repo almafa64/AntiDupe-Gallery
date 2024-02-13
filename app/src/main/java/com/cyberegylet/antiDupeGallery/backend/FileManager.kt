@@ -7,9 +7,11 @@ import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import android.util.Log
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -274,12 +276,31 @@ class FileManager(@JvmField val activity: ComponentActivity)
 			.into(imageView!!)
 	}
 
+	/**
+	 * @param type 0 -> move, 1 -> copy, else -> delete
+	 */
+	private fun updateMediaStore(fromFile: Path, toFile: Path?, type: Int = -1)
+	{
+		val list: Array<String> =
+			when (type)
+			{
+				0 -> arrayOf(fromFile.toString(), toFile!!.toString())
+				1 -> arrayOf(toFile!!.toString())
+				else -> arrayOf(fromFile.toString())
+			}
+		MediaScannerConnection.scanFile(context, list, null) { path, uri ->
+			Log.i(TAG, "scanned path: $path, uri: $uri")
+		}
+	}
+
 	fun moveFile(fromFile: Path, toFolder: Path): Boolean
 	{
 		return try
 		{
+			val toFile: Path = toFolder.resolve(fromFile.fileName)
 			Files.createDirectories(toFolder)
-			Files.move(fromFile, toFolder.resolve(fromFile.fileName), StandardCopyOption.REPLACE_EXISTING)
+			Files.move(fromFile, toFile, StandardCopyOption.REPLACE_EXISTING)
+			updateMediaStore(fromFile, toFile, 0)
 			true
 		}
 		catch (e: AccessDeniedException)
@@ -297,8 +318,10 @@ class FileManager(@JvmField val activity: ComponentActivity)
 	{
 		return try
 		{
+			val toFile: Path = toFolder.resolve(fromFile.fileName)
 			Files.createDirectories(toFolder)
-			Files.copy(fromFile, toFolder.resolve(fromFile.fileName), StandardCopyOption.REPLACE_EXISTING)
+			Files.copy(fromFile, toFile, StandardCopyOption.REPLACE_EXISTING)
+			updateMediaStore(fromFile, toFile, 1)
 			true
 		}
 		catch (e: AccessDeniedException)
@@ -312,11 +335,12 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		}
 	}
 
-	fun deleteFile(file: Path?): Boolean
+	fun deleteFile(file: Path): Boolean
 	{
 		return try
 		{
 			Files.deleteIfExists(file)
+			updateMediaStore(file, null)
 			true
 		}
 		catch (e: AccessDeniedException)
@@ -415,6 +439,9 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		@JvmStatic
 		fun isGooglePhotosUri(uri: Uri): Boolean = "com.google.android.apps.photos.content" == uri.authority
 
+		/**
+		 * @return returns the size of the file. -1 if f is Directory.
+		 */
 		@JvmStatic
 		fun getSize(f: File): Long
 		{
@@ -426,5 +453,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		}
 		return size;*/
 		}
+
+		const val TAG = "FileManager"
 	}
 }
