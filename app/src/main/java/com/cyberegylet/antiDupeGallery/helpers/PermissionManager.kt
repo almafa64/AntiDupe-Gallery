@@ -1,10 +1,13 @@
 package com.cyberegylet.antiDupeGallery.helpers
 
+import android.R.drawable.ic_dialog_alert
+import android.R.string.cancel
+import android.R.string.ok
+import android.app.AlertDialog
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-
-// ToDo move requestPermissions into init
+import androidx.core.app.ActivityCompat
 
 class PermissionManager(val activity: ComponentActivity)
 {
@@ -19,6 +22,26 @@ class PermissionManager(val activity: ComponentActivity)
 		}
 
 	/**
+	 * @param permission a permission from Manifest.permission
+	 * @param title id for alert dialog title
+	 * @param text id for alert dialog body text
+	 * @param callback callback to run on ok (true) and cancel (false)
+	 * @return true if alert dialog had to be displayed, false otherwise
+	 */
+	fun showRationaleIfNeeded(permission: String, title: Int, text: Int, callback: ((Boolean) -> Unit)): Boolean
+	{
+		return if (ActivityCompat.shouldShowRequestPermissionRationale(activity, permission))
+		{
+			AlertDialog.Builder(activity).setTitle(title).setMessage(text).setIcon(ic_dialog_alert)
+				.setPositiveButton(ok) { _, _ -> callback(true) }.setNegativeButton(cancel) { _, _ -> callback(false) }
+				.show()
+			true
+		}
+		else false
+	}
+
+	/**
+	 * **Should not be called quickly multiple times!**
 	 * @param callback a callback to work with permissions that have been denied
 	 * @param permissions permissions to request access
 	 * @return true if successfully called launch(), false otherwise

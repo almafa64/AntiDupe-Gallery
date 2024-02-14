@@ -65,7 +65,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		}
 	}
 
-	fun requestStoragePermissions(requestCallback: ((Boolean) -> Unit)?)
+	fun requestStoragePermissions(requestCallback: ((Array<String>?) -> Unit)?)
 	{
 		val hasWrite = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P)
 		{
@@ -94,7 +94,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 			) == PackageManager.PERMISSION_GRANTED
 		}
 
-		if (hasRead && hasWrite) requestCallback?.invoke(true)
+		if (hasRead && hasWrite) requestCallback?.invoke(null)
 		else
 		{
 			val permissions: ArrayList<String> = ArrayList()
@@ -108,10 +108,37 @@ class FileManager(@JvmField val activity: ComponentActivity)
 				}
 				else permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
 			}
+			/*for (String permission : permissions)
+				{
+					if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission))
+					{
+						new AlertDialog.Builder(this).setTitle(R.string.permission_storage_title)
+								.setMessage(R.string.permission_storage_text)
+								.setIcon(android.R.drawable.ic_dialog_alert).setPositiveButton(
+										android.R.string.ok,
+										(dialog, which) -> {
+											Toast.makeText(
+													this,
+													getString(R.string.permission_storage_denied),
+													Toast.LENGTH_SHORT
+											).show();
+											finishAndRemoveTask();
+										}
+								).show();
+					}
+				}*/
+			val permissionManager = PermissionManager(activity)
+			/*for (permission in permissions)
+			{
+				permissionManager.showRationaleIfNeeded(
+					permission,
+					R.string.permission_storage_title,
+					R.string.permission_storage_text
+				) {
 
-			PermissionManager(activity).requestPermissions({
-				requestCallback?.invoke(it.isEmpty())
-			}, *permissions.toTypedArray())
+				}
+			}*/
+			permissionManager.requestPermissions({ requestCallback?.invoke(it) }, *permissions.toTypedArray())
 		}
 	}
 
@@ -295,9 +322,9 @@ class FileManager(@JvmField val activity: ComponentActivity)
 
 	fun moveFile(fromFile: Path, toFolder: Path): Boolean
 	{
+		val toFile: Path = toFolder.resolve(fromFile.fileName)
 		return try
 		{
-			val toFile: Path = toFolder.resolve(fromFile.fileName)
 			Files.createDirectories(toFolder)
 			Files.move(fromFile, toFile, StandardCopyOption.REPLACE_EXISTING)
 			updateMediaStore(fromFile, toFile, 0)
@@ -305,32 +332,38 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		}
 		catch (e: AccessDeniedException)
 		{
-			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show()
+			Log.e(TAG, "access denied: $toFile\n$e")
+			Toast.makeText(context, R.string.permission_storage_denied, Toast.LENGTH_SHORT).show()
 			false
 		}
 		catch (e: IOException)
 		{
+			Log.e(TAG, "io error: $toFile\n$e")
 			false
 		}
 	}
 
 	fun copyFile(fromFile: Path, toFolder: Path): Boolean
 	{
+		val toFile: Path = toFolder.resolve(fromFile.fileName)
 		return try
 		{
-			val toFile: Path = toFolder.resolve(fromFile.fileName)
 			Files.createDirectories(toFolder)
+			Log.w("app", "dir good")
 			Files.copy(fromFile, toFile, StandardCopyOption.REPLACE_EXISTING)
+			Log.w("app", "copy good")
 			updateMediaStore(fromFile, toFile, 1)
 			true
 		}
 		catch (e: AccessDeniedException)
 		{
-			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show()
+			Log.e(TAG, "access denied: $toFile\n$e")
+			Toast.makeText(context, R.string.permission_storage_denied, Toast.LENGTH_SHORT).show()
 			false
 		}
 		catch (e: IOException)
 		{
+			Log.e(TAG, "io error: $toFile\n$e")
 			false
 		}
 	}
@@ -345,11 +378,13 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		}
 		catch (e: AccessDeniedException)
 		{
-			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show()
+			Log.e(TAG, "access denied: $file\n$e")
+			Toast.makeText(context, R.string.permission_storage_denied, Toast.LENGTH_SHORT).show()
 			false
 		}
 		catch (e: IOException)
 		{
+			Log.e(TAG, "io error: $file\n$e")
 			false
 		}
 	}
@@ -369,6 +404,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		}
 		catch (e: IOException)
 		{
+			Log.e(TAG, "io error: $toAlbum\n$e")
 			false
 		}
 	}
@@ -388,6 +424,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		}
 		catch (e: IOException)
 		{
+			Log.e(TAG, "io error: $toAlbum\n$e")
 			false
 		}
 	}
@@ -407,6 +444,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		}
 		catch (e: IOException)
 		{
+			Log.e(TAG, "io error: $album\n$e")
 			false
 		}
 	}

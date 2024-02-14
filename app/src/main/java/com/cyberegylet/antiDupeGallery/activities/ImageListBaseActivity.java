@@ -81,11 +81,11 @@ public abstract class ImageListBaseActivity extends AppCompatActivity
 		});
 
 		fileManager = new FileManager(this);
-		fileManager.requestStoragePermissions(b -> {
-			if (b) storageAccessGranted();
+		fileManager.requestStoragePermissions(permissions -> {
+			if (permissions == null || permissions.length == 0) storageAccessGranted();
 			else
 			{
-				Toast.makeText(this, getString(R.string.no_storage_permission), Toast.LENGTH_SHORT).show();
+				Toast.makeText(this, getString(R.string.permission_storage_denied), Toast.LENGTH_SHORT).show();
 				finishAndRemoveTask();
 			}
 			return Unit.INSTANCE;
