@@ -11,9 +11,9 @@ class ImageFile @JvmOverloads constructor(file: File, val mime: String = "*/*", 
 {
 	val mimeEnum: FileManager.Mimes.Type = when
 	{
-		mime[0] == 'i' -> FileManager.Mimes.Type.MIME_IMAGE
-		mime[0] == 'v' -> FileManager.Mimes.Type.MIME_VIDEO
-		else -> FileManager.Mimes.Type.MIME_NONE
+		mime[0] == 'i' -> FileManager.Mimes.Type.IMAGE
+		mime[0] == 'v' -> FileManager.Mimes.Type.VIDEO
+		else -> FileManager.Mimes.Type.UNKNOWN
 	}
 
 	override fun mySetFile()

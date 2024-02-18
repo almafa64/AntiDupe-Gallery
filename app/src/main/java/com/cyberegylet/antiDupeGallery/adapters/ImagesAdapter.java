@@ -69,7 +69,7 @@ public class ImagesAdapter extends BaseImageAdapter
 		fileManager.thumbnailIntoImageView(holder.img, imageFile.getPath());
 		holder.reIndex();
 
-		if (imageFile.getMimeEnum() == FileManager.Mimes.Type.MIME_VIDEO)
+		if (imageFile.getMimeEnum() == FileManager.Mimes.Type.VIDEO)
 		{
 			((ViewHolder) holder).videoLogo.setVisibility(View.VISIBLE);
 		}

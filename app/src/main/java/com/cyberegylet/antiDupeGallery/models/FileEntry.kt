@@ -23,8 +23,8 @@ abstract class FileEntry
 		protected set
 	var isHidden = false
 		protected set
+
 	var id: Long = 0
-		protected set
 
 	@JvmOverloads
 	constructor(file: File, id: Long = -1)
