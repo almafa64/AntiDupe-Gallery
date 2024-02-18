@@ -28,6 +28,3 @@
     protected java.lang.String getDbPath(java.lang.String);
 }
 -keep public class com.cyberegylet.antiDupeGallery.backend.Backend { *; }
-
--printusage 'usage.txt'
--printseeds 'seed.txt'
