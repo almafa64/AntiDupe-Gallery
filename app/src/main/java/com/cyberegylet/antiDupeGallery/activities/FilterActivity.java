@@ -157,7 +157,7 @@ public class FilterActivity extends AppCompatActivity
 				{
 					long files = Backend.getQueuedFileProgress();
 					if (files == 0) break;
-					if (old - files > 30)
+					if (old - files >= 1)
 					{
 						old = files;
 						double percentage = 100 - (double) files / maxFiles * 100;

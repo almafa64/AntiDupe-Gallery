@@ -26,9 +26,11 @@ import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.FilterImagesAdapter;
 import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
+import com.cyberegylet.antiDupeGallery.backend.Mimes;
 import com.cyberegylet.antiDupeGallery.helpers.RealPathUtil;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
 import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.models.Album;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.io.File;
@@ -228,7 +230,17 @@ public class FilterImagesActivity extends AppCompatActivity
 				{
 					FilterImagesAdapter.ViewHolder holder = (FilterImagesAdapter.ViewHolder) tmp;
 					Path p = Paths.get(holder.getImage().getPath());
-					if (!fileManager.moveFile(p, path)) failedImages.add(holder.getImage());
+					ImageFile imageFile = holder.getImage();
+					if (!fileManager.moveFile(p, path))
+					{
+						failedImages.add(imageFile);
+						continue;
+					}
+					if (!p.equals(path))
+					{
+						allImages.remove(imageFile);
+						Cache.updateMedia(imageFile);
+					}
 				}
 			}
 			case COPY_SELECTED_IMAGES ->
@@ -238,7 +250,18 @@ public class FilterImagesActivity extends AppCompatActivity
 				{
 					FilterImagesAdapter.ViewHolder holder = (FilterImagesAdapter.ViewHolder) tmp;
 					Path p = Paths.get(holder.getImage().getPath());
-					if (!fileManager.copyFile(p, path)) failedImages.add(holder.getImage());
+					ImageFile imageFile = holder.getImage();
+					if (!fileManager.copyFile(p, path))
+					{
+						failedImages.add(imageFile);
+						continue;
+					}
+					Path p2 = path.resolve(p.getFileName());
+					ImageFile newImage = new ImageFile(p2.toFile(), Mimes.getMimeEnumType(p2.toString()));
+					Album album = new Album(path.toString());
+					Cache.addAlbum(album);
+					Cache.addMedia(newImage);
+					if (p.equals(path)) allImages.add(newImage);
 				}
 			}
 			case DELETE_SELECTED_IMAGES ->
@@ -247,8 +270,15 @@ public class FilterImagesActivity extends AppCompatActivity
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					FilterImagesAdapter.ViewHolder holder = (FilterImagesAdapter.ViewHolder) tmp;
+					ImageFile imageFile = holder.getImage();
 					Path p = Paths.get(holder.getImage().getPath());
-					if (!fileManager.deleteFile(p)) failedImages.add(holder.getImage());
+					if (!fileManager.deleteFile(p))
+					{
+						failedImages.add(imageFile);
+						continue;
+					}
+					Cache.deleteMedia(imageFile);
+					allImages.remove(imageFile);
 				}
 			}
 		}
@@ -270,23 +300,30 @@ public class FilterImagesActivity extends AppCompatActivity
 	{
 		String digestHex = (String) activityManager.getParam("digestHex");
 
-		try (Cursor cursor = database.query(
-				Cache.Tables.DIGESTS,
-				new String[]{ Cache.Digests.PATH },
-				"hex(" + Cache.Digests.DIGEST + ") like ?",
-				new String[]{ digestHex },
-				null,
-				null,
-				Cache.Digests.PATH
-		))
+		String digestPath = Cache.Tables.DIGESTS + "." + Cache.Digests.PATH;
+		String mediaPath = Cache.Tables.MEDIA + "." + Cache.Media.PATH;
+		String mediaId = Cache.Tables.MEDIA + "." + Cache.Media.ID;
+		try (Cursor cursor = database.rawQuery(
+				"SELECT " + digestPath + ", " + Cache.Media.MIME_TYPE + ", " + mediaId + " " +
+						"FROM " + Cache.Tables.DIGESTS + " " +
+						"INNER JOIN " + Cache.Tables.MEDIA + " ON " +
+						mediaPath + " = " + digestPath + " " +
+						"WHERE hex(" + Cache.Digests.DIGEST + ") like ? " +
+						"ORDER BY " + digestPath, new String[]{ digestHex }))
 		{
 			if (!cursor.moveToFirst()) return;
-			int pathCol = cursor.getColumnIndexOrThrow(Cache.Digests.PATH);
+			int pathCol = cursor.getColumnIndexOrThrow(digestPath);
+			int idCol = cursor.getColumnIndexOrThrow(mediaId);
+			int mimeCol = cursor.getColumnIndexOrThrow(Cache.Media.MIME_TYPE);
 			do
 			{
 				File imageFile = new File(cursor.getString(pathCol));
 				if (!imageFile.canRead()) continue;
-				allImages.add(new ImageFile(imageFile));
+				allImages.add(new ImageFile(
+						imageFile,
+						Mimes.Type.getEntries().get(cursor.getInt(mimeCol)),
+						cursor.getLong(idCol)
+				));
 			} while (cursor.moveToNext());
 		}
 

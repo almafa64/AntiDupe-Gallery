@@ -1,5 +1,7 @@
 package com.cyberegylet.antiDupeGallery.models;
 
+import com.cyberegylet.antiDupeGallery.backend.Mimes;
+
 import java.io.File;
 
 public class FilteredAlbum
@@ -18,11 +20,11 @@ public class FilteredAlbum
 
 	public void setData(File indexFile, String name, int count, String digestHex)
 	{
-		if(indexFile != null) this.indexImage = new ImageFile(indexFile);
-		if(name != null) this.name = name;
+		if (indexFile != null) this.indexImage = new ImageFile(indexFile, Mimes.Type.UNKNOWN);
+		if (name != null) this.name = name;
 		this.count = count;
 		this.size = 0; //ToDo calculate size
-		if(digestHex != null) this.digestHex = digestHex;
+		if (digestHex != null) this.digestHex = digestHex;
 	}
 
 	public ImageFile getIndexImage() { return indexImage; }

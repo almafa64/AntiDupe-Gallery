@@ -3,6 +3,7 @@ package com.cyberegylet.antiDupeGallery.activities;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -25,6 +26,7 @@ import com.cyberegylet.antiDupeGallery.backend.Backend;
 import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
+import com.cyberegylet.antiDupeGallery.backend.Mimes;
 import com.cyberegylet.antiDupeGallery.compose.AboutActivity;
 import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.helpers.MyAsyncTask;
@@ -40,7 +42,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -319,10 +322,119 @@ public class AlbumActivity extends ImageListBaseActivity
 			@Override
 			public void doInBackground()
 			{
-				HashMap<String, Album> albumNames = new HashMap<>();
+				final boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
+
+				// https://github.com/SimpleMobileTools/Simple-Gallery/blob/master/app/src/main/kotlin/com/simplemobiletools/gallery/pro/helpers/MediaFetcher.kt#L84
+
+				HashSet<String> folders = new LinkedHashSet<>();
+				try (Cursor c = getContentResolver().query(
+						FileManager.EXTERNAL_URI,
+						new String[]{ MediaStore.MediaColumns.DATA },
+						null,
+						null,
+						MediaStore.MediaColumns._ID + " DESC LIMIT 10"
+				))
+				{
+					assert c != null;
+					if (c.moveToFirst())
+					{
+						do
+						{
+							String path = FileManager.getParentPath(c.getString(0));
+							folders.add(path);
+						} while (c.moveToNext());
+					}
+				}
+
+				List<String> args = new ArrayList<>();
+				StringBuilder sb = new StringBuilder();
+
+				for (String a : Mimes.PHOTO_EXTENSIONS)
+				{
+					sb.append(MediaStore.MediaColumns.DATA + " LIKE ? OR ");
+					args.add("%" + a);
+				}
+
+				for (String a : Mimes.VIDEO_EXTENSIONS)
+				{
+					sb.append(MediaStore.MediaColumns.DATA + " LIKE ? OR ");
+					args.add("%" + a);
+				}
+
+				String selection = sb.toString().trim();
+				selection = selection.substring(0, selection.lastIndexOf("OR"));
+
+				try (Cursor c = getContentResolver().query(
+						FileManager.EXTERNAL_URI,
+						new String[]{ MediaStore.MediaColumns.DATA },
+						selection,
+						args.toArray(new String[0]),
+						null
+				))
+				{
+					assert c != null;
+					if (c.moveToFirst())
+					{
+						do
+						{
+							String path = c.getString(0);
+							if (path == null) continue;
+							folders.add(FileManager.getParentPath(path));
+						} while (c.moveToNext());
+					}
+				}
+
+				Cache.getCache().beginTransaction();
+				for (String folder : folders)
+				{
+					File folderFile = new File(folder);
+					if (!folderFile.canRead()) continue;
+					Album album = new Album(folderFile);
+
+					if (!album.isHidden() || showHidden)
+					{
+						albums.add(album);
+						adapter.sort(comparator, false);
+					}
+
+					File[] files = folderFile.listFiles();
+					if (files == null) continue;
+					int timeout = 0;
+					for (File file : files)
+					{
+						if (!file.canRead()) continue;
+
+						String path = file.getPath();
+
+						boolean isImage = Mimes.isImage(path);
+						boolean isVideo = !isImage && Mimes.isVideo(path);
+
+						if (!isImage && !isVideo) continue;
+						ImageFile imageFile = new ImageFile(file, isImage ? Mimes.Type.IMAGE : Mimes.Type.VIDEO);
+
+						album.addImage(imageFile);
+						Cache.addMedia(imageFile);
+
+						if (timeout++ == 50)
+						{
+							timeout = 0;
+							runOnUiThread(adapter::notifyDataSetChanged);
+						}
+					}
+
+					if (album.getCount() != 0)
+					{
+						Cache.addAlbum(album);
+						allAlbums.add(album);
+					}
+					else albums.remove(album);
+				}
+				Cache.getCache().setTransactionSuccessful();
+				Cache.getCache().endTransaction();
+
+				/*HashMap<String, Album> albumNames = new HashMap<>();
 				FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
 				{
-					final boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
 					int timeout = 0;
 
 					@Override
@@ -370,7 +482,7 @@ public class AlbumActivity extends ImageListBaseActivity
 						MediaStore.MediaColumns._ID,
 						MediaStore.MediaColumns.DATA,
 						MediaStore.MediaColumns.MIME_TYPE
-				);
+				);*/
 			}
 
 			@SuppressLint("NotifyDataSetChanged")

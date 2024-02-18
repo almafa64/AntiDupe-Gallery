@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.activities.ImageViewActivity;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
+import com.cyberegylet.antiDupeGallery.backend.Mimes;
 import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityParameter;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
@@ -69,7 +70,7 @@ public class ImagesAdapter extends BaseImageAdapter
 		fileManager.thumbnailIntoImageView(holder.img, imageFile.getPath());
 		holder.reIndex();
 
-		if (imageFile.getMimeEnum() == FileManager.Mimes.Type.VIDEO)
+		if (imageFile.getType() == Mimes.Type.VIDEO)
 		{
 			((ViewHolder) holder).videoLogo.setVisibility(View.VISIBLE);
 		}

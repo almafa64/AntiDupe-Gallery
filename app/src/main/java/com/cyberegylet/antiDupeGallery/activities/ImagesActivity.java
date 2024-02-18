@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,7 @@ import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.ImagesAdapter;
 import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.Config;
+import com.cyberegylet.antiDupeGallery.backend.Mimes;
 import com.cyberegylet.antiDupeGallery.compose.AboutActivity;
 import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.helpers.RealPathUtil;
@@ -73,7 +75,7 @@ public class ImagesActivity extends ImageListBaseActivity
 		String sort = ConfigSort.toMediaSQLString(Config.getStringProperty(Config.Property.IMAGE_SORT));
 		try (Cursor cursor = database.query(
 				Cache.Tables.MEDIA,
-				new String[]{ Cache.Media.PATH, Cache.Media.MIME_TYPE },
+				new String[]{ Cache.Media.PATH, Cache.Media.MIME_TYPE, Cache.Media.ID },
 				Cache.Media.ALBUM_PATH + " = ?",
 				new String[]{ path },
 				null,
@@ -84,11 +86,16 @@ public class ImagesActivity extends ImageListBaseActivity
 			if (!cursor.moveToFirst()) return false;
 			int pathCol = cursor.getColumnIndexOrThrow(Cache.Media.PATH);
 			int mimeCol = cursor.getColumnIndexOrThrow(Cache.Media.MIME_TYPE);
+			int idCol = cursor.getColumnIndexOrThrow(Cache.Media.ID);
 			do
 			{
 				File imageFile = new File(cursor.getString(pathCol));
 				if (!imageFile.canRead()) continue;
-				allImages.add(new ImageFile(imageFile, cursor.getString(mimeCol)));
+				allImages.add(new ImageFile(
+						imageFile,
+						Mimes.Type.getEntries().get(cursor.getInt(mimeCol)),
+						cursor.getLong(idCol)
+				));
 			} while (cursor.moveToNext());
 		}
 
@@ -202,7 +209,9 @@ public class ImagesActivity extends ImageListBaseActivity
 		Path path = null;
 		if (requestCode != DELETE_SELECTED)
 		{
+			// ToDo path isnt tree, look into this if needs changes
 			Uri uri = data.getData();
+			Log.d("app", "uri: " + uri);
 			String dataPath = Objects.requireNonNull(uri).getPath();
 			String[] parts = Objects.requireNonNull(dataPath).split(":");
 
@@ -240,10 +249,11 @@ public class ImagesActivity extends ImageListBaseActivity
 						failedImages.add(imageFile);
 						continue;
 					}
-					File file = path.resolve(p.getFileName()).toFile();
-					if (Objects.equals(file.getParent(), p.getParent().toString())) imageFile.setFile(file);
-					else allImages.remove(imageFile);
-					Cache.updateMedia(imageFile, p.toString());
+					if (!p.equals(path))
+					{
+						allImages.remove(imageFile);
+						Cache.updateMedia(imageFile);
+					}
 				}
 			}
 			case COPY_SELECTED ->
@@ -259,9 +269,12 @@ public class ImagesActivity extends ImageListBaseActivity
 						failedImages.add(imageFile);
 						continue;
 					}
-					ImageFile newImage = new ImageFile(path.resolve(p.getFileName()).toFile());
-					Cache.addMedia(newImage, new Album(path.toString()));
-					allImages.add(newImage);
+					Path p2 = path.resolve(p.getFileName());
+					ImageFile newImage = new ImageFile(p2.toFile(), Mimes.getMimeEnumType(p2.toString()));
+					Album album = new Album(path.toString());
+					Cache.addAlbum(album);
+					Cache.addMedia(newImage);
+					if (p.equals(path)) allImages.add(newImage);
 				}
 			}
 			case DELETE_SELECTED ->
