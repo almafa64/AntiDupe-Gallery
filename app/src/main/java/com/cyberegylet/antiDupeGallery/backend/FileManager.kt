@@ -95,6 +95,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		private var idCol = 0
 		private var pathCol = 0
 		private var mimeCol = 0
+
 		private lateinit var cursor: Cursor
 		fun init(cursor: Cursor)
 		{
@@ -191,6 +192,66 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		)
 	}
 
+	fun getNoMediaFolders(): ArrayList<String>
+	{
+		val folders = ArrayList<String>()
+
+		val wrapper = object : CursorLoopWrapper()
+		{
+			override fun run()
+			{
+				val noMediaFile = File(path)
+				if (noMediaFile.exists() && noMediaFile.name == MediaStore.MEDIA_IGNORE_FILENAME)
+				{
+					folders.add(noMediaFile.parent!!)
+				}
+			}
+		}
+		cursorLoop(
+			wrapper,
+			"${MediaStore.Files.FileColumns.MEDIA_TYPE} = ? AND ${MediaStore.MediaColumns.TITLE} LIKE ?",
+			arrayOf(MediaStore.Files.FileColumns.MEDIA_TYPE_NONE.toString(), MediaStore.MEDIA_IGNORE_FILENAME),
+			EXTERNAL_URI,
+			MediaStore.MediaColumns.DATA
+		)
+
+		return folders
+	}
+
+	fun getFolders(): HashSet<String>
+	{
+		// https://github.com/SimpleMobileTools/Simple-Gallery/blob/master/app/src/main/kotlin/com/simplemobiletools/gallery/pro/helpers/MediaFetcher.kt#L84
+		val folders = HashSet<String>()
+
+		val args = ArrayList<String>()
+		val sb = StringBuilder()
+
+		for (a in Mimes.PHOTO_EXTENSIONS)
+		{
+			sb.append("${MediaStore.MediaColumns.DATA} LIKE ? OR ")
+			args.add("%$a")
+		}
+
+		for (a in Mimes.VIDEO_EXTENSIONS)
+		{
+			sb.append("${MediaStore.MediaColumns.DATA} LIKE ? OR ")
+			args.add("%$a")
+		}
+
+		val selection = sb.trimEnd().removeSuffix("OR").toString()
+
+		val wrapper = object : CursorLoopWrapper()
+		{
+			override fun run()
+			{
+				folders.add(getParentPath(path))
+			}
+		}
+		cursorLoop(wrapper, selection, args.toTypedArray(), EXTERNAL_URI, MediaStore.MediaColumns.DATA)
+
+		return folders
+	}
+
 	fun getAlbums(): ArrayList<Album>
 	{
 		val albums = ArrayList<Album>()
@@ -217,7 +278,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		).use { cursor ->
 			val pathInd = cursor!!.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA)
 			cursor.moveToFirst()
-			return Uri.parse("file://" + cursor.getString(pathInd))
+			return Uri.parse("file://${cursor.getString(pathInd)}")
 		}
 	}
 
@@ -225,7 +286,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 	{
 		contentResolver.query(
 			EXTERNAL_URI, arrayOf(MediaStore.MediaColumns._ID),
-			MediaStore.MediaColumns.DATA + "=?", arrayOf(path.path),
+			"${MediaStore.MediaColumns.DATA}=?", arrayOf(path.path),
 			null
 		).use { cursor ->
 			val idInd = cursor!!.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
@@ -248,10 +309,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		}
 	}
 
-	fun getMimeType(uri: Uri): String
-	{
-		return getMimeType(getIDFromUri(uri))
-	}
+	fun getMimeType(uri: Uri): String = getMimeType(getIDFromUri(uri))
 
 	fun thumbnailIntoImageView(imageView: ImageView, path: String)
 	{
@@ -262,7 +320,7 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		val playGIF = getBooleanProperty(Config.Property.ANIMATE_GIF)
 		options = when
 		{
-			Mimes.getMimeType(path)?.endsWith("webp") == true -> options.decode(WebpDrawable::class.java)
+			Mimes.isWebp(path) -> options.decode(WebpDrawable::class.java)
 			!playGIF -> options.dontAnimate().decode(Bitmap::class.java)
 			else -> options.decode(Drawable::class.java)
 		}
