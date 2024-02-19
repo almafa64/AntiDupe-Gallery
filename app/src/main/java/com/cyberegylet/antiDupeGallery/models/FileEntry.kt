@@ -22,7 +22,6 @@ abstract class FileEntry
 	var creationDate: Long = 0
 		protected set
 	var isHidden = false
-		protected set
 
 	var id: Long = 0
 

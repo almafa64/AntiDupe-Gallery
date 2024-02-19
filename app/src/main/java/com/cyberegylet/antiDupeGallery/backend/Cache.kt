@@ -27,6 +27,7 @@ object Cache
 		//const val ID = "id"
 		const val MODIFICATION_TIME = "mtime"
 		const val SIZE = "size"
+		const val HIDDEN = "hidden"
 	}
 
 	object Albums
@@ -35,6 +36,7 @@ object Cache
 		const val PATH = Base.PATH
 		const val SIZE = Base.SIZE
 		const val MODIFICATION_TIME = Base.MODIFICATION_TIME
+		const val HIDDEN = Base.HIDDEN
 		//const val ID = Base.ID
 
 		const val MEDIA_COUNT = "mediaCount"
@@ -46,6 +48,7 @@ object Cache
 		const val PATH = Base.PATH
 		const val SIZE = Base.SIZE
 		const val MODIFICATION_TIME = Base.MODIFICATION_TIME
+		const val HIDDEN = Base.HIDDEN
 
 		//const val ID = Base.ID
 		const val ID = "id"
@@ -65,7 +68,7 @@ object Cache
 
 	object Digests
 	{
-		const val ID = Media.MEDIA_STORE_ID
+		const val ID = Media.ID
 		const val PATH = Base.PATH
 		const val DIGEST = "digest"
 	}
@@ -85,28 +88,31 @@ object Cache
 		cache.execSQL(
 			"CREATE TABLE IF NOT EXISTS ${Tables.ALBUMS} (" +
 					"${Albums.NAME} TEXT," +
-					"${Albums.PATH} TEXT PRIMARY KEY, " +
+					"${Albums.PATH} TEXT PRIMARY KEY," +
 					"${Albums.MODIFICATION_TIME} INTEGER," +
 					"${Albums.MEDIA_COUNT} INTEGER," +
-					"${Albums.SIZE} INTEGER" +
+					"${Albums.SIZE} INTEGER," +
+					"${Albums.HIDDEN} INTEGER" +
 					")"
 		)
 		cache.execSQL(
 			"CREATE TABLE IF NOT EXISTS ${Tables.MEDIA} (" +
 					"${Media.ID} INTEGER PRIMARY KEY AUTOINCREMENT," +
-					"${Media.ALBUM_PATH} TEXT," +
 					"${Media.NAME} TEXT," +
 					"${Media.PATH} TEXT UNIQUE," +
 					"${Media.CREATION_TIME} INTEGER," +
 					"${Media.MODIFICATION_TIME} INTEGER," +
+					"${Media.HIDDEN} INTEGER," +
 					"${Media.SIZE} INTEGER," +
 					"${Media.MIME_TYPE} INTEGER," +
-					"${Media.C_HASH} BLOB," +
 					"${Media.MEDIA_STORE_ID} INTEGER," +
+					"${Media.ALBUM_PATH} TEXT," +
+					"${Media.C_HASH} BLOB," +
 					"${Media.P_HASH} BLOB," +
 					"FOREIGN KEY(${Media.ALBUM_PATH}) REFERENCES ${Tables.ALBUMS}(${Albums.PATH})" +
 					")"
 		)
+		//cache.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS idx_${Media.PATH} ON ${Tables.MEDIA}(${Media.PATH})")
 		cache.execSQL(
 			"CREATE TABLE IF NOT EXISTS ${Tables.DIGESTS} (" +
 					"${Digests.ID} INTEGER, ${Digests.PATH} TEXT, ${Digests.DIGEST} BLOB)"
@@ -114,14 +120,18 @@ object Cache
 
 		mediaInsert = cache.compileStatement(
 			"INSERT OR REPLACE INTO ${Tables.MEDIA} (" +
-					"${Media.PATH}, ${Media.NAME}, ${Media.CREATION_TIME}, ${Media.MODIFICATION_TIME}," +
-					"${Media.MIME_TYPE}, ${Media.SIZE}, ${Media.ALBUM_PATH}) VALUES (?, ?, ?, ?, ?, ?, ?)"
+					"${Media.PATH},${Media.NAME},${Media.CREATION_TIME},${Media.MODIFICATION_TIME}," +
+					"${Media.MIME_TYPE},${Media.SIZE},${Media.HIDDEN},${Media.ALBUM_PATH}" +
+					") VALUES (?,?,?,?,?,?,?,?)"
 		)
 		albumInsert = cache.compileStatement(
 			"INSERT OR REPLACE INTO ${Tables.ALBUMS} (" +
-					"${Albums.PATH}, ${Albums.NAME}, ${Albums.MODIFICATION_TIME}, ${Albums.SIZE}, ${Albums.MEDIA_COUNT}" +
-					") VALUES (?, ?, ?, ?, ?)"
+					"${Albums.PATH},${Albums.NAME},${Albums.MODIFICATION_TIME},${Albums.SIZE},${Albums.MEDIA_COUNT}," +
+					"${Albums.HIDDEN}) VALUES (?,?,?,?,?,?)"
 		)
+
+		cache.enableWriteAheadLogging()
+		cache.execSQL("PRAGMA synchronous = NORMAL")
 	}
 
 	/**
@@ -152,6 +162,7 @@ object Cache
 			put(Media.SIZE, imageFile.size)
 			put(Media.MIME_TYPE, imageFile.type.ordinal)
 			put(Media.MODIFICATION_TIME, imageFile.modifiedDate)
+			put(Media.HIDDEN, if (imageFile.isHidden) 1 else 0)
 		}
 		return cache.update(Tables.MEDIA, values, "${Media.ID} = ${imageFile.id}", null)
 	}
@@ -195,7 +206,8 @@ object Cache
 		mediaInsert.bindLong(4, imageFile.modifiedDate)
 		mediaInsert.bindLong(5, imageFile.type.ordinal.toLong())
 		mediaInsert.bindLong(6, imageFile.size)
-		mediaInsert.bindString(7, imageFile.file.parent)
+		mediaInsert.bindLong(7, if (imageFile.isHidden) 1 else 0)
+		mediaInsert.bindString(8, imageFile.file.parent)
 
 		imageFile.id = mediaInsert.executeInsert()
 
@@ -222,10 +234,13 @@ object Cache
 	@JvmStatic
 	fun updateAlbum(album: Album, oldPath: String): Int
 	{
-		val values = ContentValues().apply {
-			put(Media.ALBUM_PATH, album.path)
+		if (album.path != oldPath)
+		{
+			val values = ContentValues().apply {
+				put(Media.ALBUM_PATH, album.path)
+			}
+			cache.update(Tables.MEDIA, values, "${Media.ALBUM_PATH} = ?", arrayOf(oldPath))
 		}
-		cache.update(Tables.MEDIA, values, "${Media.ALBUM_PATH} = ?", arrayOf(oldPath))
 
 		val values2 = ContentValues().apply {
 			put(Albums.PATH, album.path)
@@ -233,6 +248,7 @@ object Cache
 			put(Albums.NAME, album.name)
 			put(Albums.MEDIA_COUNT, album.count)
 			put(Albums.MODIFICATION_TIME, album.modifiedDate)
+			put(Albums.HIDDEN, if (album.isHidden) 1 else 0)
 		}
 		return cache.update(Tables.ALBUMS, values2, "${Albums.PATH} = ?", arrayOf(oldPath))
 	}
@@ -249,15 +265,13 @@ object Cache
 		albumInsert.bindLong(3, album.modifiedDate)
 		albumInsert.bindLong(4, album.size)
 		albumInsert.bindLong(5, album.count)
+		albumInsert.bindLong(6, if (album.isHidden) 1 else 0)
 
 		album.id = albumInsert.executeInsert()
 
 		albumInsert.clearBindings()
 		return album.id
 	}
-
-	private fun insert(table: String, values: ContentValues) =
-		cache.insertWithOnConflict(table, null, values, SQLiteDatabase.CONFLICT_REPLACE)
 
 	private fun delete(table: String, path: String) = cache.delete(table, "${Base.PATH} like ?", arrayOf(path))
 }
