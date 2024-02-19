@@ -81,11 +81,8 @@ object Config
 	fun getBooleanProperty(property: Property) = properties.getProperty(property.name) == "1"
 
 	@JvmStatic
-	fun getArrayProperty(property: Property): Array<String>
-	{
-		return properties.getProperty(property.name).split(",".toRegex()).dropLastWhile { it.isEmpty() }
-			.toTypedArray()
-	}
+	fun getArrayProperty(property: Property): Array<String> =
+		properties.getProperty(property.name).split("|").dropLastWhile { it.isEmpty() }.toTypedArray()
 
 	@JvmStatic
 	fun setStringProperty(property: Property, value: String?)
@@ -108,7 +105,7 @@ object Config
 	@JvmStatic
 	fun setArrayProperty(property: Property, values: Array<String?>)
 	{
-		properties.setProperty(property.name, java.lang.String.join(",", *values))
+		properties.setProperty(property.name, values.joinToString("|"))
 	}
 
 	@JvmStatic
@@ -138,7 +135,7 @@ object Config
 			Property.IMAGE_COLUMN_NUMBER -> setIntProperty(Property.IMAGE_COLUMN_NUMBER, 3)
 			Property.ANIMATE_GIF -> setBooleanProperty(Property.ANIMATE_GIF, false)
 			Property.DO_ANIMATIONS -> setBooleanProperty(Property.DO_ANIMATIONS, true)
-			Property.BLOCKED_PATHS -> setStringProperty(Property.BLOCKED_PATHS, "")
+			Property.BLOCKED_PATHS -> setArrayProperty(Property.BLOCKED_PATHS, arrayOf())
 		}
 	}
 
