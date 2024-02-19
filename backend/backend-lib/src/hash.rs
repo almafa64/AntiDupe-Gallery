@@ -3,10 +3,8 @@ use std::io::{Read, self};
 use std::path::Path;
 
 use anyhow::Result;
+use img_hash::{HasherConfig, HashAlg};
 use sha2::{Sha256, Digest};
-// use opencv::imgcodecs::{imread, IMREAD_COLOR};
-// use opencv::img_hash::p_hash;
-// use opencv::core::Vector;
 
 pub fn chash(path: impl AsRef<Path>) -> Result<[u8; 32]> {
     let mut file = File::open(path)?;
@@ -17,12 +15,15 @@ pub fn chash(path: impl AsRef<Path>) -> Result<[u8; 32]> {
     Ok(sha256.finalize()[..].try_into().unwrap())
 }
 
-// pub fn phash(path: impl AsRef<Path>) -> Result<[u8; 8]> {
-//     let path_str = path.as_ref().as_os_str().to_str().unwrap();
-//     let image = imread(path_str, IMREAD_COLOR)?;
+pub fn phash(path: impl AsRef<Path>) -> Result<[u8; 32]> {
+    let image = image::open(path)?;
+    let hasher = HasherConfig::new()
+        .hash_alg(HashAlg::Gradient)
+        .preproc_dct()
+        .hash_size(16, 16) // 16 * 16 = 256 bits = 32 bytes
+        .to_hasher();
 
-//     let mut hash: Vector<u8> = Vector::new();
-//     p_hash(&image, &mut hash);
+    let hash = hasher.hash_image(&image);
 
-//     Ok(hash.to_vec()[..].try_into().unwrap())
-// }
+    Ok(*(<&[u8] as TryInto<&[u8; 32]>>::try_into(hash.as_bytes()).unwrap()))
+}
