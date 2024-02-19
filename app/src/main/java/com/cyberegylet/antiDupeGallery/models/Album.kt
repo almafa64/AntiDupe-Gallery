@@ -47,6 +47,19 @@ class Album : FileEntry
 	{
 		super.mySetFile()
 		modifiedDate = file.lastModified()
+
+		if (isHidden) return
+
+		var curDir = file
+		do
+		{
+			if (curDir.listFiles { _, name -> name.lowercase() == ".nomedia" }?.size == 1)
+			{
+				isHidden = true
+				return
+			}
+			curDir = curDir.parentFile!!
+		} while (curDir.path != "/storage")
 	}
 
 	companion object
