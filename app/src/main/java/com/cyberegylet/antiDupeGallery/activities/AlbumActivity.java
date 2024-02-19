@@ -3,10 +3,8 @@ package com.cyberegylet.antiDupeGallery.activities;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -43,7 +41,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -326,75 +323,27 @@ public class AlbumActivity extends ImageListBaseActivity
 
 				// https://github.com/SimpleMobileTools/Simple-Gallery/blob/master/app/src/main/kotlin/com/simplemobiletools/gallery/pro/helpers/MediaFetcher.kt#L84
 
-				HashSet<String> folders = new LinkedHashSet<>();
-				try (Cursor c = getContentResolver().query(
-						FileManager.EXTERNAL_URI,
-						new String[]{ MediaStore.MediaColumns.DATA },
-						null,
-						null,
-						MediaStore.MediaColumns._ID + " DESC LIMIT 10"
-				))
-				{
-					assert c != null;
-					if (c.moveToFirst())
-					{
-						do
-						{
-							String path = FileManager.getParentPath(c.getString(0));
-							folders.add(path);
-						} while (c.moveToNext());
-					}
-				}
-
-				List<String> args = new ArrayList<>();
-				StringBuilder sb = new StringBuilder();
-
-				for (String a : Mimes.PHOTO_EXTENSIONS)
-				{
-					sb.append(MediaStore.MediaColumns.DATA + " LIKE ? OR ");
-					args.add("%" + a);
-				}
-
-				for (String a : Mimes.VIDEO_EXTENSIONS)
-				{
-					sb.append(MediaStore.MediaColumns.DATA + " LIKE ? OR ");
-					args.add("%" + a);
-				}
-
-				String selection = sb.toString().trim();
-				selection = selection.substring(0, selection.lastIndexOf("OR"));
-
-				try (Cursor c = getContentResolver().query(
-						FileManager.EXTERNAL_URI,
-						new String[]{ MediaStore.MediaColumns.DATA },
-						selection,
-						args.toArray(new String[0]),
-						null
-				))
-				{
-					assert c != null;
-					if (c.moveToFirst())
-					{
-						do
-						{
-							String path = c.getString(0);
-							if (path == null) continue;
-							folders.add(FileManager.getParentPath(path));
-						} while (c.moveToNext());
-					}
-				}
+				HashSet<String> folders = fileManager.getFolders();
+				HashSet<String> noMediaFolders = new HashSet<>(fileManager.getNoMediaFolders());
 
 				Cache.getCache().beginTransaction();
 				for (String folder : folders)
 				{
 					File folderFile = new File(folder);
-					if (!folderFile.canRead()) continue;
 					Album album = new Album(folderFile);
 
-					if (!album.isHidden() || showHidden)
+					if (!album.isHidden())
 					{
-						albums.add(album);
-						adapter.sort(comparator, false);
+						String curPath = folder;
+						do
+						{
+							if (noMediaFolders.contains(curPath))
+							{
+								album.setHidden(true);
+								break;
+							}
+							curPath = FileManager.getParentPath(curPath);
+						} while (!curPath.equals("/storage"));
 					}
 
 					File[] files = folderFile.listFiles();
@@ -426,63 +375,15 @@ public class AlbumActivity extends ImageListBaseActivity
 					{
 						Cache.addAlbum(album);
 						allAlbums.add(album);
+						if (!album.isHidden() || showHidden)
+						{
+							albums.add(album);
+							adapter.sort(comparator, false);
+						}
 					}
-					else albums.remove(album);
 				}
 				Cache.getCache().setTransactionSuccessful();
 				Cache.getCache().endTransaction();
-
-				/*HashMap<String, Album> albumNames = new HashMap<>();
-				FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
-				{
-					int timeout = 0;
-
-					@Override
-					public void run()
-					{
-						String path = getPath();
-
-						File image = new File(path);
-						if (!image.canRead()) return;
-
-						final String albumPath = path.substring(0, path.lastIndexOf('/'));
-
-						Album album = albumNames.get(albumPath);
-						if (album == null)
-						{
-							album = new Album(albumPath);
-							Cache.addAlbum(album);
-							albumNames.put(albumPath, album);
-							allAlbums.add(album);
-							if (!album.isHidden() || showHidden)
-							{
-								albums.add(album);
-								adapter.sort(comparator, false);
-							}
-						}
-
-						long id = getId();
-						//Backend.queueFile(id, path);
-
-						ImageFile imageFile = new ImageFile(image, getMime(), id);
-						album.addImage(imageFile);
-						Cache.addMedia(imageFile, album);
-
-						if (timeout++ == 30)
-						{
-							timeout = 0;
-							runOnUiThread(adapter::notifyDataSetChanged);
-						}
-					}
-				};
-				String image_sort = ConfigSort.toSQLString(Config.getStringProperty(Config.Property.IMAGE_SORT));
-				fileManager.allImageAndVideoLoop(
-						image_sort,
-						wrapper,
-						MediaStore.MediaColumns._ID,
-						MediaStore.MediaColumns.DATA,
-						MediaStore.MediaColumns.MIME_TYPE
-				);*/
 			}
 
 			@SuppressLint("NotifyDataSetChanged")

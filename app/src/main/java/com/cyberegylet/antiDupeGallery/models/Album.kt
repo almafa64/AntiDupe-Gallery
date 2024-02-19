@@ -41,25 +41,13 @@ class Album : FileEntry
 		if ((indexImage?.modifiedDate ?: 0) < imageFile.modifiedDate) indexImage = imageFile
 		size += FileManager.getSize(imageFile.file)
 		count++
+		imageFile.isHidden = isHidden
 	}
 
 	override fun mySetFile()
 	{
 		super.mySetFile()
 		modifiedDate = file.lastModified()
-
-		if (isHidden) return
-
-		var curDir = file
-		do
-		{
-			if (curDir.listFiles { _, name -> name.lowercase() == ".nomedia" }?.size == 1)
-			{
-				isHidden = true
-				return
-			}
-			curDir = curDir.parentFile!!
-		} while (curDir.path != "/storage")
 	}
 
 	companion object
