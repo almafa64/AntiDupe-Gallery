@@ -99,7 +99,7 @@ public class FilterActivity extends AppCompatActivity
 						{
 							count++;
 							albums.add(new FilteredAlbum(f, String.valueOf(count), cursor.getInt(countCol), hex));
-							albums.sort((b, c) -> Math.toIntExact(b.getCount() - c.getCount()));
+							albums.sort((b, c) -> Math.toIntExact(c.getCount() - b.getCount()));
 						}
 						runOnUiThread(adapter::notifyDataSetChanged);
 

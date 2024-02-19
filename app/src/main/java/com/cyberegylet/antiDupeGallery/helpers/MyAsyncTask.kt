@@ -23,7 +23,10 @@ abstract class MyAsyncTask
 	/**
 	 * sets thread stop variable, which will block remaining steps
 	 */
-	fun stop() { shouldStop = true }
+	fun stop()
+	{
+		shouldStop = true
+	}
 
 	fun running(): Boolean = thread?.isAlive ?: false
 }
