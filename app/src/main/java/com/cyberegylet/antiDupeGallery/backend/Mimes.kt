@@ -5,14 +5,7 @@ import java.io.File
 object Mimes
 {
 	@JvmField
-	val MIME_VIDEOS = arrayOf("video/mpeg", "video/mp4", "video/webm", "video/3gpp", "video/avi", "video/quicktime")
-
-	@JvmField
-	val MIME_IMAGES =
-		arrayOf("image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/svg", "image/ico")
-
-	@JvmField
-	val PHOTO_EXTENSIONS = arrayOf(".jpg", ".png", ".jpeg", ".bmp", ".webp", ".heic", ".heif", ".apng", ".avif")
+	val PHOTO_EXTENSIONS = arrayOf(".jpg", ".png", ".jpeg", ".gif", ".bmp", ".webp", ".heic", ".heif", ".apng", ".avif")
 
 	@JvmField
 	val VIDEO_EXTENSIONS = arrayOf(".mp4", ".mkv", ".webm", ".avi", ".3gp", ".mov", ".m4v", ".3gpp")
@@ -22,6 +15,12 @@ object Mimes
 
 	@JvmStatic
 	fun isVideo(path: String) = VIDEO_EXTENSIONS.any { path.endsWith(it, true) }
+
+	@JvmStatic
+	fun isGif(path: String) = path.endsWith(".gif", true)
+
+	@JvmStatic
+	fun isWebp(path: String) = path.endsWith(".webp", true)
 
 	@JvmStatic
 	fun getMimeType(file: File) = getMimeType(file.path)
@@ -35,6 +34,7 @@ object Mimes
 	{
 		return when
 		{
+			//isGif(path) -> Type.GIF
 			isImage(path) -> Type.IMAGE
 			isVideo(path) -> Type.VIDEO
 			else -> Type.UNKNOWN
@@ -135,6 +135,7 @@ object Mimes
 	{
 		UNKNOWN,
 		IMAGE,
-		VIDEO
+		VIDEO,
+		//GIF
 	}
 }
