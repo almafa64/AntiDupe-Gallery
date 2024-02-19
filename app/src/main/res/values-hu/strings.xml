@@ -27,6 +27,7 @@
         <item>Készítési Dátum</item>
         <item>Méret</item>
         <item>Név</item>
+        <item>Darabszám</item>
     </string-array>
 
     <!-- pin -->

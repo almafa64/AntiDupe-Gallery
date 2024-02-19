@@ -6,13 +6,13 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.Arrays
 import java.util.Properties
 
 object Config
 {
 	private const val TAG = "Config"
 	private const val CONFIG_FILE = "config"
+
 	private var filePath: Path? = null
 	private var _properties: Properties? = null
 	private val properties: Properties
@@ -21,24 +21,24 @@ object Config
 	@JvmStatic
 	fun init(context: Context)
 	{
-		if (_properties != null)
+		if (initCalled())
 		{
 			Log.i(TAG, "Already called Config.init()")
 			return
 		}
+
 		filePath = Paths.get(context.filesDir.path, CONFIG_FILE)
 		_properties = Properties()
 		try
 		{
 			Files.newBufferedReader(filePath).use { reader ->
 				properties.load(reader)
-				val toRemove: MutableList<Any> = ArrayList()
-				val props = Property.entries.toTypedArray()
-				val e = properties.propertyNames()
-				while (e.hasMoreElements())
+				val toRemove = ArrayList<String>()
+				val props = Property.entries
+				for (key: Any in properties.propertyNames())
 				{
-					val name = e.nextElement() as String
-					if (Arrays.stream(props).noneMatch { p: Property -> p.name == name }) toRemove.add(name)
+					val name: String = key as String
+					if (props.none { it.name == name }) toRemove.add(name)
 				}
 				for (r in toRemove)
 				{
@@ -109,6 +109,9 @@ object Config
 	}
 
 	@JvmStatic
+	fun initCalled() = _properties != null
+
+	@JvmStatic
 	fun restoreDefaults()
 	{
 		properties.clear()
@@ -155,7 +158,7 @@ object Config
 
 		/**
 		 * 1. number: is_ascending<br></br>
-		 * 2. number: sort type (0: mod date, 1: create date, 2: size, 3: name)
+		 * 2. number: sort type (0: mod date, 1: create date, 2: size, 3: name, 4: count)
 		 */
 		ALBUM_SORT("f_sort"),
 

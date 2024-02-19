@@ -36,7 +36,6 @@ public class ImageViewActivity extends Activity implements Serializable
 
 		setContentView(R.layout.image_view);
 
-
 		TextView textView = findViewById(R.id.activity_header);
 		textView.setText(new File(imagePath).getName());
 

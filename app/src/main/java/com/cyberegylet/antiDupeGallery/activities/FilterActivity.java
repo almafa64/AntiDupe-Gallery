@@ -57,6 +57,8 @@ public class FilterActivity extends AppCompatActivity
 
 		MyAsyncTask show = new MyAsyncTask()
 		{
+			int count = 0;
+
 			@Override
 			public void doInBackground()
 			{
@@ -78,7 +80,6 @@ public class FilterActivity extends AppCompatActivity
 					boolean hasPaths = paths.size() > 0;
 
 					if (!cursor.moveToFirst()) return;
-					int count = 0;
 					do
 					{
 						String path = cursor.getString(pathCol);
@@ -98,6 +99,7 @@ public class FilterActivity extends AppCompatActivity
 						{
 							count++;
 							albums.add(new FilteredAlbum(f, String.valueOf(count), cursor.getInt(countCol), hex));
+							albums.sort((b, c) -> Math.toIntExact(b.getCount() - c.getCount()));
 						}
 						runOnUiThread(adapter::notifyDataSetChanged);
 

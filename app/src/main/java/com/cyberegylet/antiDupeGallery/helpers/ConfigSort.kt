@@ -40,7 +40,7 @@ object ConfigSort
 			SortType.MODIFICATION_DATE -> MediaStore.MediaColumns.DATE_MODIFIED
 			SortType.CREATION_DATE -> MediaStore.MediaColumns.DATE_TAKEN
 			SortType.SIZE -> MediaStore.MediaColumns.SIZE
-			SortType.NAME -> MediaStore.MediaColumns.DISPLAY_NAME
+			else -> MediaStore.MediaColumns.DISPLAY_NAME
 		}
 		if (!isAscending(configString)) sort += " DESC"
 		return sort
@@ -59,7 +59,7 @@ object ConfigSort
 			SortType.MODIFICATION_DATE -> Cache.Media.MODIFICATION_TIME
 			SortType.CREATION_DATE -> Cache.Media.CREATION_TIME
 			SortType.SIZE -> Cache.Media.SIZE
-			SortType.NAME -> Cache.Media.NAME
+			else -> Cache.Media.NAME
 		}
 		if (!isAscending(configString)) sort += " DESC"
 		return sort
@@ -77,7 +77,8 @@ object ConfigSort
 			{
 				SortType.MODIFICATION_DATE, SortType.CREATION_DATE -> Comparator.comparing(Album::modifiedDate)
 				SortType.SIZE -> Comparator.comparing(Album::size)
-				SortType.NAME -> Comparator.comparing { f: Album -> f.name.lowercase() }
+				SortType.COUNT -> Comparator.comparing(Album::count)
+				else -> Comparator.comparing { f: Album -> f.name.lowercase() }
 			}
 			if (!isAscending(sortData)) comparator = comparator.reversed()
 			return comparator
@@ -96,7 +97,7 @@ object ConfigSort
 				SortType.MODIFICATION_DATE -> Comparator.comparing(ImageFile::modifiedDate)
 				SortType.CREATION_DATE -> Comparator.comparing(ImageFile::creationDate)
 				SortType.SIZE -> Comparator.comparing(ImageFile::size)
-				SortType.NAME -> Comparator.comparing { f: ImageFile -> f.name.lowercase() }
+				else -> Comparator.comparing { f: ImageFile -> f.name.lowercase() }
 			}
 			if (!isAscending(sortData)) comparator = comparator.reversed()
 			return comparator
@@ -107,6 +108,7 @@ object ConfigSort
 		MODIFICATION_DATE,
 		CREATION_DATE,
 		SIZE,
-		NAME
+		NAME,
+		COUNT
 	}
 }

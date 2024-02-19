@@ -26,6 +26,7 @@
         <item>Creation Date</item>
         <item>Size</item>
         <item>Name</item>
+        <item>Count</item>
     </string-array>
 
     <!-- pin -->
