@@ -304,12 +304,12 @@ public class FilterImagesActivity extends AppCompatActivity
 		String mediaPath = Cache.Tables.MEDIA + "." + Cache.Media.PATH;
 		String mediaId = Cache.Tables.MEDIA + "." + Cache.Media.ID;
 		try (Cursor cursor = database.rawQuery(
-				"SELECT " + digestPath + ", " + Cache.Media.MIME_TYPE + ", " + mediaId + " " +
-						"FROM " + Cache.Tables.DIGESTS + " " +
-						"INNER JOIN " + Cache.Tables.MEDIA + " ON " +
-						mediaPath + " = " + digestPath + " " +
-						"WHERE hex(" + Cache.Digests.DIGEST + ") like ? " +
-						"ORDER BY " + digestPath, new String[]{ digestHex }))
+				"SELECT " + digestPath + "," + Cache.Media.MIME_TYPE + "," + mediaId +
+						" FROM " + Cache.Tables.DIGESTS +
+						" INNER JOIN " + Cache.Tables.MEDIA + " ON" +
+						" " + mediaPath + " = " + digestPath +
+						" WHERE hex(" + Cache.Digests.DIGEST + ") like ?" +
+						" ORDER BY " + digestPath, new String[]{ digestHex }))
 		{
 			if (!cursor.moveToFirst()) return;
 			int pathCol = cursor.getColumnIndexOrThrow(digestPath);

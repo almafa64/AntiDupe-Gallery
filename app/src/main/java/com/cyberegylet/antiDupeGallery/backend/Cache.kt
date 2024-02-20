@@ -115,7 +115,7 @@ object Cache
 		//cache.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS idx_${Media.PATH} ON ${Tables.MEDIA}(${Media.PATH})")
 		cache.execSQL(
 			"CREATE TABLE IF NOT EXISTS ${Tables.DIGESTS} (" +
-					"${Digests.ID} INTEGER, ${Digests.PATH} TEXT, ${Digests.DIGEST} BLOB)"
+					"${Digests.ID} INTEGER PRIMARY KEY, ${Digests.PATH} TEXT, ${Digests.DIGEST} BLOB)"
 		)
 
 		mediaInsert = cache.compileStatement(

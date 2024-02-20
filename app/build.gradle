@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId "com.cyberegylet.antiDupeGallery"
-        minSdk 27
+        minSdk 26
         targetSdk 33
         versionCode 1
         versionName "1.0"
@@ -56,7 +56,7 @@ android {
 cargo {
     module = '../backend'
     libname = 'backend'
-    targets = ['arm64']
+    targets = ['arm64', "arm"]
     def isRelease = gradle.startParameter.taskRequests.any {
         it.args.any { it.endsWith("Release") }
     }
