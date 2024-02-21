@@ -18,7 +18,6 @@ import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.Priority
-import com.bumptech.glide.integration.webp.decoder.WebpDrawable
 import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.Downsampler
@@ -320,7 +319,6 @@ class FileManager(@JvmField val activity: ComponentActivity)
 		val playGIF = getBooleanProperty(Config.Property.ANIMATE_GIF)
 		options = when
 		{
-			Mimes.isWebp(path) -> options.decode(WebpDrawable::class.java)
 			!playGIF -> options.dontAnimate().decode(Bitmap::class.java)
 			else -> options.decode(Drawable::class.java)
 		}
