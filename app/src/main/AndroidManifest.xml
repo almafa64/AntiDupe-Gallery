@@ -3,6 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission
+        android:name="android.permission.POST_NOTIFICATIONS"
+        android:minSdkVersion="33" />
+    <uses-permission
         android:name="android.permission.READ_MEDIA_VIDEO"
         android:minSdkVersion="33" />
     <uses-permission
@@ -14,6 +17,14 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
+
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE"
+        android:minSdkVersion="28" />
+
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
+        android:minSdkVersion="34" />
 
     <application
         android:allowBackup="false"
@@ -83,6 +94,11 @@
         <activity android:name=".activities.FilterImagesActivity" />
         <activity android:name=".activities.SettingsActivity" />
         <activity android:name=".activities.PinActivity" />
+
+        <service
+            android:name=".services.FilterService"
+            android:enabled="true"
+            android:foregroundServiceType="specialUse" />
     </application>
 
 </manifest>
