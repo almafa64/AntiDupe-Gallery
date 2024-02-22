@@ -70,12 +70,20 @@
     <string name="permission_storage_denied">No storage permission</string>
     <string name="permission_storage_title">Storage permission</string>
     <string name="permission_storage_text">This permission needed to run the application. To turn it back on go to the app settings.</string>
+    <string name="permission_notification_denied">No notification permission</string>
 
     <!-- info -->
     <string name="email" translatable="false">afarkasam2@gmail.com</string>
     <string name="version_text" translatable="false">Version 1.4.2</string>
     <string name="app_name" translatable="false">AntiDupe Gallery</string>
 
+    <!-- notifications -->
+    <string name="notifications_filtering">Filtering</string>
+
     <!-- ids -->
     <string name="default_notification_channel_id" translatable="false">default</string>
+
+    <!-- texts -->
+    <string name="texts_files">files</string>
+    <string name="texts_group">group</string>
 </resources>

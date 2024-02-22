@@ -1,7 +1,9 @@
 package com.cyberegylet.antiDupeGallery.activities;
 
-import android.database.Cursor;
+import android.Manifest;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -12,20 +14,18 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.FilterAdapter;
-import com.cyberegylet.antiDupeGallery.backend.Backend;
 import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
-import com.cyberegylet.antiDupeGallery.helpers.MyAsyncTask;
-import com.cyberegylet.antiDupeGallery.helpers.Utils;
+import com.cyberegylet.antiDupeGallery.helpers.PermissionManager;
 import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.models.FilteredAlbum;
+import com.cyberegylet.antiDupeGallery.services.FilterService;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+
+import kotlin.Unit;
 
 public class FilterActivity extends AppCompatActivity
 {
@@ -40,11 +40,35 @@ public class FilterActivity extends AppCompatActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.filter_activity);
 
+		Config.init(getApplicationContext());
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+		{
+			new PermissionManager(this).requestPermissions(p -> {
+				if (p != null && p.length > 0)
+				{
+					Toast.makeText(this, R.string.permission_notification_denied, Toast.LENGTH_SHORT).show();
+					activityManager.goBack();
+				}
+				return Unit.INSTANCE;
+			}, Manifest.permission.POST_NOTIFICATIONS);
+		}
+
 		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
 
-		List<String> paths = Arrays.asList((String[]) Objects.requireNonNull(activityManager.getParam("paths")));
+		/*Object pathsObj = activityManager.getParam("paths");
+		List<String> paths = null;
+		if (pathsObj != null) paths = Arrays.asList((String[]) pathsObj);*/
+
+		String[] paths = activityManager.getStringArray("paths");
+
+		//List<String> paths = Arrays.asList((String[]) pathsObj);
 
 		RecyclerView recycler = findViewById(R.id.recycler);
+		FilterService.mutableLiveData.setValue(recycler);
+
+		if (paths == null) return;
+		
 		List<FilteredAlbum> albums = new ArrayList<>();
 		FilterAdapter adapter = new FilterAdapter(albums, new FileManager(this));
 		recycler.setLayoutManager(new GridLayoutManager(
@@ -55,139 +79,9 @@ public class FilterActivity extends AppCompatActivity
 
 		database = Cache.getCache();
 
-		MyAsyncTask show = new MyAsyncTask()
-		{
-			int count = 0;
-
-			@Override
-			public void doInBackground()
-			{
-				try (Cursor cursor = database.query(
-						Cache.Tables.DIGESTS,
-						new String[]{ Cache.Digests.PATH, "HEX(" + Cache.Digests.DIGEST + ")",
-								"COUNT(" + Cache.Digests.DIGEST + ")" },
-						null,
-						null,
-						Cache.Digests.DIGEST,
-						"COUNT(" + Cache.Digests.DIGEST + ") > 1",
-						"COUNT(" + Cache.Digests.DIGEST + ") desc"
-				))
-				{
-					int pathCol = cursor.getColumnIndexOrThrow(Cache.Digests.PATH);
-					int digestCol = cursor.getColumnIndexOrThrow("HEX(" + Cache.Digests.DIGEST + ")");
-					int countCol = cursor.getColumnIndexOrThrow("COUNT(" + Cache.Digests.DIGEST + ")");
-
-					boolean hasPaths = paths.size() > 0;
-
-					if (!cursor.moveToFirst()) return;
-					do
-					{
-						String path = cursor.getString(pathCol);
-						File f = new File(path);
-						if (!f.canRead() || (hasPaths && !paths.contains(f.getParent()))) continue;
-
-						String hex = cursor.getString(digestCol);
-
-						FilteredAlbum a = albums.stream().filter(album -> album.getDigestHex().equals(hex)).findAny()
-								.orElse(null);
-
-						if (a != null)
-						{
-							a.setData(null, null, cursor.getInt(countCol), null);
-						}
-						else
-						{
-							count++;
-							albums.add(new FilteredAlbum(f, "group " + count, cursor.getInt(countCol), hex));
-							albums.sort((b, c) -> Math.toIntExact(c.getCount() - b.getCount()));
-						}
-						runOnUiThread(adapter::notifyDataSetChanged);
-
-					} while (cursor.moveToNext());
-				}
-			}
-
-			@Override
-			public void onPostExecute() { }
-
-			@Override
-			public void onPreExecute() { }
-		};
-
-		new MyAsyncTask()
-		{
-			long maxFiles;
-
-			@Override
-			public void onPreExecute()
-			{
-				try (Cursor cursor = database.query(
-						Cache.Tables.MEDIA,
-						new String[]{ Cache.Media.PATH, Cache.Media.ID },
-						null,
-						null,
-						null,
-						null,
-						null
-				))
-				{
-					if (!cursor.moveToFirst())
-					{
-						stop();
-						return;
-					}
-
-					int pathCol = cursor.getColumnIndexOrThrow(Cache.Media.PATH);
-					int idCol = cursor.getColumnIndexOrThrow(Cache.Media.ID);
-					maxFiles = cursor.getCount();
-
-					int count = 0;
-
-					do
-					{
-						Backend.queueFile(cursor.getLong(idCol), cursor.getString(pathCol));
-						count++;
-					} while (cursor.moveToNext());
-				}
-			}
-
-			@Override
-			public void doInBackground()
-			{
-				long old = Backend.getQueuedFileProgress();
-				while (true)
-				{
-					long files = Backend.getQueuedFileProgress();
-					if (files == 0) break;
-					if (old - files >= 1)
-					{
-						old = files;
-						double percentage = 100 - (double) files / maxFiles * 100;
-						runOnUiThread(() -> Toast.makeText(
-								FilterActivity.this,
-								Utils.doubleString(percentage, 2) + "%",
-								Toast.LENGTH_SHORT
-						).show());
-						if (!show.running()) show.execute();
-					}
-				}
-			}
-
-			@Override
-			public void onPostExecute()
-			{
-				runOnUiThread(() -> Toast.makeText(FilterActivity.this, R.string.filter_complete, Toast.LENGTH_SHORT)
-						.show());
-				try
-				{
-					Objects.requireNonNull(show.getThread()).join();
-				}
-				catch (InterruptedException e)
-				{
-					throw new RuntimeException(e);
-				}
-				show.execute();
-			}
-		}.execute();
+		Intent i = new Intent(getApplicationContext(), FilterService.class);
+		i.setAction(FilterService.ACTION_START_FILTERING);
+		i.putExtra(FilterService.PATHS_PARAM, paths);
+		startService(i);
 	}
 }

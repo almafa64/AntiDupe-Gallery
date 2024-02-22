@@ -18,7 +18,7 @@ import java.util.List;
 
 public class FilterAdapter extends BaseImageAdapter
 {
-	private final List<FilteredAlbum> albums;
+	public final List<FilteredAlbum> albums;
 
 	public FilterAdapter(List<FilteredAlbum> albums, FileManager fileManager)
 	{

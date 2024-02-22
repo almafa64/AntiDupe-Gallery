@@ -21,6 +21,7 @@ object Config
 	@JvmStatic
 	fun init(context: Context)
 	{
+		if (context != context.applicationContext) throw RuntimeException("context needs to be applicationContext")
 		if (initCalled())
 		{
 			Log.i(TAG, "Already called Config.init()")

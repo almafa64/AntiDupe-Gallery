@@ -99,6 +99,15 @@
             android:name=".services.FilterService"
             android:enabled="true"
             android:foregroundServiceType="specialUse" />
-    </application>
 
+        <receiver
+            android:name=".services.TestReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="action_start_filtering" />
+                <action android:name="action_stop_filtering" />
+            </intent-filter>
+        </receiver>
+    </application>
 </manifest>

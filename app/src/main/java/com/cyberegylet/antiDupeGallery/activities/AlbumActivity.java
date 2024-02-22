@@ -56,7 +56,7 @@ public class AlbumActivity extends ImageListBaseActivity
 	@Override
 	protected boolean myOnCreate(@Nullable Bundle savedInstanceState)
 	{
-		Config.init(this);
+		Config.init(getApplicationContext());
 
 		if (Config.getStringProperty(Config.Property.PIN_LOCK).length() != 0 && ActivityManager.getParam(
 				this,
