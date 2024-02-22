@@ -67,7 +67,7 @@ public class AlbumActivity extends ImageListBaseActivity
 			return false;
 		}
 
-		if (!hasBackendBeenCalled) Backend.init(this);
+		if (!hasBackendBeenCalled) Backend.init(getDbPath(Cache.DATABASE_NAME));
 		hasBackendBeenCalled = true;
 
 		setContentView(R.layout.album_activity);

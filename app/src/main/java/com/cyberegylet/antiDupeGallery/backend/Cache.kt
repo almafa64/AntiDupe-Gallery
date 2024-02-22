@@ -14,9 +14,10 @@ object Cache
 
 	object Tables
 	{
-		const val DIGESTS = "digests"
 		const val ALBUMS = "albums"
 		const val MEDIA = "media"
+		const val CHASH = "chash"
+		const val PHASH = "phash"
 	}
 
 	object Base
@@ -40,6 +41,18 @@ object Cache
 		//const val ID = Base.ID
 
 		const val MEDIA_COUNT = "mediaCount"
+	}
+
+	object CHash {
+		const val MEDIA_ID = "media_id"
+		const val BYTES = "bytes"
+		const val CALC_MTIME = "calc_mtime"
+	}
+
+	object PHash {
+		const val MEDIA_ID = "media_id"
+		const val BYTES = "bytes"
+		const val CALC_MTIME = "calc_mtime"
 	}
 
 	object Media
@@ -113,10 +126,20 @@ object Cache
 					")"
 		)
 		//cache.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS idx_${Media.PATH} ON ${Tables.MEDIA}(${Media.PATH})")
-		cache.execSQL(
-			"CREATE TABLE IF NOT EXISTS ${Tables.DIGESTS} (" +
-					"${Digests.ID} INTEGER PRIMARY KEY, ${Digests.PATH} TEXT, ${Digests.DIGEST} BLOB)"
-		)
+		cache.execSQL("CREATE TABLE IF NOT EXISTS ${Tables.CHASH} (" +
+				"${CHash.MEDIA_ID} INTEGER PRIMARY KEY," +
+				"${CHash.BYTES} BLOB," +
+				"${CHash.CALC_MTIME} INTEGER," +
+				"FOREIGN KEY(${CHash.MEDIA_ID}) REFERENCES ${Tables.MEDIA}(${Media.ID})" +
+				")"
+		);
+		cache.execSQL("CREATE TABLE IF NOT EXISTS ${Tables.PHASH} (" +
+				"${PHash.MEDIA_ID} INTEGER PRIMARY KEY," +
+				"${PHash.BYTES} BLOB," +
+				"${PHash.CALC_MTIME} INTEGER," +
+				"FOREIGN KEY(${PHash.MEDIA_ID}) REFERENCES ${Tables.MEDIA}(${Media.ID})" +
+				")"
+		);
 
 		mediaInsert = cache.compileStatement(
 			"INSERT OR REPLACE INTO ${Tables.MEDIA} (" +

@@ -19,11 +19,17 @@ public class Backend
 		}
 	}
 
-	public static native void init(AlbumActivity mainActivity);
+	public static final class HashStatus {
+		public final long totalCount;
+		public final long completed;
 
-	public static native void queueFile(long id, String path);
+		private HashStatus(long totalCount, long completed) { this.totalCount = totalCount; this.completed = completed; }
+	}
 
-	public static native long getQueuedFileProgress();
+	public static native void init(String dbPath);
+	public static native void runHashProcess(boolean chash, boolean phash);
+	public static native void stopHashProcess();
+	public static native HashStatus getHashStatus();
 
 	public static native void shutdown();
 }
