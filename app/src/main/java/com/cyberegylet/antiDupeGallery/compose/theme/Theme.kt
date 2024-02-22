@@ -20,15 +20,15 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
 private val DarkColorScheme = darkColorScheme(
-	primary = Purple80,
-	secondary = PurpleGrey80,
-	tertiary = Pink80
+	primary = Blue40,
+	secondary = DarkBlue80,
+	tertiary = DarkBlue80
 )
 
 private val LightColorScheme = lightColorScheme(
-	primary = Purple40,
-	secondary = PurpleGrey40,
-	tertiary = Pink40
+	primary = DarkBlue80,
+	secondary = Blue40,
+	tertiary = Blue40
 
 	/* Other default colors to override
     background = Color(0xFFFFFBFE),

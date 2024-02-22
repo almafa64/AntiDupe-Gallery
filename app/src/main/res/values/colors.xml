@@ -14,5 +14,7 @@
 
     <color name="album_text_bg">#B2000000</color>
 
-    <color name="adg_logo_background">#30AFCF</color>
+    <color name="blue_700">#1596B6</color>
+    <color name="blue_500">#30AFCF</color>
+    <color name="blue_200">#4FCFEF</color>
 </resources>
