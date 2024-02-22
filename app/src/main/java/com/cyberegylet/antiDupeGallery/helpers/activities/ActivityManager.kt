@@ -84,6 +84,12 @@ class ActivityManager(@JvmField val activity: Activity)
 	 */
 	fun <T : Parcelable> getListParam(name: String): ArrayList<T>? = getListParam(activity, name)
 
+	/**
+	 * Gets list type data from passed ActivityParameter.
+	 * @param name name of the ActivityParameter
+	 */
+	fun getStringArray(name: String): Array<String>? = getStringArray(activity, name)
+
 	companion object
 	{
 		/**
@@ -223,6 +229,9 @@ class ActivityManager(@JvmField val activity: Activity)
 		@JvmStatic
 		fun <T : Parcelable> getListParam(activity: Activity, name: String): ArrayList<T>? =
 			activity.intent.getParcelableArrayListExtra(name)
+
+		@JvmStatic
+		fun getStringArray(activity: Activity, name: String): Array<String>? = activity.intent.getStringArrayExtra(name)
 
 		/**
 		 * Applies a dim effect to a ViewGroup
