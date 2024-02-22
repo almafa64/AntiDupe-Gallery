@@ -2,7 +2,6 @@ package com.cyberegylet.antiDupeGallery.helpers
 
 abstract class MyAsyncTask
 {
-	private var shouldStop: Boolean = false
 	var thread: Thread? = null
 		private set
 
@@ -10,8 +9,8 @@ abstract class MyAsyncTask
 	{
 		thread = Thread {
 			onPreExecute()
-			if (!shouldStop) doInBackground()
-			if (!shouldStop) onPostExecute()
+			if (!stopped()) doInBackground()
+			if (!stopped()) onPostExecute()
 		}
 		thread?.start()
 	}
@@ -21,12 +20,15 @@ abstract class MyAsyncTask
 	abstract fun onPreExecute()
 
 	/**
-	 * sets thread stop variable, which will block remaining steps
+	 * stops the thread (only sets flag -> check with isStopped to see if code should stop)
 	 */
 	fun stop()
 	{
-		shouldStop = true
+		thread?.interrupt()
+		thread = null
 	}
 
 	fun running(): Boolean = thread?.isAlive ?: false
+	fun stopped() = thread?.isInterrupted ?: true
+	fun wait() = thread?.join()
 }

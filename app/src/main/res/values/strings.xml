@@ -74,16 +74,17 @@
 
     <!-- info -->
     <string name="email" translatable="false">afarkasam2@gmail.com</string>
-    <string name="version_text" translatable="false">Version 1.4.2</string>
+    <string name="version_text" translatable="false">Version 1.6.6</string>
     <string name="app_name" translatable="false">AntiDupe Gallery</string>
 
     <!-- notifications -->
     <string name="notifications_filtering">Filtering</string>
-
+    <string name="notifications_filtering_starting">Starting filtering…</string>
+    <string name="notifications_filtering_ended">Filtering ended. Click to see.</string>
     <!-- ids -->
-    <string name="default_notification_channel_id" translatable="false">default</string>
 
     <!-- texts -->
     <string name="texts_files">files</string>
     <string name="texts_group">group</string>
+    <string name="texts_stop">stop</string>
 </resources>
