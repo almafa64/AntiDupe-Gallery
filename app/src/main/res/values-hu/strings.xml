@@ -11,29 +11,29 @@
     <string name="settings_general_heading">Általános</string>
     <string name="settings_pin">Alkalmazás PIN</string>
     <string name="settings_show_hidden">Rejtett fájlok mutatása</string>
-    <string name="settings_animate_gif">GIF Animálása</string>
+    <string name="settings_animate_gif">GIFek animálása</string>
     <string name="settings_reset">Beállítások visszaállítása</string>
     <string name="settings_danger_header">Veszély zóna</string>
-    <string name="settings_use_bin">Fájlok kukába rakása törlés helyett</string>
+    <string name="settings_use_bin">Fájlok kukába helyezése törlés helyett</string>
     <string name="settings_sort_button">Rendezési beállítások</string>
 
     <!-- sorting -->
     <string name="sorting_album_header">Album rendezés</string>
     <string name="sorting_image_header">Kép rendezés</string>
     <string name="sorting_sort_text">Szerint</string>
-    <string name="sorting_asc_text">Növekvő</string>
+    <string name="sorting_asc_text">Növekvő sorrend</string>
     <string-array name="sorting_sort_types">
         <item>Módsítási Dátum</item>
-        <item>Készítési Dátum</item>
+        <item>Létrehozási Dátum</item>
         <item>Méret</item>
         <item>Név</item>
         <item>Darabszám</item>
     </string-array>
 
     <!-- pin -->
-    <string name="pin_enter_pin">Írd be a PIN kódott</string>
-    <string name="pin_enter_pin_again">Írd be a PIN kódott mégegyszer</string>
-    <string name="pin_didnt_match">Pin nem egyezett első pinnel</string>
+    <string name="pin_enter_pin">Írd be a PIN kódot</string>
+    <string name="pin_enter_pin_again">Írd be a PIN kódot mégegyszer</string>
+    <string name="pin_didnt_match">A beírt PINek nem egyeznek</string>
 
     <!-- popup -->
     <string name="popup_move">Mozgatás</string>
@@ -45,9 +45,9 @@
     <string name="popup_move_file_success">Fájlok sikeresen mozgatva</string>
     <string name="popup_copy_file_success">Fájlok sikeresen másolva</string>
     <string name="popup_delete_file_success">Fájlok sikeresen törölve</string>
-    <string name="popup_info">Info</string>
+    <string name="popup_info">Infó</string>
     <string name="popup_items_selected">Elemek kiválasztva</string>
-    <string name="popup_delete_confirm">Tényleg törölni akarod ezt az albumot?</string>
+    <string name="popup_delete_confirm">Biztosan törölni akarod ezt az albumot?</string>
 
     <!-- info popup -->
     <string name="info_name">Név</string>
@@ -59,7 +59,7 @@
 
     <!-- Filter -->
     <string name="filter_header_text">Szűrés</string>
-    <string name="filter_complete">Kész a szűrés</string>
+    <string name="filter_complete">A szűrés befejeződött</string>
 
     <!-- permission -->
     <string name="permission_storage_denied">Nincs tárhely engedély</string>
