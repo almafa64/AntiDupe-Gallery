@@ -9,12 +9,8 @@
 -dontobfuscate
 -keepattributes SourceFile,LineNumberTable
 
-# dont delete these
-#-keep public class com.bumptech.glide.integration.webp.WebpImage { *; }
-#-keep public class com.bumptech.glide.integration.webp.WebpFrame { *; }
-#-keep public class com.bumptech.glide.integration.webp.WebpBitmapFactory { *; }
-
 -keep public class com.cyberegylet.antiDupeGallery.activities.ImageListBaseActivity {
     protected java.lang.String getDbPath(java.lang.String);
 }
 -keep public class com.cyberegylet.antiDupeGallery.backend.Backend { *; }
+-keep public class com.cyberegylet.antiDupeGallery.backend.Backend$* { *; }
