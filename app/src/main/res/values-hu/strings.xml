@@ -69,6 +69,8 @@
 
     <!-- notifications -->
     <string name="notifications_filtering">Szűrés</string>
+    <string name="notifications_filtering_starting">Szűrés indítása…</string>
+    <string name="notifications_filtering_ended">Szűrés befejezve. Kattinst az eredményért</string>
 
     <!-- general -->
     <string name="settings_button">Beállítások</string>
@@ -79,4 +81,5 @@
     <!-- texts -->
     <string name="texts_files">fájlok</string>
     <string name="texts_group">csoport</string>
+    <string name="texts_stop">stop</string>
 </resources>
