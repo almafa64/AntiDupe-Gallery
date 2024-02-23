@@ -132,7 +132,7 @@ pub extern "C" fn run_hash_process<'a>(_env: JNIEnv<'a>, _class: JClass, chash: 
 pub extern "C" fn stop_hash_process<'a>(_env: JNIEnv<'a>, _class: JClass) {
     let mut context = CONTEXT.get().unwrap().write().unwrap();
     if let Some(hash_stop_sender) = context.hash_stop_sender.take() {
-        hash_stop_sender.send(()).unwrap();
+        hash_stop_sender.send(()).ok();
     }
 }
 
