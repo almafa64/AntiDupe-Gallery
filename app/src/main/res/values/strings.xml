@@ -74,7 +74,7 @@
 
     <!-- info -->
     <string name="email" translatable="false">afarkasam2@gmail.com</string>
-    <string name="version_text" translatable="false">Version 1.6.6</string>
+    <string name="version_text" translatable="false">Version 2.0.0</string>
     <string name="app_name" translatable="false">AntiDupe Gallery</string>
 
     <!-- notifications -->
