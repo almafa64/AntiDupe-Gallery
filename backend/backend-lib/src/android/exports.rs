@@ -146,7 +146,7 @@ pub extern "C" fn get_hash_status<'a>(mut env: JNIEnv<'a>, _class: JClass) -> JO
     let obj = env.new_object(HASH_STATUS_CLASS, HASH_STATUS_CTOR_SIG, &[
         JValueGen::Long(context.shared.hash_status.total_count().try_into().unwrap()),
         JValueGen::Long(context.shared.hash_status.completed().try_into().unwrap()),
-        JValueGen::Bool(context.shared.hash_status.running()),
+        JValueGen::Bool(context.shared.hash_status.running() as u8),
     ]);
 
     let obj = obj.expect("Failed to create HashStatus object");
