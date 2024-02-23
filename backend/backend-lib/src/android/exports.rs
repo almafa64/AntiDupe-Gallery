@@ -33,6 +33,10 @@ pub extern "C" fn init(
     _class: JClass,
     db_path: JString,
 ) {
+    if CONTEXT.get().is_some() {
+        return;
+    }
+
     log::info(&mut env, "Backend", "Backend init called");
 
     let (msg_sender, msg_recver) = mpsc::unbounded_channel();
