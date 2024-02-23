@@ -26,8 +26,8 @@
         android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
         android:minSdkVersion="34" />
 
+    <!-- android:allowBackup="false" -->
     <application
-        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -101,7 +101,7 @@
             android:foregroundServiceType="specialUse" />
 
         <receiver
-            android:name=".services.TestReceiver"
+            android:name=".services.StopReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
