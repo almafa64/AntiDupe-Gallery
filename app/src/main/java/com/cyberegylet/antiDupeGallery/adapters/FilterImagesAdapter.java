@@ -41,12 +41,7 @@ public class FilterImagesAdapter extends BaseImageAdapter
 
 			// view = ConstraintLayout (the parent of ImageView)
 			img.setOnClickListener(v -> {
-				if (selected.size() > 0)
-				{
-					if (checkBox.isChecked()) unSelectView(this, null);
-					else selectView(this, null);
-				}
-				else
+				if (selected.size() == 0)
 				{
 					ActivityManager.switchActivity(
 							fileManager.activity,
