@@ -139,13 +139,14 @@ pub extern "C" fn stop_hash_process<'a>(_env: JNIEnv<'a>, _class: JClass) {
 #[java(export(class = "com.cyberegylet.antiDupeGallery.backend.Backend", rename = "getHashStatus"))]
 pub extern "C" fn get_hash_status<'a>(mut env: JNIEnv<'a>, _class: JClass) -> JObject<'a> {
     const HASH_STATUS_CLASS: &'static str = "com/cyberegylet/antiDupeGallery/backend/Backend$HashStatus";
-    const HASH_STATUS_CTOR_SIG: &'static str = "(JJ)V"; // (long, long) -> void
+    const HASH_STATUS_CTOR_SIG: &'static str = "(JJZ)V"; // (long, long, boolean) -> void
 
     let context = CONTEXT.get().unwrap().read().unwrap();
 
     let obj = env.new_object(HASH_STATUS_CLASS, HASH_STATUS_CTOR_SIG, &[
         JValueGen::Long(context.shared.hash_status.total_count().try_into().unwrap()),
         JValueGen::Long(context.shared.hash_status.completed().try_into().unwrap()),
+        JValueGen::Bool(context.shared.hash_status.running()),
     ]);
 
     let obj = obj.expect("Failed to create HashStatus object");
