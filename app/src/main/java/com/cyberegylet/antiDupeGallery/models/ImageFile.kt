@@ -1,21 +1,15 @@
 package com.cyberegylet.antiDupeGallery.models
 
 import com.cyberegylet.antiDupeGallery.backend.FileManager
+import com.cyberegylet.antiDupeGallery.backend.Mimes
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.BasicFileAttributes
 
-class ImageFile @JvmOverloads constructor(file: File, val mime: String = "*/*", id: Long = -1) : FileEntry(file, id)
+class ImageFile @JvmOverloads constructor(file: File, val type: Mimes.Type, id: Long = -1) : FileEntry(file, id)
 {
-	val mimeEnum: FileManager.Mimes.Type = when
-	{
-		mime[0] == 'i' -> FileManager.Mimes.Type.MIME_IMAGE
-		mime[0] == 'v' -> FileManager.Mimes.Type.MIME_VIDEO
-		else -> FileManager.Mimes.Type.MIME_NONE
-	}
-
 	override fun mySetFile()
 	{
 		super.mySetFile()

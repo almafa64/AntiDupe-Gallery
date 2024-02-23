@@ -10,8 +10,8 @@ import androidx.annotation.NonNull;
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.activities.ImageViewActivity;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityParameter;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.util.List;
@@ -41,12 +41,7 @@ public class FilterImagesAdapter extends BaseImageAdapter
 
 			// view = ConstraintLayout (the parent of ImageView)
 			img.setOnClickListener(v -> {
-				if (selected.size() > 0)
-				{
-					if (checkBox.isChecked()) unSelectView(this, null);
-					else selectView(this, null);
-				}
-				else
+				if (selected.size() == 0)
 				{
 					ActivityManager.switchActivity(
 							fileManager.activity,

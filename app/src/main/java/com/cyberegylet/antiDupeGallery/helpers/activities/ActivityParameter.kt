@@ -1,4 +1,4 @@
-package com.cyberegylet.antiDupeGallery.backend.activities
+package com.cyberegylet.antiDupeGallery.helpers.activities
 
 import android.net.Uri
 

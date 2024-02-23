@@ -37,7 +37,8 @@ public class SimpleActivityGenerator
 		res = activity.getResources();
 		toPx = res.getDisplayMetrics().density;
 		RelativeLayout root = new RelativeLayout(activity);
-		activity.addContentView(root,
+		activity.addContentView(
+				root,
 				new RelativeLayout.LayoutParams(
 						ViewGroup.LayoutParams.MATCH_PARENT,
 						ViewGroup.LayoutParams.MATCH_PARENT
@@ -48,7 +49,8 @@ public class SimpleActivityGenerator
 		back.setId(R.id.back_button);
 		back.setTooltipText(res.getText(R.string.back_arrow_text));
 		back.setContentDescription(res.getText(R.string.back_arrow_text));
-		RelativeLayout.LayoutParams backParam = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+		RelativeLayout.LayoutParams backParam = new RelativeLayout.LayoutParams(
+				ViewGroup.LayoutParams.WRAP_CONTENT,
 				ViewGroup.LayoutParams.WRAP_CONTENT
 		);
 		backParam.addRule(RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE);
@@ -56,7 +58,8 @@ public class SimpleActivityGenerator
 		back.setLayoutParams(backParam);
 
 		TextView title = new TextView(activity);
-		RelativeLayout.LayoutParams textParam = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+		RelativeLayout.LayoutParams textParam = new RelativeLayout.LayoutParams(
+				ViewGroup.LayoutParams.MATCH_PARENT,
 				ViewGroup.LayoutParams.MATCH_PARENT
 		);
 		textParam.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
@@ -70,7 +73,8 @@ public class SimpleActivityGenerator
 		title.setText(res.getText(titleTextID));
 
 		ScrollView scroll = new ScrollView(activity);
-		RelativeLayout.LayoutParams scrollParam = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+		RelativeLayout.LayoutParams scrollParam = new RelativeLayout.LayoutParams(
+				ViewGroup.LayoutParams.MATCH_PARENT,
 				ViewGroup.LayoutParams.MATCH_PARENT
 		);
 		scrollParam.addRule(RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE);
@@ -80,7 +84,8 @@ public class SimpleActivityGenerator
 		scroll.setLayoutParams(scrollParam);
 
 		scrollLayout = new LinearLayout(activity);
-		ViewGroup.LayoutParams linearParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+		ViewGroup.LayoutParams linearParam = new LinearLayout.LayoutParams(
+				ViewGroup.LayoutParams.MATCH_PARENT,
 				ViewGroup.LayoutParams.WRAP_CONTENT
 		);
 		scrollLayout.setLayoutParams(linearParam);
@@ -101,7 +106,8 @@ public class SimpleActivityGenerator
 		}
 
 		TextView header = new TextView(activity);
-		LinearLayout.LayoutParams headerParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+		LinearLayout.LayoutParams headerParam = new LinearLayout.LayoutParams(
+				ViewGroup.LayoutParams.MATCH_PARENT,
 				res.getDimensionPixelSize(R.dimen.simple_activity_row_height)
 		);
 		if (hasIcons) headerParam.setMarginStart(res.getDimensionPixelSize(R.dimen.simple_activity_margin));
@@ -148,7 +154,8 @@ public class SimpleActivityGenerator
 	private LinearLayout addRow(Integer textID, View customView, View.OnClickListener clickListener, Integer iconID)
 	{
 		curLinearLayout = new LinearLayout(activity);
-		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+				ViewGroup.LayoutParams.MATCH_PARENT,
 				res.getDimensionPixelSize(R.dimen.simple_activity_row_height)
 		);
 		curLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -160,7 +167,8 @@ public class SimpleActivityGenerator
 		if (textID == null) return curLinearLayout;
 
 		TextView text = new TextView(activity);
-		LinearLayout.LayoutParams textParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+		LinearLayout.LayoutParams textParam = new LinearLayout.LayoutParams(
+				ViewGroup.LayoutParams.MATCH_PARENT,
 				ViewGroup.LayoutParams.MATCH_PARENT
 		);
 		textParam.weight = 1;
@@ -169,7 +177,8 @@ public class SimpleActivityGenerator
 			if (iconID != null)
 			{
 				ImageView image = new ImageView(activity);
-				LinearLayout.LayoutParams imageParam = new LinearLayout.LayoutParams(res.getDimensionPixelSize(R.dimen.simple_activity_margin),
+				LinearLayout.LayoutParams imageParam = new LinearLayout.LayoutParams(
+						res.getDimensionPixelSize(R.dimen.simple_activity_margin),
 						(int) (50 * toPx)
 				);
 				imageParam.topMargin = (int) (10 * toPx);
@@ -189,7 +198,8 @@ public class SimpleActivityGenerator
 		curLinearLayout.addView(text);
 		if (customView != null)
 		{
-			LinearLayout.LayoutParams customParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+			LinearLayout.LayoutParams customParam = new LinearLayout.LayoutParams(
+					ViewGroup.LayoutParams.WRAP_CONTENT,
 					ViewGroup.LayoutParams.MATCH_PARENT
 			);
 			customParam.setMarginEnd(res.getDimensionPixelSize(R.dimen.simple_activity_small_margin));

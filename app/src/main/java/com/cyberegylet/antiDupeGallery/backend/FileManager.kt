@@ -1,19 +1,20 @@
 package com.cyberegylet.antiDupeGallery.backend
 
 import android.Manifest
-import android.app.Activity
 import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import android.util.Log
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
+import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.Priority
@@ -24,6 +25,8 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
 import com.cyberegylet.antiDupeGallery.R
 import com.cyberegylet.antiDupeGallery.backend.Config.getBooleanProperty
+import com.cyberegylet.antiDupeGallery.helpers.PermissionManager
+import com.cyberegylet.antiDupeGallery.models.Album
 import java.io.File
 import java.io.IOException
 import java.nio.file.AccessDeniedException
@@ -31,40 +34,13 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
-class FileManager(@JvmField val activity: Activity)
+class FileManager(@JvmField val activity: ComponentActivity)
 {
 	@JvmField
 	val context: Context = activity.applicationContext
 	private val contentResolver: ContentResolver = activity.contentResolver
-	private var hasFileAccess = false
 
-	object Mimes
-	{
-		@JvmField
-		val MIME_VIDEOS = arrayOf("video/mpeg", "video/mp4", "video/webm", "video/3gpp", "video/avi", "video/quicktime")
-
-		@JvmField
-		val MIME_IMAGES =
-			arrayOf("image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/svg", "image/ico")
-
-		@JvmStatic
-		fun isImage(mimeString: String): Boolean = listOf(*MIME_IMAGES).contains(mimeString)
-
-		@JvmStatic
-		fun isVideo(mimeString: String): Boolean = listOf(*MIME_VIDEOS).contains(mimeString)
-
-		@JvmStatic
-		fun isMedia(mimeString: String): Boolean = isImage(mimeString) || isVideo(mimeString)
-
-		enum class Type
-		{
-			MIME_NONE,
-			MIME_IMAGE,
-			MIME_VIDEO
-		}
-	}
-
-	init
+	fun requestStoragePermissions(requestCallback: ((Array<String>?) -> Unit)?)
 	{
 		val hasWrite = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P)
 		{
@@ -73,10 +49,7 @@ class FileManager(@JvmField val activity: Activity)
 				Manifest.permission.WRITE_EXTERNAL_STORAGE
 			) == PackageManager.PERMISSION_GRANTED
 		}
-		else
-		{
-			true
-		}
+		else true
 
 		val hasRead: Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
 		{
@@ -96,10 +69,10 @@ class FileManager(@JvmField val activity: Activity)
 			) == PackageManager.PERMISSION_GRANTED
 		}
 
-		if (hasRead && hasWrite) hasFileAccess = true
+		if (hasRead && hasWrite) requestCallback?.invoke(null)
 		else
 		{
-			val permissions: MutableList<String> = ArrayList()
+			val permissions: ArrayList<String> = ArrayList()
 			if (!hasWrite) permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 			if (!hasRead)
 			{
@@ -110,17 +83,18 @@ class FileManager(@JvmField val activity: Activity)
 				}
 				else permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
 			}
-			ActivityCompat.requestPermissions(activity, permissions.toTypedArray(), STORAGE_REQUEST_CODE)
+
+			val permissionManager = PermissionManager(activity)
+			permissionManager.requestPermissions({ requestCallback?.invoke(it) }, *permissions.toTypedArray())
 		}
 	}
-
-	fun hasFileAccess(): Boolean = hasFileAccess
 
 	abstract class CursorLoopWrapper
 	{
 		private var idCol = 0
 		private var pathCol = 0
 		private var mimeCol = 0
+
 		private lateinit var cursor: Cursor
 		fun init(cursor: Cursor)
 		{
@@ -148,7 +122,7 @@ class FileManager(@JvmField val activity: Activity)
 		selection: String?,
 		args: Array<String>?,
 		uri: Uri,
-		vararg queries: String
+		vararg queries: String,
 	)
 	{
 		contentResolver.query(uri, queries, selection, args, sort).use { cursor ->
@@ -176,7 +150,7 @@ class FileManager(@JvmField val activity: Activity)
 		selection: String?,
 		args: Array<String>?,
 		uri: Uri,
-		vararg queries: String
+		vararg queries: String,
 	)
 	{
 		cursorLoop(wrapper, 0, null, selection, args, uri, *queries)
@@ -188,7 +162,7 @@ class FileManager(@JvmField val activity: Activity)
 		selection: String?,
 		args: Array<String>?,
 		uri: Uri,
-		vararg queries: String
+		vararg queries: String,
 	)
 	{
 		cursorLoop(wrapper, 0, sort, selection, args, uri, *queries)
@@ -205,7 +179,7 @@ class FileManager(@JvmField val activity: Activity)
 	}
 
 	fun allImageAndVideoInFolderLoop(
-		absoluteFolder: String, sort: String?, wrapper: CursorLoopWrapper, vararg queries: String
+		absoluteFolder: String, sort: String?, wrapper: CursorLoopWrapper, vararg queries: String,
 	)
 	{
 		cursorLoop(
@@ -215,6 +189,82 @@ class FileManager(@JvmField val activity: Activity)
 			EXTERNAL_URI,
 			*queries
 		)
+	}
+
+	fun getNoMediaFolders(): ArrayList<String>
+	{
+		val folders = ArrayList<String>()
+
+		val wrapper = object : CursorLoopWrapper()
+		{
+			override fun run()
+			{
+				val noMediaFile = File(path)
+				if (noMediaFile.exists() && noMediaFile.name == MediaStore.MEDIA_IGNORE_FILENAME)
+				{
+					folders.add(noMediaFile.parent!!)
+				}
+			}
+		}
+		cursorLoop(
+			wrapper,
+			"${MediaStore.Files.FileColumns.MEDIA_TYPE} = ? AND ${MediaStore.MediaColumns.TITLE} LIKE ?",
+			arrayOf(MediaStore.Files.FileColumns.MEDIA_TYPE_NONE.toString(), MediaStore.MEDIA_IGNORE_FILENAME),
+			EXTERNAL_URI,
+			MediaStore.MediaColumns.DATA
+		)
+
+		return folders
+	}
+
+	fun getFolders(): HashSet<String>
+	{
+		// https://github.com/SimpleMobileTools/Simple-Gallery/blob/master/app/src/main/kotlin/com/simplemobiletools/gallery/pro/helpers/MediaFetcher.kt#L84
+		val folders = HashSet<String>()
+
+		val args = ArrayList<String>()
+		val sb = StringBuilder()
+
+		for (a in Mimes.PHOTO_EXTENSIONS)
+		{
+			sb.append("${MediaStore.MediaColumns.DATA} LIKE ? OR ")
+			args.add("%$a")
+		}
+
+		for (a in Mimes.VIDEO_EXTENSIONS)
+		{
+			sb.append("${MediaStore.MediaColumns.DATA} LIKE ? OR ")
+			args.add("%$a")
+		}
+
+		val selection = sb.trimEnd().removeSuffix("OR").toString()
+
+		val wrapper = object : CursorLoopWrapper()
+		{
+			override fun run()
+			{
+				folders.add(getParentPath(path))
+			}
+		}
+		cursorLoop(wrapper, selection, args.toTypedArray(), EXTERNAL_URI, MediaStore.MediaColumns.DATA)
+
+		return folders
+	}
+
+	fun getAlbums(): ArrayList<Album>
+	{
+		val albums = ArrayList<Album>()
+		val wrapper = object : CursorLoopWrapper()
+		{
+			override fun run()
+			{
+				val f = File(path)
+				if (!f.isDirectory) return
+				albums.add(Album(f))
+			}
+		}
+		cursorLoop(wrapper, EXTERNAL_URI, MediaStore.MediaColumns.DATA)
+		return albums
 	}
 
 	fun getUriFromID(id: Int): Uri
@@ -227,7 +277,7 @@ class FileManager(@JvmField val activity: Activity)
 		).use { cursor ->
 			val pathInd = cursor!!.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA)
 			cursor.moveToFirst()
-			return Uri.parse("file://" + cursor.getString(pathInd))
+			return Uri.parse("file://${cursor.getString(pathInd)}")
 		}
 	}
 
@@ -235,7 +285,7 @@ class FileManager(@JvmField val activity: Activity)
 	{
 		contentResolver.query(
 			EXTERNAL_URI, arrayOf(MediaStore.MediaColumns._ID),
-			MediaStore.MediaColumns.DATA + "=?", arrayOf(path.path),
+			"${MediaStore.MediaColumns.DATA}=?", arrayOf(path.path),
 			null
 		).use { cursor ->
 			val idInd = cursor!!.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
@@ -258,77 +308,107 @@ class FileManager(@JvmField val activity: Activity)
 		}
 	}
 
-	fun getMimeType(uri: Uri): String
-	{
-		return getMimeType(getIDFromUri(uri))
-	}
+	fun getMimeType(uri: Uri): String = getMimeType(getIDFromUri(uri))
 
-	fun thumbnailIntoImageView(imageView: ImageView?, path: String?)
+	fun thumbnailIntoImageView(imageView: ImageView, path: String)
 	{
 		var options = RequestOptions().priority(Priority.LOW)
 			.diskCacheStrategy(DiskCacheStrategy.RESOURCE).format(DecodeFormat.PREFER_ARGB_8888)
 			.set(Downsampler.ALLOW_HARDWARE_CONFIG, true).centerCrop()
 
 		val playGIF = getBooleanProperty(Config.Property.ANIMATE_GIF)
-		options = if (!playGIF) options.dontAnimate().decode(Bitmap::class.java)
-		else options.decode(Drawable::class.java)
+		options = when
+		{
+			!playGIF -> options.dontAnimate().decode(Bitmap::class.java)
+			else -> options.decode(Drawable::class.java)
+		}
 
 		Glide.with(context).load(path).apply(options).transition(DrawableTransitionOptions.withCrossFade())
-			.into(imageView!!)
+			.into(imageView)
+	}
+
+	/**
+	 * @param type 0 -> move, 1 -> copy, else -> delete
+	 */
+	private fun updateMediaStore(fromFile: Path, toFile: Path?, type: Int = -1)
+	{
+		val list: Array<String> =
+			when (type)
+			{
+				0 -> arrayOf(fromFile.toString(), toFile!!.toString())
+				1 -> arrayOf(toFile!!.toString())
+				else -> arrayOf(fromFile.toString())
+			}
+		MediaScannerConnection.scanFile(context, list, null) { path, uri ->
+			Log.i(TAG, "scanned path: $path, uri: $uri")
+		}
 	}
 
 	fun moveFile(fromFile: Path, toFolder: Path): Boolean
 	{
+		val toFile: Path = toFolder.resolve(fromFile.fileName)
 		return try
 		{
 			Files.createDirectories(toFolder)
-			Files.move(fromFile, toFolder.resolve(fromFile.fileName), StandardCopyOption.REPLACE_EXISTING)
+			Files.move(fromFile, toFile, StandardCopyOption.REPLACE_EXISTING)
+			updateMediaStore(fromFile, toFile, 0)
 			true
 		}
 		catch (e: AccessDeniedException)
 		{
-			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show()
+			Log.e(TAG, "access denied: $toFile\n$e")
+			Toast.makeText(context, R.string.permission_storage_denied, Toast.LENGTH_SHORT).show()
 			false
 		}
 		catch (e: IOException)
 		{
+			Log.e(TAG, "io error: $toFile\n$e")
 			false
 		}
 	}
 
 	fun copyFile(fromFile: Path, toFolder: Path): Boolean
 	{
+		val toFile: Path = toFolder.resolve(fromFile.fileName)
 		return try
 		{
 			Files.createDirectories(toFolder)
-			Files.copy(fromFile, toFolder.resolve(fromFile.fileName), StandardCopyOption.REPLACE_EXISTING)
+			Log.w("app", "dir good")
+			Files.copy(fromFile, toFile, StandardCopyOption.REPLACE_EXISTING)
+			Log.w("app", "copy good")
+			updateMediaStore(fromFile, toFile, 1)
 			true
 		}
 		catch (e: AccessDeniedException)
 		{
-			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show()
+			Log.e(TAG, "access denied: $toFile\n$e")
+			Toast.makeText(context, R.string.permission_storage_denied, Toast.LENGTH_SHORT).show()
 			false
 		}
 		catch (e: IOException)
 		{
+			Log.e(TAG, "io error: $toFile\n$e")
 			false
 		}
 	}
 
-	fun deleteFile(file: Path?): Boolean
+	fun deleteFile(file: Path): Boolean
 	{
 		return try
 		{
 			Files.deleteIfExists(file)
+			updateMediaStore(file, null)
 			true
 		}
 		catch (e: AccessDeniedException)
 		{
-			Toast.makeText(context, R.string.no_storage_permission, Toast.LENGTH_SHORT).show()
+			Log.e(TAG, "access denied: $file\n$e")
+			Toast.makeText(context, R.string.permission_storage_denied, Toast.LENGTH_SHORT).show()
 			false
 		}
 		catch (e: IOException)
 		{
+			Log.e(TAG, "io error: $file\n$e")
 			false
 		}
 	}
@@ -348,6 +428,7 @@ class FileManager(@JvmField val activity: Activity)
 		}
 		catch (e: IOException)
 		{
+			Log.e(TAG, "io error: $toAlbum\n$e")
 			false
 		}
 	}
@@ -367,6 +448,7 @@ class FileManager(@JvmField val activity: Activity)
 		}
 		catch (e: IOException)
 		{
+			Log.e(TAG, "io error: $toAlbum\n$e")
 			false
 		}
 	}
@@ -386,13 +468,14 @@ class FileManager(@JvmField val activity: Activity)
 		}
 		catch (e: IOException)
 		{
+			Log.e(TAG, "io error: $album\n$e")
 			false
 		}
 	}
 
 	companion object
 	{
-		const val STORAGE_REQUEST_CODE = 1
+		@JvmField
 		val EXTERNAL_URI: Uri = MediaStore.Files.getContentUri("external")
 		const val IMAGES = MediaStore.MediaColumns.MIME_TYPE + " like 'image/%'"
 		const val VIDEOS = MediaStore.MediaColumns.MIME_TYPE + " like 'video/%'"
@@ -409,11 +492,18 @@ class FileManager(@JvmField val activity: Activity)
 		fun isDownloadsDocument(uri: Uri): Boolean = "com.android.providers.downloads.documents" == uri.authority
 
 		@JvmStatic
+		fun isRawDownloadsDocument(uri: Uri): Boolean =
+			uri.toString().contains("com.android.providers.downloads.documents/document/raw")
+
+		@JvmStatic
 		fun isMediaDocument(uri: Uri): Boolean = "com.android.providers.media.documents" == uri.authority
 
 		@JvmStatic
 		fun isGooglePhotosUri(uri: Uri): Boolean = "com.google.android.apps.photos.content" == uri.authority
 
+		/**
+		 * @return returns the size of the file. -1 if f is Directory.
+		 */
 		@JvmStatic
 		fun getSize(f: File): Long
 		{
@@ -425,5 +515,13 @@ class FileManager(@JvmField val activity: Activity)
 		}
 		return size;*/
 		}
+
+		@JvmStatic
+		fun getFileExtension(path: String) = path.substring(path.lastIndexOf(".") + 1)
+
+		@JvmStatic
+		fun getParentPath(path: String) = path.take(path.lastIndexOf('/'))
+
+		const val TAG = "FileManager"
 	}
 }

@@ -10,8 +10,8 @@ import androidx.annotation.Nullable;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.backend.Config;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityParameter;
 
 public class PinActivity extends Activity
 {
@@ -38,7 +38,8 @@ public class PinActivity extends Activity
 			{
 				if (s.length() == 4 && Config.getStringProperty(Config.Property.PIN_LOCK).equals(s.toString()))
 				{
-					ActivityManager.switchActivity(PinActivity.this,
+					ActivityManager.switchActivity(
+							PinActivity.this,
 							AlbumActivity.class,
 							new ActivityParameter<>("login", true)
 					);

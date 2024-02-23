@@ -10,8 +10,8 @@ import androidx.annotation.NonNull;
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.activities.ImagesActivity;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityParameter;
 import com.cyberegylet.antiDupeGallery.models.Album;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 

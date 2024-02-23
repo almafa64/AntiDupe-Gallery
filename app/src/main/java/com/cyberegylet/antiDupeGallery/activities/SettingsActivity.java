@@ -19,9 +19,9 @@ import androidx.appcompat.widget.AppCompatCheckBox;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.backend.Config;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
 import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.helpers.SimpleActivityGenerator;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
 
 public class SettingsActivity extends Activity
 {

@@ -3,7 +3,9 @@ package com.cyberegylet.antiDupeGallery.activities;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,15 +14,21 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.Nullable;
+import androidx.documentfile.provider.DocumentFile;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.ImagesAdapter;
 import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.Config;
+import com.cyberegylet.antiDupeGallery.backend.Mimes;
+import com.cyberegylet.antiDupeGallery.compose.AboutActivity;
 import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
+import com.cyberegylet.antiDupeGallery.helpers.RealPathUtil;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
+import com.cyberegylet.antiDupeGallery.models.Album;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.io.File;
@@ -34,9 +42,17 @@ import java.util.stream.Collectors;
 
 public class ImagesActivity extends ImageListBaseActivity
 {
-	private static final int MOVE_SELECTED_IMAGES = 1;
-	private static final int COPY_SELECTED_IMAGES = 2;
-	private static final int DELETE_SELECTED_IMAGES = 3;
+	private final ActivityResultLauncher<Intent> moveLauncher = activityManager.registerLauncher(o -> myOnActivityResult(
+			MOVE_SELECTED,
+			o.getResultCode(),
+			o.getData()
+	));
+
+	private final ActivityResultLauncher<Intent> copyLauncher = activityManager.registerLauncher(o -> myOnActivityResult(
+			COPY_SELECTED,
+			o.getResultCode(),
+			o.getData()
+	));
 
 	private String currentFolder;
 	private final List<ImageFile> allImages = new ArrayList<>();
@@ -59,7 +75,7 @@ public class ImagesActivity extends ImageListBaseActivity
 		String sort = ConfigSort.toMediaSQLString(Config.getStringProperty(Config.Property.IMAGE_SORT));
 		try (Cursor cursor = database.query(
 				Cache.Tables.MEDIA,
-				new String[]{ Cache.Media.PATH, Cache.Media.MIME_TYPE },
+				new String[]{ Cache.Media.PATH, Cache.Media.MIME_TYPE, Cache.Media.ID },
 				Cache.Media.ALBUM_PATH + " = ?",
 				new String[]{ path },
 				null,
@@ -70,11 +86,16 @@ public class ImagesActivity extends ImageListBaseActivity
 			if (!cursor.moveToFirst()) return false;
 			int pathCol = cursor.getColumnIndexOrThrow(Cache.Media.PATH);
 			int mimeCol = cursor.getColumnIndexOrThrow(Cache.Media.MIME_TYPE);
+			int idCol = cursor.getColumnIndexOrThrow(Cache.Media.ID);
 			do
 			{
 				File imageFile = new File(cursor.getString(pathCol));
 				if (!imageFile.canRead()) continue;
-				allImages.add(new ImageFile(imageFile, cursor.getString(mimeCol)));
+				allImages.add(new ImageFile(
+						imageFile,
+						Mimes.Type.getEntries().get(cursor.getInt(mimeCol)),
+						cursor.getLong(idCol)
+				));
 			} while (cursor.moveToNext());
 		}
 
@@ -108,12 +129,12 @@ public class ImagesActivity extends ImageListBaseActivity
 				else if (id == moveId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					startActivityForResult(intent, MOVE_SELECTED_IMAGES);
+					activityManager.launchIntent(intent, moveLauncher);
 				}
 				else if (id == copyId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					startActivityForResult(intent, COPY_SELECTED_IMAGES);
+					activityManager.launchIntent(intent, copyLauncher);
 				}
 				else if (id == deleteId)
 				{
@@ -121,8 +142,8 @@ public class ImagesActivity extends ImageListBaseActivity
 							.setMessage(R.string.popup_delete_confirm).setIcon(android.R.drawable.ic_dialog_alert)
 							.setPositiveButton(
 									android.R.string.yes,
-									(dialog, whichButton) -> onActivityResult(
-											DELETE_SELECTED_IMAGES,
+									(dialog, whichButton) -> myOnActivityResult(
+											DELETE_SELECTED,
 											RESULT_OK,
 											new Intent()
 									)
@@ -179,22 +200,43 @@ public class ImagesActivity extends ImageListBaseActivity
 	}
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	protected void myOnActivityResult(int requestCode, int resultCode, Intent data)
 	{
 		if (resultCode != RESULT_OK || data == null) return;
 		final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
 		final List<BaseImageAdapter.ViewHolder> selected = adapter.getSelected;
 		// ToDo fix this, its very hacky
 		Path path = null;
-		if (requestCode != DELETE_SELECTED_IMAGES)
+		if (requestCode != DELETE_SELECTED)
 		{
-			path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]);
+			// ToDo path isnt tree, look into this if needs changes
+			Uri uri = data.getData();
+			Log.d("app", "uri: " + uri);
+			String dataPath = Objects.requireNonNull(uri).getPath();
+			String[] parts = Objects.requireNonNull(dataPath).split(":");
+
+			DocumentFile docFile = DocumentFile.fromTreeUri(this, uri);
+
+			//Log.d("app", Objects.requireNonNull(DocumentFile.fromTreeUri(this, uri).getUri().toString()));
+
+			// raw -> parts[1]
+			// primary -> /storage/emulated/0/ + parts[1]
+			//path = Paths.get("/storage/emulated/0/" + parts[1]);
+			if (uri.toString().startsWith("content://com.android.providers.downloads.documents/tree/raw"))
+			{
+				path = Paths.get(parts[1]);
+			}
+			else if (dataPath.startsWith("/tree/primary:"))
+			{
+				path = Paths.get("/storage/emulated/0/" + parts[1]);
+			}
+			else path = Paths.get(RealPathUtil.getRealPath(this, Objects.requireNonNull(docFile).getUri()));
 		}
 		List<ImageFile> failedImages = new ArrayList<>();
 		int textId = 0;
 		switch (requestCode)
 		{
-			case MOVE_SELECTED_IMAGES ->
+			case MOVE_SELECTED ->
 			{
 				textId = R.string.popup_move_file_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
@@ -207,13 +249,14 @@ public class ImagesActivity extends ImageListBaseActivity
 						failedImages.add(imageFile);
 						continue;
 					}
-					File file = path.resolve(p.getFileName()).toFile();
-					if (Objects.equals(file.getParent(), p.getParent().toString())) imageFile.setFile(file);
-					else allImages.remove(imageFile);
-					Cache.updateMedia(imageFile, p.toString());
+					if (!p.equals(path))
+					{
+						allImages.remove(imageFile);
+						Cache.updateMedia(imageFile);
+					}
 				}
 			}
-			case COPY_SELECTED_IMAGES ->
+			case COPY_SELECTED ->
 			{
 				textId = R.string.popup_copy_file_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
@@ -226,12 +269,15 @@ public class ImagesActivity extends ImageListBaseActivity
 						failedImages.add(imageFile);
 						continue;
 					}
-					ImageFile newImage = new ImageFile(path.resolve(p.getFileName()).toFile());
-					Cache.addMedia(newImage, path.toString());
-					allImages.add(newImage);
+					Path p2 = path.resolve(p.getFileName());
+					ImageFile newImage = new ImageFile(p2.toFile(), Mimes.getMimeEnumType(p2.toString()));
+					Album album = new Album(path.toString());
+					Cache.addAlbum(album);
+					Cache.addMedia(newImage);
+					if (p.equals(path)) allImages.add(newImage);
 				}
 			}
-			case DELETE_SELECTED_IMAGES ->
+			case DELETE_SELECTED ->
 			{
 				textId = R.string.popup_delete_file_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
@@ -244,7 +290,7 @@ public class ImagesActivity extends ImageListBaseActivity
 						failedImages.add(imageFile);
 						continue;
 					}
-					Cache.deleteMedia(imageFile.getPath());
+					Cache.deleteMedia(imageFile);
 					allImages.remove(imageFile);
 				}
 			}

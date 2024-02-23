@@ -1,11 +1,10 @@
 package com.cyberegylet.antiDupeGallery.activities;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
@@ -15,8 +14,10 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -25,29 +26,46 @@ import com.cyberegylet.antiDupeGallery.adapters.BaseImageAdapter;
 import com.cyberegylet.antiDupeGallery.adapters.FilterImagesAdapter;
 import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.backend.Mimes;
+import com.cyberegylet.antiDupeGallery.helpers.RealPathUtil;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.models.Album;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class FilterImagesActivity extends Activity
+import kotlin.Unit;
+
+public class FilterImagesActivity extends AppCompatActivity
 {
 	private static final String TAG = "FilterImagesActivity";
 	private static final int MOVE_SELECTED_IMAGES = 1;
 	private static final int COPY_SELECTED_IMAGES = 2;
 	private static final int DELETE_SELECTED_IMAGES = 3;
 
+	private final ActivityManager activityManager = new ActivityManager(this);
+
+	private final ActivityResultLauncher<Intent> moveLauncher = activityManager.registerLauncher(o -> myOnActivityResult(
+			MOVE_SELECTED_IMAGES,
+			o.getResultCode(),
+			o.getData()
+	));
+
+	private final ActivityResultLauncher<Intent> copyLauncher = activityManager.registerLauncher(o -> myOnActivityResult(
+			COPY_SELECTED_IMAGES,
+			o.getResultCode(),
+			o.getData()
+	));
+
 	private final List<ImageFile> allImages = new ArrayList<>();
 	private SQLiteDatabase database;
 	private RecyclerView recycler;
-	private ActivityManager activityManager;
 	private FileManager fileManager;
 
 	@Override
@@ -58,8 +76,6 @@ public class FilterImagesActivity extends Activity
 
 		database = Cache.getCache();
 		recycler = findViewById(R.id.recycler);
-		activityManager = new ActivityManager(this);
-		fileManager = new FileManager(this);
 
 		recycler.setLayoutManager(new LinearLayoutManager(this));
 
@@ -90,12 +106,14 @@ public class FilterImagesActivity extends Activity
 				if (id == moveId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					startActivityForResult(intent, MOVE_SELECTED_IMAGES);
+					//startActivityForResult(intent, MOVE_SELECTED_IMAGES);
+					activityManager.launchIntent(intent, moveLauncher);
 				}
 				else if (id == copyId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					startActivityForResult(intent, COPY_SELECTED_IMAGES);
+					//startActivityForResult(intent, COPY_SELECTED_IMAGES);
+					activityManager.launchIntent(intent, copyLauncher);
 				}
 				else if (id == deleteId)
 				{
@@ -103,7 +121,7 @@ public class FilterImagesActivity extends Activity
 							.setMessage(R.string.popup_delete_confirm).setIcon(android.R.drawable.ic_dialog_alert)
 							.setPositiveButton(
 									android.R.string.yes,
-									(dialog, whichButton) -> onActivityResult(
+									(dialog, whichButton) -> myOnActivityResult(
 											DELETE_SELECTED_IMAGES,
 											RESULT_OK,
 											new Intent()
@@ -159,26 +177,19 @@ public class FilterImagesActivity extends Activity
 		});
 
 		fileManager = new FileManager(this);
-		if (fileManager.hasFileAccess()) storageAccessGranted();
+		fileManager.requestStoragePermissions(b -> {
+			if (b == null || b.length == 0) storageAccessGranted();
+			else
+			{
+				Toast.makeText(this, getString(R.string.permission_storage_denied), Toast.LENGTH_SHORT).show();
+				finishAndRemoveTask();
+			}
+			return Unit.INSTANCE;
+		});
 	}
 
-	@Override
-	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
-	{
-		if (requestCode == FileManager.STORAGE_REQUEST_CODE && Arrays.stream(grantResults)
-				.allMatch(v -> v == PackageManager.PERMISSION_GRANTED))
-		{
-			storageAccessGranted();
-		}
-		else
-		{
-			Toast.makeText(this, getString(R.string.no_storage_permission), Toast.LENGTH_SHORT).show();
-			finishAndRemoveTask();
-		}
-	}
 
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	protected void myOnActivityResult(int requestCode, int resultCode, Intent data)
 	{
 		if (resultCode != RESULT_OK || data == null) return;
 		final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
@@ -187,7 +198,26 @@ public class FilterImagesActivity extends Activity
 		Path path = null;
 		if (requestCode != DELETE_SELECTED_IMAGES)
 		{
-			path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]);
+			Uri uri = data.getData();
+			String dataPath = Objects.requireNonNull(uri).getPath();
+			String[] parts = Objects.requireNonNull(dataPath).split(":");
+
+			DocumentFile docFile = DocumentFile.fromTreeUri(this, uri);
+
+			//Log.d("app", Objects.requireNonNull(DocumentFile.fromTreeUri(this, uri).getUri().toString()));
+
+			// raw -> parts[1]
+			// primary -> /storage/emulated/0/ + parts[1]
+			//path = Paths.get("/storage/emulated/0/" + parts[1]);
+			if (uri.toString().startsWith("content://com.android.providers.downloads.documents/tree/raw"))
+			{
+				path = Paths.get(parts[1]);
+			}
+			else if (dataPath.startsWith("/tree/primary:"))
+			{
+				path = Paths.get("/storage/emulated/0/" + parts[1]);
+			}
+			else path = Paths.get(RealPathUtil.getRealPath(this, Objects.requireNonNull(docFile).getUri()));
 		}
 		List<ImageFile> failedImages = new ArrayList<>();
 		int textId = 0;
@@ -200,7 +230,17 @@ public class FilterImagesActivity extends Activity
 				{
 					FilterImagesAdapter.ViewHolder holder = (FilterImagesAdapter.ViewHolder) tmp;
 					Path p = Paths.get(holder.getImage().getPath());
-					if (!fileManager.moveFile(p, path)) failedImages.add(holder.getImage());
+					ImageFile imageFile = holder.getImage();
+					if (!fileManager.moveFile(p, path))
+					{
+						failedImages.add(imageFile);
+						continue;
+					}
+					if (!p.equals(path))
+					{
+						allImages.remove(imageFile);
+						Cache.updateMedia(imageFile);
+					}
 				}
 			}
 			case COPY_SELECTED_IMAGES ->
@@ -210,7 +250,18 @@ public class FilterImagesActivity extends Activity
 				{
 					FilterImagesAdapter.ViewHolder holder = (FilterImagesAdapter.ViewHolder) tmp;
 					Path p = Paths.get(holder.getImage().getPath());
-					if (!fileManager.copyFile(p, path)) failedImages.add(holder.getImage());
+					ImageFile imageFile = holder.getImage();
+					if (!fileManager.copyFile(p, path))
+					{
+						failedImages.add(imageFile);
+						continue;
+					}
+					Path p2 = path.resolve(p.getFileName());
+					ImageFile newImage = new ImageFile(p2.toFile(), Mimes.getMimeEnumType(p2.toString()));
+					Album album = new Album(path.toString());
+					Cache.addAlbum(album);
+					Cache.addMedia(newImage);
+					if (p.equals(path)) allImages.add(newImage);
 				}
 			}
 			case DELETE_SELECTED_IMAGES ->
@@ -219,8 +270,15 @@ public class FilterImagesActivity extends Activity
 				for (BaseImageAdapter.ViewHolder tmp : selected)
 				{
 					FilterImagesAdapter.ViewHolder holder = (FilterImagesAdapter.ViewHolder) tmp;
+					ImageFile imageFile = holder.getImage();
 					Path p = Paths.get(holder.getImage().getPath());
-					if (!fileManager.deleteFile(p)) failedImages.add(holder.getImage());
+					if (!fileManager.deleteFile(p))
+					{
+						failedImages.add(imageFile);
+						continue;
+					}
+					Cache.deleteMedia(imageFile);
+					allImages.remove(imageFile);
 				}
 			}
 		}
@@ -242,23 +300,42 @@ public class FilterImagesActivity extends Activity
 	{
 		String digestHex = (String) activityManager.getParam("digestHex");
 
-		try (Cursor cursor = database.query(
-				Cache.Tables.DIGESTS,
-				new String[]{ Cache.Digests.PATH },
-				"hex(" + Cache.Digests.DIGEST + ") like ?",
-				new String[]{ digestHex },
-				null,
-				null,
-				Cache.Digests.PATH
+		String digestPath = Cache.Tables.DIGESTS + "." + Cache.Digests.PATH;
+		String mediaPath = Cache.Tables.MEDIA + "." + Cache.Media.PATH;
+		String mediaId = Cache.Tables.MEDIA + "." + Cache.Media.ID;
+		try (Cursor cursor = database.rawQuery(
+				"SELECT " + digestPath + "," + Cache.Media.MIME_TYPE + "," + mediaId +
+						" FROM " + Cache.Tables.DIGESTS +
+						" INNER JOIN " + Cache.Tables.MEDIA + " ON" +
+						" " + mediaPath + " = " + digestPath +
+						" WHERE hex(" + Cache.Digests.DIGEST + ") like ?" +
+						" ORDER BY " + digestPath, new String[]{ digestHex }))
+		{*/
+		String chash_id = Cache.Tables.CHASH + "." + Cache.CHash.MEDIA_ID;
+		String chash_bytes = Cache.Tables.CHASH + "." + Cache.CHash.BYTES;
+		try (Cursor cursor = database.rawQuery(
+				"SELECT " + Cache.Media.PATH + "," + Cache.Media.MIME_TYPE + "," + Cache.Media.ID + " " +
+						"FROM " + Cache.Tables.MEDIA + " " +
+						"INNER JOIN " + Cache.Tables.CHASH + " ON " + Cache.Media.ID + " = " + chash_id + " " +
+						"WHERE HEX(" + chash_bytes + ") = ? " +
+						"ORDER BY " + Cache.Media.PATH,
+				new String[]{ digestHex }
 		))
 		{
 			if (!cursor.moveToFirst()) return;
-			int pathCol = cursor.getColumnIndexOrThrow(Cache.Digests.PATH);
+			int pathCol = cursor.getColumnIndexOrThrow(Cache.Media.PATH);
+			int idCol = cursor.getColumnIndexOrThrow(Cache.Media.ID);
+			int mimeCol = cursor.getColumnIndexOrThrow(Cache.Media.MIME_TYPE);
 			do
 			{
+
 				File imageFile = new File(cursor.getString(pathCol));
 				if (!imageFile.canRead()) continue;
-				allImages.add(new ImageFile(imageFile));
+				allImages.add(new ImageFile(
+						imageFile,
+						Mimes.Type.getEntries().get(cursor.getInt(mimeCol)),
+						cursor.getLong(idCol)
+				));
 			} while (cursor.moveToNext());
 		}
 

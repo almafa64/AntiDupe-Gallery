@@ -1,15 +1,14 @@
 package com.cyberegylet.antiDupeGallery.activities;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.widget.SearchView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -17,18 +16,34 @@ import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
 
-import java.util.Arrays;
+import kotlin.Unit;
 
-public abstract class ImageListBaseActivity extends Activity
+public abstract class ImageListBaseActivity extends AppCompatActivity
 {
+	protected static final int MOVE_SELECTED = 1;
+	protected static final int COPY_SELECTED = 2;
+	protected static final int DELETE_SELECTED = 3;
+
 	public final String TAG;
 	public static SQLiteDatabase database;
 	protected FileManager fileManager;
 	protected RecyclerView recycler;
 	protected final ActivityManager activityManager = new ActivityManager(this);
 	protected SearchView search;
+
+	protected final ActivityResultLauncher<Intent> moveLauncher = activityManager.registerLauncher(o -> myOnActivityResult(
+			MOVE_SELECTED,
+			o.getResultCode(),
+			o.getData()
+	));
+
+	protected final ActivityResultLauncher<Intent> copyLauncher = activityManager.registerLauncher(o -> myOnActivityResult(
+			COPY_SELECTED,
+			o.getResultCode(),
+			o.getData()
+	));
 
 	protected ImageListBaseActivity(String tag) { TAG = tag; }
 
@@ -66,7 +81,15 @@ public abstract class ImageListBaseActivity extends Activity
 		});
 
 		fileManager = new FileManager(this);
-		if (fileManager.hasFileAccess()) storageAccessGranted();
+		fileManager.requestStoragePermissions(permissions -> {
+			if (permissions == null || permissions.length == 0) storageAccessGranted();
+			else
+			{
+				Toast.makeText(this, getString(R.string.permission_storage_denied), Toast.LENGTH_SHORT).show();
+				finishAndRemoveTask();
+			}
+			return Unit.INSTANCE;
+		});
 	}
 
 	@Override
@@ -91,23 +114,7 @@ public abstract class ImageListBaseActivity extends Activity
 		filterRecycle(search.getQuery().toString());
 	}
 
-	@Override
-	protected abstract void onActivityResult(int requestCode, int resultCode, Intent data);
-
-	@Override
-	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
-	{
-		if (requestCode == FileManager.STORAGE_REQUEST_CODE && Arrays.stream(grantResults)
-				.allMatch(v -> v == PackageManager.PERMISSION_GRANTED))
-		{
-			storageAccessGranted();
-		}
-		else
-		{
-			Toast.makeText(this, getString(R.string.no_storage_permission), Toast.LENGTH_SHORT).show();
-			finishAndRemoveTask();
-		}
-	}
+	protected abstract void myOnActivityResult(int requestCode, int resultCode, Intent data);
 
 	protected abstract void storageAccessGranted();
 

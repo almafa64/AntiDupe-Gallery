@@ -1,32 +1,34 @@
 package com.cyberegylet.antiDupeGallery.models;
 
-import androidx.annotation.NonNull;
-
-import org.jetbrains.annotations.NotNull;
+import com.cyberegylet.antiDupeGallery.backend.Mimes;
 
 import java.io.File;
 
 public class FilteredAlbum
 {
-	private final ImageFile indexImage;
-	@NotNull
-	private final String name;
-	private final long size;
-	private final long count;
-	private final String digestHex;
+	private ImageFile indexImage;
 
-	public FilteredAlbum(File indexFile, @NonNull String name, int count, String digestHex)
+	private String name;
+	private long size;
+	private long count;
+	private String digestHex;
+
+	public FilteredAlbum(File indexFile, String name, int count, String digestHex)
 	{
-		indexImage = new ImageFile(indexFile);
-		this.name = name;
+		setData(indexFile, name, count, digestHex);
+	}
+
+	public void setData(File indexFile, String name, int count, String digestHex)
+	{
+		if (indexFile != null) this.indexImage = new ImageFile(indexFile, Mimes.Type.UNKNOWN);
+		if (name != null) this.name = name;
 		this.count = count;
-		this.size = 0;
-		this.digestHex = digestHex;
+		this.size = 0; //ToDo calculate size
+		if (digestHex != null) this.digestHex = digestHex;
 	}
 
 	public ImageFile getIndexImage() { return indexImage; }
 
-	@NonNull
 	public String getName() { return name; }
 
 	public long getSize() { return size; }

@@ -6,13 +6,13 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.Arrays
 import java.util.Properties
 
 object Config
 {
 	private const val TAG = "Config"
 	private const val CONFIG_FILE = "config"
+
 	private var filePath: Path? = null
 	private var _properties: Properties? = null
 	private val properties: Properties
@@ -21,24 +21,25 @@ object Config
 	@JvmStatic
 	fun init(context: Context)
 	{
-		if (_properties != null)
+		if (context != context.applicationContext) throw RuntimeException("context needs to be applicationContext")
+		if (initCalled())
 		{
 			Log.i(TAG, "Already called Config.init()")
 			return
 		}
+
 		filePath = Paths.get(context.filesDir.path, CONFIG_FILE)
 		_properties = Properties()
 		try
 		{
 			Files.newBufferedReader(filePath).use { reader ->
 				properties.load(reader)
-				val toRemove: MutableList<Any> = ArrayList()
-				val props = Property.values()
-				val e = properties.propertyNames()
-				while (e.hasMoreElements())
+				val toRemove = ArrayList<String>()
+				val props = Property.entries
+				for (key: Any in properties.propertyNames())
 				{
-					val name = e.nextElement() as String
-					if (Arrays.stream(props).noneMatch { p: Property -> p.name == name }) toRemove.add(name)
+					val name: String = key as String
+					if (props.none { it.name == name }) toRemove.add(name)
 				}
 				for (r in toRemove)
 				{
@@ -81,11 +82,8 @@ object Config
 	fun getBooleanProperty(property: Property) = properties.getProperty(property.name) == "1"
 
 	@JvmStatic
-	fun getArrayProperty(property: Property): Array<String>
-	{
-		return properties.getProperty(property.name).split(",".toRegex()).dropLastWhile { it.isEmpty() }
-			.toTypedArray()
-	}
+	fun getArrayProperty(property: Property): Array<String> =
+		properties.getProperty(property.name).split("|").dropLastWhile { it.isEmpty() }.toTypedArray()
 
 	@JvmStatic
 	fun setStringProperty(property: Property, value: String?)
@@ -108,14 +106,17 @@ object Config
 	@JvmStatic
 	fun setArrayProperty(property: Property, values: Array<String?>)
 	{
-		properties.setProperty(property.name, java.lang.String.join(",", *values))
+		properties.setProperty(property.name, values.joinToString("|"))
 	}
+
+	@JvmStatic
+	fun initCalled() = _properties != null
 
 	@JvmStatic
 	fun restoreDefaults()
 	{
 		properties.clear()
-		for (p in Property.values())
+		for (p in Property.entries)
 		{
 			restoreDefault(p)
 		}
@@ -138,7 +139,7 @@ object Config
 			Property.IMAGE_COLUMN_NUMBER -> setIntProperty(Property.IMAGE_COLUMN_NUMBER, 3)
 			Property.ANIMATE_GIF -> setBooleanProperty(Property.ANIMATE_GIF, false)
 			Property.DO_ANIMATIONS -> setBooleanProperty(Property.DO_ANIMATIONS, true)
-			Property.BLOCKED_PATHS -> setStringProperty(Property.BLOCKED_PATHS, "")
+			Property.BLOCKED_PATHS -> setArrayProperty(Property.BLOCKED_PATHS, arrayOf())
 		}
 	}
 
@@ -154,10 +155,11 @@ object Config
 		PIN_LOCK("pin_lock"),
 		USE_BIN("bin"),
 		DO_ANIMATIONS("do_anims"),
+		BLOCKED_PATHS("path_block"),
 
 		/**
 		 * 1. number: is_ascending<br></br>
-		 * 2. number: sort type (0: mod date, 1: create date, 2: size, 3: name)
+		 * 2. number: sort type (0: mod date, 1: create date, 2: size, 3: name, 4: count)
 		 */
 		ALBUM_SORT("f_sort"),
 
@@ -165,8 +167,7 @@ object Config
 		 * 1. number: is_ascending<br></br>
 		 * 2. number: sort type (0: mod date, 1: create date, 2: size, 3: name)
 		 */
-		IMAGE_SORT("i_sort"),
-		BLOCKED_PATHS("path_block");
+		IMAGE_SORT("i_sort");
 
 		override fun toString(): String = propertyName
 	}

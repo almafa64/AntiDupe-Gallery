@@ -7,14 +7,10 @@ import androidx.annotation.Nullable;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.helpers.SimpleActivityGenerator;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
 
-public class AboutActivity extends Activity
+public class OldAboutActivity extends Activity
 {
-	private static final String TAG = "AboutActivity";
-
-	private final ActivityManager activityManager = new ActivityManager(this);
-
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState)
 	{
@@ -26,6 +22,6 @@ public class AboutActivity extends Activity
 		generator.newHeader(R.string.about_other);
 		generator.addRow(R.string.version_text, R.drawable.ic_info);
 
-		findViewById(R.id.back_button).setOnClickListener(v -> activityManager.goBack());
+		findViewById(R.id.back_button).setOnClickListener(v -> ActivityManager.goBack(OldAboutActivity.this));
 	}
 }

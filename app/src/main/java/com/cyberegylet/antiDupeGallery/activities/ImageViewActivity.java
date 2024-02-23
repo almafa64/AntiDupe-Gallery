@@ -9,7 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 
 import com.cyberegylet.antiDupeGallery.R;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
 import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 
@@ -35,7 +35,6 @@ public class ImageViewActivity extends Activity implements Serializable
 		else imagePath = (String) activityManager.getParam("imagePath");
 
 		setContentView(R.layout.image_view);
-
 
 		TextView textView = findViewById(R.id.activity_header);
 		textView.setText(new File(imagePath).getName());

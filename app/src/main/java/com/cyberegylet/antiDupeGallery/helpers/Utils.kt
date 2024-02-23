@@ -7,12 +7,27 @@ import java.util.Date
 
 object Utils
 {
+	/**
+	 * Converts seconds to locale Date format string
+	 * @param s seconds
+	 * @return locale Date format
+	 */
 	@JvmStatic
 	fun sToDate(s: Long): String = msToDate(s * 1000)
 
+	/**
+	 * Converts milliseconds to locale Date format string
+	 * @param ms milliseconds
+	 * @return locale Date format
+	 */
 	@JvmStatic
 	fun msToDate(ms: Long): String = DateFormat.getDateTimeInstance().format(Date(ms))
 
+	/**
+	 * Converts bytes to human readable format (e.g.: 420KB, 69MB)
+	 * @param size bytes
+	 * @return human readable format
+	 */
 	@JvmStatic
 	fun getByteStringFromSize(size: Long): String
 	{
@@ -27,9 +42,16 @@ object Utils
 		}
 	}
 
+	/**
+	 * Converts Double to String rounded to precision
+	 * @param d double value
+	 * @param precision can be negative and positive
+	 * @return rounded Double converted to String
+	 */
 	@JvmStatic
-	private fun doubleString(d: Double): String
+	@JvmOverloads
+	fun doubleString(d: Double, precision: Int = 2): String
 	{
-		return BigDecimal.valueOf(d).setScale(2, RoundingMode.HALF_UP).toPlainString() + ""
+		return BigDecimal.valueOf(d).setScale(precision, RoundingMode.HALF_UP).toPlainString()
 	}
 }

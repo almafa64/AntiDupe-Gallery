@@ -1,7 +1,5 @@
 package com.cyberegylet.antiDupeGallery.backend;
 
-import com.cyberegylet.antiDupeGallery.activities.AlbumActivity;
-
 public class Backend
 {
 	static
@@ -11,19 +9,31 @@ public class Backend
 
 	public static final class Digest
 	{
-		public byte[] digest;
+		public final byte[] digest;
 
-		private Digest(byte[] digest)
-		{
-			this.digest = digest;
+		private Digest(byte[] digest) { this.digest = digest; }
+	}
+
+	public static final class HashStatus
+	{
+		public final long totalCount;
+		public final long completed;
+		public final boolean running;
+
+		private HashStatus(long totalCount, long completed, boolean running) {
+			this.totalCount = totalCount;
+			this.completed = completed;
+			this.running = running;
 		}
 	}
 
-	public static native void init(AlbumActivity mainActivity);
+	public static native void init(String dbPath);
 
-	public static native void queueFile(long id, String path);
+	public static native void runHashProcess(boolean chash, boolean phash);
 
-	public static native long getQueuedFileProgress();
+	public static native void stopHashProcess();
+
+	public static native HashStatus getHashStatus();
 
 	public static native void shutdown();
 }

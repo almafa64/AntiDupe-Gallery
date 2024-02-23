@@ -3,8 +3,8 @@ package com.cyberegylet.antiDupeGallery.activities;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.documentfile.provider.DocumentFile;
 
 import com.cyberegylet.antiDupeGallery.R;
 import com.cyberegylet.antiDupeGallery.adapters.AlbumAdapter;
@@ -23,11 +24,14 @@ import com.cyberegylet.antiDupeGallery.backend.Backend;
 import com.cyberegylet.antiDupeGallery.backend.Cache;
 import com.cyberegylet.antiDupeGallery.backend.Config;
 import com.cyberegylet.antiDupeGallery.backend.FileManager;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityManager;
-import com.cyberegylet.antiDupeGallery.backend.activities.ActivityParameter;
+import com.cyberegylet.antiDupeGallery.backend.Mimes;
+import com.cyberegylet.antiDupeGallery.compose.AboutActivity;
 import com.cyberegylet.antiDupeGallery.helpers.ConfigSort;
 import com.cyberegylet.antiDupeGallery.helpers.MyAsyncTask;
+import com.cyberegylet.antiDupeGallery.helpers.RealPathUtil;
 import com.cyberegylet.antiDupeGallery.helpers.Utils;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityManager;
+import com.cyberegylet.antiDupeGallery.helpers.activities.ActivityParameter;
 import com.cyberegylet.antiDupeGallery.models.Album;
 import com.cyberegylet.antiDupeGallery.models.ImageFile;
 
@@ -36,17 +40,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
 public class AlbumActivity extends ImageListBaseActivity
 {
-	private static final int MOVE_SELECTED_ALBUMS = 1;
-	private static final int COPY_SELECTED_ALBUMS = 2;
-	private static final int DELETE_SELECTED_ALBUMS = 3;
-
 	private List<Album> allAlbums;
 
 	private static boolean hasBackendBeenCalled = false;
@@ -56,7 +56,7 @@ public class AlbumActivity extends ImageListBaseActivity
 	@Override
 	protected boolean myOnCreate(@Nullable Bundle savedInstanceState)
 	{
-		Config.init(this);
+		Config.init(getApplicationContext());
 
 		if (Config.getStringProperty(Config.Property.PIN_LOCK).length() != 0 && ActivityManager.getParam(
 				this,
@@ -67,7 +67,7 @@ public class AlbumActivity extends ImageListBaseActivity
 			return false;
 		}
 
-		if (!hasBackendBeenCalled) Backend.init(this);
+		if (!hasBackendBeenCalled) Backend.init(getDbPath(Cache.DATABASE_NAME));
 		hasBackendBeenCalled = true;
 
 		setContentView(R.layout.album_activity);
@@ -121,25 +121,25 @@ public class AlbumActivity extends ImageListBaseActivity
 				else if (id == moveId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					startActivityForResult(intent, MOVE_SELECTED_ALBUMS);
+					activityManager.launchIntent(intent, moveLauncher);
 				}
 				else if (id == copyId)
 				{
 					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					startActivityForResult(intent, COPY_SELECTED_ALBUMS);
+					activityManager.launchIntent(intent, copyLauncher);
 				}
 				else if (id == deleteId)
 				{
 					new AlertDialog.Builder(this).setTitle(R.string.popup_delete)
 							.setMessage(R.string.popup_delete_confirm).setIcon(android.R.drawable.ic_dialog_alert)
 							.setPositiveButton(
-									android.R.string.yes,
-									(dialog, whichButton) -> onActivityResult(
-											DELETE_SELECTED_ALBUMS,
+									android.R.string.ok,
+									(dialog, whichButton) -> myOnActivityResult(
+											DELETE_SELECTED,
 											RESULT_OK,
 											new Intent()
 									)
-							).setNegativeButton(android.R.string.no, null).show();
+							).setNegativeButton(android.R.string.cancel, null).show();
 				}
 				else if (id == infoId)
 				{
@@ -192,7 +192,7 @@ public class AlbumActivity extends ImageListBaseActivity
 	}
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	protected void myOnActivityResult(int requestCode, int resultCode, Intent data)
 	{
 		if (resultCode != RESULT_OK || data == null) return;
 		final BaseImageAdapter adapter = ((BaseImageAdapter) Objects.requireNonNull(recycler.getAdapter()));
@@ -200,15 +200,34 @@ public class AlbumActivity extends ImageListBaseActivity
 		// ToDo test on sd card
 		Log.d("app", String.valueOf(data));
 		Path path = null;
-		if (requestCode != DELETE_SELECTED_ALBUMS)
+		if (requestCode != DELETE_SELECTED)
 		{
-			path = Paths.get("/storage/emulated/0/" + data.getData().getPath().split(":")[1]);
+			Uri uri = data.getData();
+			String dataPath = Objects.requireNonNull(uri).getPath();
+			String[] parts = Objects.requireNonNull(dataPath).split(":");
+
+			DocumentFile docFile = DocumentFile.fromTreeUri(this, uri);
+
+			//Log.d("app", Objects.requireNonNull(DocumentFile.fromTreeUri(this, uri).getUri().toString()));
+
+			// raw -> parts[1]
+			// primary -> /storage/emulated/0/ + parts[1]
+			//path = Paths.get("/storage/emulated/0/" + parts[1]);
+			if (uri.toString().startsWith("content://com.android.providers.downloads.documents/tree/raw"))
+			{
+				path = Paths.get(parts[1]);
+			}
+			else if (dataPath.startsWith("/tree/primary:"))
+			{
+				path = Paths.get("/storage/emulated/0/" + parts[1]);
+			}
+			else path = Paths.get(RealPathUtil.getRealPath(this, Objects.requireNonNull(docFile).getUri()));
 		}
 		List<Album> failedAlbums = new ArrayList<>();
 		int textId = 0;
 		switch (requestCode)
 		{
-			case MOVE_SELECTED_ALBUMS ->
+			case MOVE_SELECTED ->
 			{
 				textId = R.string.popup_move_folder_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
@@ -225,7 +244,7 @@ public class AlbumActivity extends ImageListBaseActivity
 					Cache.updateAlbum(album, p.toString());
 				}
 			}
-			case COPY_SELECTED_ALBUMS ->
+			case COPY_SELECTED ->
 			{
 				textId = R.string.popup_copy_folder_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
@@ -243,7 +262,7 @@ public class AlbumActivity extends ImageListBaseActivity
 					allAlbums.add(newAlbum);
 				}
 			}
-			case DELETE_SELECTED_ALBUMS ->
+			case DELETE_SELECTED ->
 			{
 				textId = R.string.popup_delete_folder_success;
 				for (BaseImageAdapter.ViewHolder tmp : selected)
@@ -279,6 +298,7 @@ public class AlbumActivity extends ImageListBaseActivity
 		}
 	}
 
+	// ToDo remove deleted files from db
 	@Override
 	protected void storageAccessGranted()
 	{
@@ -289,7 +309,6 @@ public class AlbumActivity extends ImageListBaseActivity
 		AlbumAdapter adapter = new AlbumAdapter(albums, fileManager);
 		recycler.setAdapter(adapter);
 
-		// ToDo remove deleted files
 		new MyAsyncTask()
 		{
 			private long timeStart = 0;
@@ -300,58 +319,71 @@ public class AlbumActivity extends ImageListBaseActivity
 			@Override
 			public void doInBackground()
 			{
-				HashMap<String, Album> albumNames = new HashMap<>();
-				FileManager.CursorLoopWrapper wrapper = new FileManager.CursorLoopWrapper()
+				final boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
+
+				// https://github.com/SimpleMobileTools/Simple-Gallery/blob/master/app/src/main/kotlin/com/simplemobiletools/gallery/pro/helpers/MediaFetcher.kt#L84
+
+				HashSet<String> folders = fileManager.getFolders();
+				HashSet<String> noMediaFolders = new HashSet<>(fileManager.getNoMediaFolders());
+
+				Cache.getCache().beginTransaction();
+				for (String folder : folders)
 				{
-					final boolean showHidden = Config.getBooleanProperty(Config.Property.SHOW_HIDDEN);
-					int timeout = 0;
+					File folderFile = new File(folder);
+					Album album = new Album(folderFile);
 
-					@Override
-					public void run()
+					if (!album.isHidden())
 					{
-						String path = getPath();
-
-						File image = new File(path);
-						if (!image.canRead()) return;
-
-						final String albumPath = path.substring(0, path.lastIndexOf('/'));
-
-						Album album = albumNames.get(albumPath);
-						if (album == null)
+						String curPath = folder;
+						do
 						{
-							album = new Album(albumPath);
-							Cache.addAlbum(album);
-							albumNames.put(albumPath, album);
-							allAlbums.add(album);
-							if (!album.isHidden() || showHidden)
+							if (noMediaFolders.contains(curPath))
 							{
-								albums.add(album);
-								adapter.sort(comparator, false);
+								album.setHidden(true);
+								break;
 							}
-						}
+							curPath = FileManager.getParentPath(curPath);
+						} while (!curPath.equals("/storage"));
+					}
 
-						long id = getId();
-						Backend.queueFile(id, path);
+					File[] files = folderFile.listFiles();
+					if (files == null) continue;
+					int timeout = 0;
+					for (File file : files)
+					{
+						if (!file.canRead()) continue;
 
-						ImageFile imageFile = new ImageFile(image, getMime(), id);
+						String path = file.getPath();
+
+						boolean isImage = Mimes.isImage(path);
+						boolean isVideo = !isImage && Mimes.isVideo(path);
+
+						if (!isImage && !isVideo) continue;
+						ImageFile imageFile = new ImageFile(file, isImage ? Mimes.Type.IMAGE : Mimes.Type.VIDEO);
+
 						album.addImage(imageFile);
-						Cache.addMedia(imageFile, albumPath);
+						Cache.addMedia(imageFile);
 
-						if (timeout++ == 30)
+						if (timeout++ == 50)
 						{
 							timeout = 0;
 							runOnUiThread(adapter::notifyDataSetChanged);
 						}
 					}
-				};
-				String image_sort = ConfigSort.toSQLString(Config.getStringProperty(Config.Property.IMAGE_SORT));
-				fileManager.allImageAndVideoLoop(
-						image_sort,
-						wrapper,
-						MediaStore.MediaColumns._ID,
-						MediaStore.MediaColumns.DATA,
-						MediaStore.MediaColumns.MIME_TYPE
-				);
+
+					if (album.getCount() != 0)
+					{
+						Cache.addAlbum(album);
+						allAlbums.add(album);
+						if (!album.isHidden() || showHidden)
+						{
+							albums.add(album);
+							adapter.sort(comparator, false);
+						}
+					}
+				}
+				Cache.getCache().setTransactionSuccessful();
+				Cache.getCache().endTransaction();
 			}
 
 			@SuppressLint("NotifyDataSetChanged")
