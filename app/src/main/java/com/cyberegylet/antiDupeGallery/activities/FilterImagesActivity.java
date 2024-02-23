@@ -310,13 +310,25 @@ public class FilterImagesActivity extends AppCompatActivity
 						" " + mediaPath + " = " + digestPath +
 						" WHERE hex(" + Cache.Digests.DIGEST + ") like ?" +
 						" ORDER BY " + digestPath, new String[]{ digestHex }))
+		{*/
+		String chash_id = Cache.Tables.CHASH + "." + Cache.CHash.MEDIA_ID;
+		String chash_bytes = Cache.Tables.CHASH + "." + Cache.CHash.BYTES;
+		try (Cursor cursor = database.rawQuery(
+				"SELECT " + Cache.Media.PATH + "," + Cache.Media.MIME_TYPE + "," + Cache.Media.ID + " " +
+						"FROM " + Cache.Tables.MEDIA + " " +
+						"INNER JOIN " + Cache.Tables.CHASH + " ON " + Cache.Media.ID + " = " + chash_id + " " +
+						"WHERE HEX(" + chash_bytes + ") = ? " +
+						"ORDER BY " + Cache.Media.PATH,
+				new String[]{ digestHex }
+		))
 		{
 			if (!cursor.moveToFirst()) return;
-			int pathCol = cursor.getColumnIndexOrThrow(digestPath);
-			int idCol = cursor.getColumnIndexOrThrow(mediaId);
+			int pathCol = cursor.getColumnIndexOrThrow(Cache.Media.PATH);
+			int idCol = cursor.getColumnIndexOrThrow(Cache.Media.ID);
 			int mimeCol = cursor.getColumnIndexOrThrow(Cache.Media.MIME_TYPE);
 			do
 			{
+
 				File imageFile = new File(cursor.getString(pathCol));
 				if (!imageFile.canRead()) continue;
 				allImages.add(new ImageFile(

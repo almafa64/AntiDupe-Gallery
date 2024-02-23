@@ -29,7 +29,7 @@ import java.io.File
 import java.util.Timer
 import java.util.TimerTask
 
-class TestReceiver : BroadcastReceiver()
+class StopReceiver : BroadcastReceiver()
 {
 	override fun onReceive(context: Context?, intent: Intent?)
 	{
@@ -39,26 +39,40 @@ class TestReceiver : BroadcastReceiver()
 			FilterService.ACTION_STOP_FILTERING ->
 			{
 				val filterService = FilterService.filterService!!
-				if (FilterService.isFilterActivityOpen) filterService.stopNotification()
+				if (FilterService.isFilterActivityOpen)
+				{
+					filterService.stopNotification()
+					FilterService.filterService?.stop()
+				}
 				else
 				{
+					val intent2 = Intent(context, FilterActivity::class.java)
+					intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+					intent2.putExtra(FilterService.FILTER_DONE_PARAM, 1)
+					val pIntent =
+						PendingIntent.getActivity(
+							context,
+							0,
+							intent2,
+							PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+						)
+
 					filterService.notificationBuilder?.let {
 						it.clearActions()
-						val intent2 = Intent(context, FilterActivity::class.java)
-						intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-						intent2.extras?.putInt(FilterService.FILTER_DONE_PARAM, 1)
-						val pIntent =
-							PendingIntent.getActivity(context, 0, intent2, PendingIntent.FLAG_IMMUTABLE)
 						it.setContentIntent(pIntent)
 						it.setOngoing(false)
+						it.setAutoCancel(true)
 					}
 
 					FilterService.mNotificationManager?.notify(
 						FilterService.NOTIFY_ID,
 						filterService.getNotification(text = context.resources.getString(R.string.notifications_filtering_ended))
 					)
+
+					Backend.stopHashProcess()
+					FilterService.showThread?.stop()
+					FilterService.filterThread?.stop()
 				}
-				FilterService.filterService?.stop()
 			}
 		}
 	}
@@ -95,8 +109,8 @@ class FilterService : Service()
 		private var paths: Array<String>? = null
 		private var db: SQLiteDatabase? = null
 		private var intent: Intent? = null
-		private var showThread: MyAsyncTask? = null
-		private var filterThread: MyAsyncTask? = null
+		var showThread: MyAsyncTask? = null
+		var filterThread: MyAsyncTask? = null
 	}
 
 	var notificationBuilder: NotificationCompat.Builder? = null
@@ -125,7 +139,6 @@ class FilterService : Service()
 
 		val notificationIntent = Intent(applicationContext, FilterActivity::class.java)
 		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-
 		val contentPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
 
 		val channel =
@@ -134,9 +147,14 @@ class FilterService : Service()
 		channel.lightColor = Color.BLUE
 		mNotificationManager!!.createNotificationChannel(channel)
 
-		val stopIntent = Intent(this, TestReceiver::class.java)
+		val stopIntent = Intent(this, StopReceiver::class.java)
 		stopIntent.action = ACTION_STOP_FILTERING
-		val stopPendingIntent = PendingIntent.getBroadcast(this, 0, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+		val stopPendingIntent = PendingIntent.getBroadcast(
+			this,
+			0,
+			stopIntent,
+			PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+		)
 
 		notificationBuilder =
 			NotificationCompat.Builder(this, CHANNEL_ID).setContentTitle(getText(R.string.notifications_filtering))
@@ -145,8 +163,8 @@ class FilterService : Service()
 				.setContentIntent(contentPendingIntent).setOngoing(true)
 				.addAction(R.drawable.ic_info, getText(R.string.texts_stop), stopPendingIntent)
 
-		var maxFiles = 0
-		var filesGlobal: Long = 0
+		var maxFiles = 0L
+		var filesGlobal = 0L
 
 		startForeground(NOTIFY_ID, getNotification(text = getString(R.string.notifications_filtering_starting)))
 
@@ -157,23 +175,27 @@ class FilterService : Service()
 		showThread = object : MyAsyncTask()
 		{
 			var count = 0
+			var fileCount = 0L
 
 			@SuppressLint("NotifyDataSetChanged")
 			override fun doInBackground()
 			{
-				db?.query(
-					Cache.Tables.DIGESTS,
-					arrayOf(Cache.Digests.PATH, "HEX(${Cache.Digests.DIGEST})", "COUNT(${Cache.Digests.DIGEST})"),
-					null,
-					null,
-					Cache.Digests.DIGEST,
-					"COUNT(${Cache.Digests.DIGEST}) > 1",
-					"COUNT(${Cache.Digests.DIGEST}) desc"
+				db?.rawQuery(
+					"""SELECT ${Cache.Media.PATH},
+							HEX(${Cache.Tables.CHASH}.${Cache.CHash.BYTES}) AS digest,
+							COUNT(${Cache.Tables.CHASH}.${Cache.CHash.BYTES}) AS dup_count
+							FROM ${Cache.Tables.MEDIA}
+							INNER JOIN ${Cache.Tables.CHASH}
+							ON ${Cache.Tables.CHASH}.${Cache.CHash.MEDIA_ID} = ${Cache.Tables.MEDIA}.${Cache.Media.ID}
+							GROUP BY digest
+							HAVING dup_count > 1
+							ORDER BY dup_count DESC""",
+					null
 				).use {
 					if (it == null || !it.moveToFirst()) return
 					val pathCol = it.getColumnIndexOrThrow(Cache.Digests.PATH)
-					val digestCol = it.getColumnIndexOrThrow("HEX(${Cache.Digests.DIGEST})")
-					val countCol = it.getColumnIndexOrThrow("COUNT(${Cache.Digests.DIGEST})")
+					val digestCol = it.getColumnIndexOrThrow("digest")
+					val countCol = it.getColumnIndexOrThrow("dup_count")
 
 					val hasPaths = paths?.isNotEmpty() ?: false
 
@@ -190,6 +212,8 @@ class FilterService : Service()
 						if (album != null)
 						{
 							album.setData(null, null, it.getInt(countCol), null)
+							if (fileCount++ > 30) fileCount = 0
+							else continue
 						}
 						else
 						{
@@ -228,23 +252,23 @@ class FilterService : Service()
 						{
 							mNotificationManager?.notify(
 								NOTIFY_ID,
-								getNotification(maxFiles, (maxFiles - filesGlobal).toInt())
+								getNotification(maxFiles.toInt(), filesGlobal.toInt())
 							)
 						}
 					}, 0, 400)
 				}
 
-				var old = Backend.getQueuedFileProgress()
+				var old = Backend.getHashStatus().completed
 				while (!stopped())
 				{
-					val files = Backend.getQueuedFileProgress()
-					if (files == 0L)
+					val files = Backend.getHashStatus().completed
+					if (files == maxFiles)
 					{
 						showThread?.wait()
 						showThread?.execute()
 						break
 					}
-					if (old - files > 1L)
+					if (files - old > 1L)
 					{
 						old = files
 						filesGlobal = files
@@ -263,19 +287,32 @@ class FilterService : Service()
 				if (isFilterActivityOpen) stopNotification()
 				else
 				{
+					val intent = Intent(applicationContext, FilterActivity::class.java)
+					intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+					intent.putExtra(FILTER_DONE_PARAM, 1)
+					val pIntent =
+						PendingIntent.getActivity(
+							applicationContext,
+							0,
+							intent,
+							PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+						)
+
 					notificationBuilder?.let {
 						it.clearActions()
-						val intent = Intent(applicationContext, FilterActivity::class.java)
-						intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-						intent.extras?.putInt(FILTER_DONE_PARAM, 1)
-						val pIntent =
-							PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 						it.setContentIntent(pIntent)
+						it.setOngoing(false)
+						it.setAutoCancel(true)
 					}
 					mNotificationManager?.notify(
 						NOTIFY_ID,
 						getNotification(text = getString(R.string.notifications_filtering_ended))
 					)
+
+					Backend.stopHashProcess()
+					showThread?.stop()
+					filterThread?.stop()
+
 					return
 				}
 
@@ -284,23 +321,12 @@ class FilterService : Service()
 
 			override fun onPreExecute()
 			{
-				db?.query(Cache.Tables.MEDIA, arrayOf(Cache.Media.PATH, Cache.Media.ID), null, null, null, null, null)
-					.use {
-						if (it?.moveToFirst() != true)
-						{
-							this@FilterService.stop()
-							return
-						}
-
-						val pathCol = it.getColumnIndex(Cache.Media.PATH)
-						val idCol = it.getColumnIndex(Cache.Media.ID)
-						maxFiles = it.count
-
-						do
-						{
-							Backend.queueFile(it.getLong(idCol), it.getString(pathCol))
-						} while (it.moveToNext())
-					}
+				Backend.runHashProcess(true, false)
+				while (!Backend.getHashStatus().running)
+				{
+					continue
+				}
+				maxFiles = Backend.getHashStatus().totalCount
 			}
 		}
 		filterThread?.execute()
@@ -337,6 +363,7 @@ class FilterService : Service()
 
 	fun stop()
 	{
+		Backend.stopHashProcess()
 		showThread?.stop()
 		filterThread?.stop()
 		stopForeground(STOP_FOREGROUND_REMOVE)
