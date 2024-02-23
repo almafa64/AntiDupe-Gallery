@@ -5,7 +5,7 @@ mod hash;
 mod logger;
 
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 
 use jni::JNIEnv;
 use sqlx::query::QueryAs;
@@ -53,6 +53,7 @@ async fn main(
                                     log::info!("Backend hash stop signal received");
                                 }
                             }
+                            shared_state.hash_status.running.store(false, Ordering::Relaxed);
                         },
                     },
                     None => panic!("Message sender closed"),
@@ -70,6 +71,7 @@ async fn main(
 struct HashStatus {
     total_count: AtomicU64,
     completed: AtomicU64,
+    running: AtomicBool,
 }
 
 type CHashMediaRow = (i64, Box<str>, i64);
@@ -116,6 +118,7 @@ async fn hash_start(db: &Pool<Sqlite>, shared: &Arc<Shared>, chash: bool, phash:
     let total_count = chash_count + phash_count;
     shared.hash_status.total_count.store(total_count, Ordering::Relaxed);
     shared.hash_status.completed.store(0, Ordering::Relaxed);
+    shared.hash_status.running.store(true, Ordering::Relaxed);
 
     if chash {
         do_chash(db, shared).await;
@@ -196,5 +199,9 @@ impl HashStatus {
 
     pub fn completed(&self) -> u64 {
         self.completed.load(Ordering::Relaxed)
+    }
+
+    pub fn running(&self) -> bool {
+        self.running.load(Ordering::Relaxed)
     }
 }

@@ -22,8 +22,13 @@ public class Backend
 	public static final class HashStatus {
 		public final long totalCount;
 		public final long completed;
+		public final boolean running;
 
-		private HashStatus(long totalCount, long completed) { this.totalCount = totalCount; this.completed = completed; }
+		private HashStatus(long totalCount, long completed, boolean running) {
+			this.totalCount = totalCount;
+			this.completed = completed;
+			this.running = running;
+		}
 	}
 
 	public static native void init(String dbPath);
