@@ -71,7 +71,6 @@ public class FilterActivity extends AppCompatActivity
 			if (activityManager.getParam(FilterService.FILTER_DONE_PARAM) != null)
 			{
 				FilterService filterService = Objects.requireNonNull(FilterService.getFilterService());
-				filterService.stopNotification();
 				filterService.stop();
 			}
 

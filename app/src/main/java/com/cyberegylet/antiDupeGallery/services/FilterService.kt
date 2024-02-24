@@ -39,11 +39,7 @@ class StopReceiver : BroadcastReceiver()
 			FilterService.ACTION_STOP_FILTERING ->
 			{
 				val filterService = FilterService.filterService!!
-				if (FilterService.isFilterActivityOpen)
-				{
-					filterService.stopNotification()
-					FilterService.filterService?.stop()
-				}
+				if (FilterService.isFilterActivityOpen) filterService.stop()
 				else
 				{
 					val intent2 = Intent(context, FilterActivity::class.java)
@@ -284,7 +280,7 @@ class FilterService : Service()
 
 			override fun onPostExecute()
 			{
-				if (isFilterActivityOpen) stopNotification()
+				if (isFilterActivityOpen) this@FilterService.stop()
 				else
 				{
 					val intent = Intent(applicationContext, FilterActivity::class.java)
@@ -312,11 +308,7 @@ class FilterService : Service()
 					Backend.stopHashProcess()
 					showThread?.stop()
 					filterThread?.stop()
-
-					return
 				}
-
-				this@FilterService.stop()
 			}
 
 			override fun onPreExecute()
@@ -355,12 +347,6 @@ class FilterService : Service()
 		return notification
 	}
 
-	fun stopNotification()
-	{
-		mNotificationManager?.cancel(NOTIFY_ID)
-		mNotificationManager?.deleteNotificationChannel(CHANNEL_ID)
-	}
-
 	fun stop()
 	{
 		Backend.stopHashProcess()
@@ -368,6 +354,8 @@ class FilterService : Service()
 		filterThread?.stop()
 		stopForeground(STOP_FOREGROUND_REMOVE)
 		stopSelf()
+		mNotificationManager?.cancel(NOTIFY_ID)
+		mNotificationManager?.deleteNotificationChannel(CHANNEL_ID)
 		isRunning = false
 	}
 
