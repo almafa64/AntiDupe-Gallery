@@ -40,35 +40,7 @@ class StopReceiver : BroadcastReceiver()
 			{
 				val filterService = FilterService.filterService!!
 				if (FilterService.isFilterActivityOpen) filterService.stop()
-				else
-				{
-					val intent2 = Intent(context, FilterActivity::class.java)
-					intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-					intent2.putExtra(FilterService.FILTER_DONE_PARAM, 1)
-					val pIntent =
-						PendingIntent.getActivity(
-							context,
-							0,
-							intent2,
-							PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-						)
-
-					filterService.notificationBuilder?.let {
-						it.clearActions()
-						it.setContentIntent(pIntent)
-						it.setOngoing(false)
-						it.setAutoCancel(true)
-					}
-
-					FilterService.mNotificationManager?.notify(
-						FilterService.NOTIFY_ID,
-						filterService.getNotification(text = context.resources.getString(R.string.notifications_filtering_ended))
-					)
-
-					Backend.stopHashProcess()
-					FilterService.showThread?.stop()
-					FilterService.filterThread?.stop()
-				}
+				else filterService.endNotification()
 			}
 		}
 	}
@@ -78,14 +50,16 @@ class FilterService : Service()
 {
 	companion object
 	{
-		@JvmField
+		@JvmStatic
 		var recyclerViewMutable = MutableLiveData<RecyclerView>()
+			private set
 
 		@JvmField
 		var isFilterActivityOpen = false
 
-		@JvmField
-		var mNotificationManager: NotificationManager? = null
+		@JvmStatic
+		var notificationManager: NotificationManager? = null
+			private set
 
 		@JvmStatic
 		var filterService: FilterService? = null
@@ -105,11 +79,11 @@ class FilterService : Service()
 		private var paths: Array<String>? = null
 		private var db: SQLiteDatabase? = null
 		private var intent: Intent? = null
-		var showThread: MyAsyncTask? = null
-		var filterThread: MyAsyncTask? = null
+		private var showThread: MyAsyncTask? = null
+		private var filterThread: MyAsyncTask? = null
 	}
 
-	var notificationBuilder: NotificationCompat.Builder? = null
+	private var notificationBuilder: NotificationCompat.Builder? = null
 
 	override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int
 	{
@@ -129,7 +103,7 @@ class FilterService : Service()
 
 		paths = intent?.getStringArrayExtra(PATHS_PARAM)
 
-		mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+		notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 		db = Cache.cache
 		filterService = this
 
@@ -141,7 +115,7 @@ class FilterService : Service()
 			NotificationChannel(CHANNEL_ID, "filtering status channel", NotificationManager.IMPORTANCE_DEFAULT)
 		channel.enableLights(true)
 		channel.lightColor = Color.BLUE
-		mNotificationManager!!.createNotificationChannel(channel)
+		notificationManager!!.createNotificationChannel(channel)
 
 		val stopIntent = Intent(this, StopReceiver::class.java)
 		stopIntent.action = ACTION_STOP_FILTERING
@@ -246,7 +220,7 @@ class FilterService : Service()
 					{
 						override fun run()
 						{
-							mNotificationManager?.notify(
+							notificationManager?.notify(
 								NOTIFY_ID,
 								getNotification(maxFiles.toInt(), filesGlobal.toInt())
 							)
@@ -281,34 +255,7 @@ class FilterService : Service()
 			override fun onPostExecute()
 			{
 				if (isFilterActivityOpen) this@FilterService.stop()
-				else
-				{
-					val intent = Intent(applicationContext, FilterActivity::class.java)
-					intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-					intent.putExtra(FILTER_DONE_PARAM, 1)
-					val pIntent =
-						PendingIntent.getActivity(
-							applicationContext,
-							0,
-							intent,
-							PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-						)
-
-					notificationBuilder?.let {
-						it.clearActions()
-						it.setContentIntent(pIntent)
-						it.setOngoing(false)
-						it.setAutoCancel(true)
-					}
-					mNotificationManager?.notify(
-						NOTIFY_ID,
-						getNotification(text = getString(R.string.notifications_filtering_ended))
-					)
-
-					Backend.stopHashProcess()
-					showThread?.stop()
-					filterThread?.stop()
-				}
+				else this@FilterService.endNotification()
 			}
 
 			override fun onPreExecute()
@@ -347,6 +294,35 @@ class FilterService : Service()
 		return notification
 	}
 
+	fun endNotification()
+	{
+		val intent = Intent(applicationContext, FilterActivity::class.java)
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+		intent.putExtra(FILTER_DONE_PARAM, 1)
+		val pIntent =
+			PendingIntent.getActivity(
+				applicationContext,
+				0,
+				intent,
+				PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+			)
+
+		notificationBuilder?.let {
+			it.clearActions()
+			it.setContentIntent(pIntent)
+			it.setOngoing(false)
+			it.setAutoCancel(true)
+		}
+		notificationManager?.notify(
+			NOTIFY_ID,
+			getNotification(text = getString(R.string.notifications_filtering_ended))
+		)
+
+		Backend.stopHashProcess()
+		showThread?.stop()
+		filterThread?.stop()
+	}
+
 	fun stop()
 	{
 		Backend.stopHashProcess()
@@ -354,8 +330,8 @@ class FilterService : Service()
 		filterThread?.stop()
 		stopForeground(STOP_FOREGROUND_REMOVE)
 		stopSelf()
-		mNotificationManager?.cancel(NOTIFY_ID)
-		mNotificationManager?.deleteNotificationChannel(CHANNEL_ID)
+		notificationManager?.cancel(NOTIFY_ID)
+		notificationManager?.deleteNotificationChannel(CHANNEL_ID)
 		isRunning = false
 	}
 

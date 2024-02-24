@@ -8,6 +8,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.MutableLiveData;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -62,11 +63,12 @@ public class FilterActivity extends AppCompatActivity
 				Config.getIntProperty(Config.Property.ALBUM_COLUMN_NUMBER)
 		));
 
+		MutableLiveData<RecyclerView> mutable = FilterService.getRecyclerViewMutable();
 		if (FilterService.isRunning())
 		{
-			RecyclerView oldRecycler = Objects.requireNonNull(FilterService.recyclerViewMutable.getValue());
+			RecyclerView oldRecycler = Objects.requireNonNull(mutable.getValue());
 			recycler.setAdapter(oldRecycler.getAdapter());
-			FilterService.recyclerViewMutable.setValue(recycler);
+			mutable.setValue(recycler);
 
 			if (activityManager.getParam(FilterService.FILTER_DONE_PARAM) != null)
 			{
@@ -77,7 +79,7 @@ public class FilterActivity extends AppCompatActivity
 			return;
 		}
 
-		FilterService.recyclerViewMutable.setValue(recycler);
+		mutable.setValue(recycler);
 		setStateToService(true);
 
 		List<FilteredAlbum> albums = new ArrayList<>();
