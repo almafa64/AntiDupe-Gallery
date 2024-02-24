@@ -115,6 +115,7 @@ class FilterService : Service()
 			NotificationChannel(CHANNEL_ID, "filtering status channel", NotificationManager.IMPORTANCE_DEFAULT)
 		channel.enableLights(true)
 		channel.lightColor = Color.BLUE
+		channel.enableLights(false)
 		notificationManager!!.createNotificationChannel(channel)
 
 		val stopIntent = Intent(this, StopReceiver::class.java)
@@ -130,7 +131,7 @@ class FilterService : Service()
 			NotificationCompat.Builder(this, CHANNEL_ID).setContentTitle(getText(R.string.notifications_filtering))
 				.setSmallIcon(R.drawable.ic_adg_logo_foreground).setColor(getColor(R.color.blue_500))
 				.setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
-				.setContentIntent(contentPendingIntent).setOngoing(true)
+				.setContentIntent(contentPendingIntent).setOngoing(true).setVibrate(null)
 				.addAction(R.drawable.ic_info, getText(R.string.texts_stop), stopPendingIntent)
 
 		var maxFiles = 0L

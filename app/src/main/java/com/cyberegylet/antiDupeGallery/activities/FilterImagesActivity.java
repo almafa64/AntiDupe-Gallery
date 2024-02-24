@@ -271,7 +271,7 @@ public class FilterImagesActivity extends AppCompatActivity
 				{
 					FilterImagesAdapter.ViewHolder holder = (FilterImagesAdapter.ViewHolder) tmp;
 					ImageFile imageFile = holder.getImage();
-					Path p = Paths.get(holder.getImage().getPath());
+					Path p = Paths.get(imageFile.getPath());
 					if (!fileManager.deleteFile(p))
 					{
 						failedImages.add(imageFile);
@@ -300,7 +300,7 @@ public class FilterImagesActivity extends AppCompatActivity
 	{
 		String digestHex = (String) activityManager.getParam("digestHex");
 
-		String digestPath = Cache.Tables.DIGESTS + "." + Cache.Digests.PATH;
+		/*String digestPath = Cache.Tables.DIGESTS + "." + Cache.Digests.PATH;
 		String mediaPath = Cache.Tables.MEDIA + "." + Cache.Media.PATH;
 		String mediaId = Cache.Tables.MEDIA + "." + Cache.Media.ID;
 		try (Cursor cursor = database.rawQuery(
